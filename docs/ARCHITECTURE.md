@@ -2,7 +2,7 @@
 
 The full design and its reasoning are in [PLAN.md](PLAN.md). This page describes **what exists in the code today** and how the pieces fit. It is updated at the end of every phase.
 
-## Current state: Phase 5 (money and billing)
+## Current state: Phase 6 (leads, owner report, onboarding)
 
 ```
 apps/
@@ -33,6 +33,10 @@ apps/
               /v1/payments-account                the clinic's own Razorpay keys (encrypted)
               /v1/wallet                          the Sentio usage wallet: balance, usage, top-up, mandate, invoices
               /v1/admin/…                         Sentio admin panel: clinics, license, rates, reconciliation, health
+              /v1/leads, /v1/lead-settings        leads from ads: list, detail, call outcomes, funnel; the Page and alert phone
+              /webhooks/meta-leads                Meta lead-form webhook (signed; routed to the clinic by Page)
+              /v1/reports                         owner report (day, week, month) and "rupees recovered"
+              /v1/setup, /v1/test-mode            setup checklist and test mode
               /webhooks/payments/clinic/:id       patients' payments (the clinic's own gateway account)
               /webhooks/payments/sentio           licenses, recharges and mandates (Sentio's gateway account)
               src/admin/                          Sentio admin commands (create a clinic, demo data)
@@ -43,11 +47,13 @@ apps/
               followups (every 5 minutes: start and advance follow-up ladders, expire estimates),
               place_call (AI confirmation call, rules re-checked just before dialling), request_deposit,
               send_receipt, wallet_watch (owner notices, spend alerts), recharge_forecast (hourly, pre-debit
-              notices), recharge_debit (every 15 minutes), reconcile (nightly)
+              notices), recharge_debit (every 15 minutes), reconcile (nightly), fetch_lead and lead_kickoff (a new
+              lead gets its first WhatsApp within a minute), owner_report (hourly; sends at 9 pm clinic time)
   voice/      Phone-call media server: one WebSocket per call from the phone company; turn detection,
               speech-to-text, dialogue, text-to-speech, barge-in, heartbeat
   web/        Next.js staff dashboard (installable on Android): Today, Calendar, WhatsApp inbox, Tasks,
-              Patients, Phone calls, Import, Settings (incl. WhatsApp and phone assistant), Activity;
+              Patients, Phone calls, Leads, Reports, Setup checklist, Import, Settings (incl. WhatsApp,
+              phone assistant, lead ads), Activity;
               English/Hindi; offline cache and outbox
 packages/
   shared/     Money in paise, Indian phone numbers, UUIDv7, PII scrubbing, redacting logger, env loader,
@@ -61,6 +67,8 @@ packages/
               revenue (treatment templates and plans, estimates and their PDF, follow-up engine, campaigns)
               billing (patient ledger, receipts and invoices, payment links; metering, the usage wallet and
               what each state allows; license, mandates, recharges, Sentio's GST invoices, reconciliation)
+              leads (capture, qualifying answers, scoring, staff call tasks, funnel), reports (owner report,
+              rupees recovered, nightly WhatsApp), clinics (setup checklist, test mode)
   agent/      The assistants: language, date and time understanding (Devanagari romanized first), intent
               detection, emergency detector, output safety filter; the WhatsApp assistant; the phone
               assistant (dialogue, spoken texts, call routing, call flow, outbound confirmation calls);
@@ -123,6 +131,25 @@ A sitting's status follows its appointment through a database trigger. Booked, c
   3. It debits only after 24 hours. The database also refuses a debit dated sooner.
   4. The gateway's webhook credits the wallet and issues the GST invoice, once.
 - **Webhooks are claimed and applied in one transaction.** A retry after success changes nothing, and a crash part-way leaves the event for the gateway's retry.
+
+## How a lead becomes a patient
+
+The proven pattern for ad leads is **speed plus a human close**: reply within minutes (leads reached in the first 5 minutes convert far better than those reached an hour later), let automation qualify and warm, and have a person make the call that closes. Sentio does exactly that:
+
+1. **Capture.** A Meta lead form fires the webhook; the worker fetches the lead with the Page token. A tap on a Click-to-WhatsApp ad arrives as a chat carrying the ad's referral. Staff add phone, walk-in, JustDial or Practo leads by hand. The same phone is never two leads.
+2. **First contact within a minute**, on WhatsApp, in the language the person wrote in. It asks at most two tap-questions: what they need, then when they want to come (skipping any the form already answered).
+3. **Score.** Pain, "this week" or high-value work (implants, braces, cosmetic or smile work) is **hot**. A hot lead, or anyone who taps "Call me", gets a staff call task due within 15 minutes of clinic hours, and a WhatsApp alert to the chosen staff phone.
+4. **Book.** The assistant offers consultation slots in the same chat; the booking is the normal one (the database commits it).
+5. **Follow up.** No reply: a nudge the next morning, a staff call task, another nudge, a last call task. It stops the moment the lead books, says STOP, or staff mark it lost.
+6. **People close.** The AI never calls a lead. Staff calls are logged with outcomes (booked, call back, not interested, wrong number), and the lead's stage then follows the clinic's own records: booked → visited → won (with the rupee value from the ledger). The funnel shows each campaign's leads, bookings, visits and revenue.
+
+## How the owner report counts "rupees recovered"
+
+A payment counts when it was made within 30 days **after** a Sentio follow-up reached that patient (next sitting, estimate, missed visit, recall, dues or lead). Each payment counts once, for the latest follow-up before it; reversed payments don't count. The report lists every counted payment with the follow-up behind it, so anyone can check each rupee. It shows money that came in after follow-ups, not proof that the follow-up alone caused it.
+
+## Test mode
+
+While test mode is on, the outbox and the confirmation-call check allow only staff numbers and listed test numbers. Everything else is recorded as blocked with the reason `test_mode`, so the owner can test end to end without messaging a real patient.
 
 ## How a booking stays correct
 

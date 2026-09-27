@@ -81,6 +81,16 @@ The automatic behaviours are built in the phase shown. Until then, the "what a p
 | Reconciliation shows "off by more than 1%"             | Usage was not metered somewhere, a provider price changed, or the provider bill covers a different period | Compare the rate card with the provider's invoice. Add a new rate from the date prices changed. If one kind of usage is missing, check the worker logs.                               |
 | "wallet_balances" shows drift                          | A wallet's cached balance differs from its ledger (should never happen)                                   | Tell engineering. The ledger is the truth; the cached balance can be recomputed.                                                                                                      |
 
+## Leads and reports: common problems
+
+| What you see                                     | Likely cause                                                                                                                | What to do                                                                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Meta form leads don't appear under Leads         | The Page is not subscribed to the app, the Page token expired or lacks `leads_retrieval`, or `LEADS_PROVIDER` is not `meta` | SETUP Part D7. Re-save the Page token in Settings → Lead ads; the api logs show "fetch_lead" errors with Meta's reason. |
+| A Click-to-WhatsApp chat is not marked as a lead | The chat did not carry Meta's ad referral (for example, the person saved the number and wrote later)                        | Add the lead by hand on the Leads page with the source "WhatsApp ad".                                                   |
+| Hot-lead alerts don't reach the staff phone      | No alert phone set, or that phone never wrote to the clinic's WhatsApp and the alert template is not approved               | Settings → Lead ads → alert phone; check template approval in Settings → WhatsApp.                                      |
+| The owner didn't get the 9 pm report             | Switched off on the Reports page, no owner phone, or the template is not approved yet                                       | Reports page switch; Settings → Staff (owner's phone); Settings → WhatsApp templates.                                   |
+| A patient says they got no messages during setup | Test mode is still on                                                                                                       | Setup checklist → turn test mode off. Blocked messages show in the chat as "blocked: test_mode".                        |
+
 ## Adding production failures to the eval suite
 
 Every real conversation that went wrong becomes a new test case in `evals/cases/` (Phase 3 onwards):

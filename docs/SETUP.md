@@ -471,6 +471,47 @@ There are two kinds of money, kept apart on purpose:
 
 ---
 
+## Part D7: Leads, owner report and onboarding (Phase 6)
+
+### One time, for Sentio (about 30 minutes)
+
+1. **Lead ads use the same Meta app as WhatsApp.** In [developers.facebook.com](https://developers.facebook.com) open the Sentio app, add the **Webhooks** product, choose **Page**, and subscribe to the **leadgen** field. Callback URL: `https://API/webhooks/meta-leads`. Verify token: the same value as `WHATSAPP_VERIFY_TOKEN`.
+2. In the app's **App Review**, request the permissions `leads_retrieval`, `pages_manage_metadata`, `pages_show_list` and `pages_read_engagement`. Meta reviews these (usually a few days). Until approved, only people with a role on the app can test.
+3. In Railway, on the **api** and **worker** services, set `LEADS_PROVIDER` to `meta`. It uses the existing `WHATSAPP_APP_SECRET` and `WHATSAPP_VERIFY_TOKEN`; the api refuses to start if either is missing.
+4. On the **worker** service, set `DASHBOARD_URL` to the dashboard's address (for example `https://app.sentio.care`). The owner's 9 pm WhatsApp report links to it.
+
+### For each clinic (about 15 minutes)
+
+1. **Connect the Facebook Page.** The clinic's Page admin creates a long-lived **Page access token** that has `leads_retrieval` (Meta Business Suite → Settings → System users, or the Graph API Explorer). In the dashboard: **Settings → Lead ads (Facebook & Instagram)**, enter the Page ID and the token, and save. Then subscribe the Page to the app once:
+
+   ```
+   curl -X POST "https://graph.facebook.com/v23.0/<PAGE_ID>/subscribed_apps?subscribed_fields=leadgen&access_token=<PAGE_TOKEN>"
+   ```
+
+2. **Alert phone.** In the same section, enter the staff mobile that should get a WhatsApp alert for every hot lead (the person who calls leads back).
+3. **Click-to-WhatsApp ads** need nothing extra: people who tap the ad land in the clinic's WhatsApp chat, and the assistant records them as leads with the ad's name. In Ads Manager, keep the ad's destination as the clinic's WhatsApp number.
+4. **The lead form.** Ask the clinic's ad agency to add two short questions to the Meta lead form: "What do you need help with?" and "When would you like to come?". The assistant reads the answers (English or Hindi) and asks only what is missing.
+
+### Onboarding a new clinic (the owner does this, with Sentio on the phone)
+
+The owner signs in and taps the **Setup** banner on Today (or **More → Setup checklist**). It lists every step with a link to where it is done, and shows a tick when the clinic's data shows the step is finished:
+
+1. **Turn test mode on first.** Messages and calls then go only to staff numbers (and any test numbers entered there). Messages to patients are recorded as "blocked: test mode", never sent.
+2. Clinic details, doctors, working hours, treatments and prices, staff.
+3. WhatsApp (Part D3) and the phone number (Part D4).
+4. **Call forwarding.** The checklist shows the codes for Jio, Airtel, Vi and BSNL mobiles, ready to tap, and what to ask for on a landline. Forward only busy, unanswered and unreachable calls, so staff still pick up first.
+5. **Test call.** From another phone, call the clinic and don't pick up. The assistant answers; book a test visit. Open **Calls**, find the call and mark it **passed**.
+6. Online payments and lead ads (optional), then the license (Part D6).
+7. **Turn test mode off.** The Today banner reminds the owner while it is on.
+
+### Check it works
+
+1. Submit a test lead with Meta's [Lead Ads Testing Tool](https://developers.facebook.com/tools/lead-ads-testing). Within a minute it appears under **More → Leads**, and the test phone gets the first WhatsApp.
+2. Open **More → Reports**: the day's numbers and "rupees recovered", with every counted payment listed.
+3. At 9 pm clinic time, the owner gets the day's summary on WhatsApp (they can switch it off on the Reports page).
+
+---
+
 ## Part E: Updating the app
 
 You don't need to do anything. When a change is merged into the `main` branch on GitHub, Railway deploys it automatically:
