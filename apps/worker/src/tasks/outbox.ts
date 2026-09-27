@@ -14,7 +14,11 @@ export interface OutboxTaskDeps {
 export function queueFromHelpers(helpers: JobHelpers): JobQueue {
   return {
     add: async (task, payload, options = {}) => {
-      await helpers.addJob(task, payload, { jobKey: options.jobKey, runAt: options.runAt });
+      await helpers.addJob(task, payload, {
+        jobKey: options.jobKey,
+        runAt: options.runAt,
+        queueName: options.queueName,
+      });
     },
   };
 }

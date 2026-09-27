@@ -62,6 +62,11 @@ export async function processInboundMessage(
   }
 
   const outcome = await withClinic(deps.pool, ctx, async (c) => {
+    // Lock the chat, so two messages from the same patient never run the assistant at the same time.
+    await c.query(
+      "select 1 from conversations where id = (select conversation_id from messages where id = $1) for update",
+      [messageId],
+    );
     const { rows } = await c.query(
       "update messages set payload = payload || '{\"processed\": true}' where id = $1 and direction = 'in' and not coalesce((payload->>'processed')::boolean, false) returning conversation_id, kind, body, payload",
       [messageId],

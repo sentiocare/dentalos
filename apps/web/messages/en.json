@@ -47,7 +47,9 @@
     "activity": "Activity log",
     "signOut": "Sign out",
     "language": "Language",
-    "switchClinic": "Switch clinic"
+    "switchClinic": "Switch clinic",
+    "inbox": "WhatsApp",
+    "tasks": "Tasks"
   },
   "login": {
     "title": "Sign in",
@@ -90,7 +92,8 @@
     "upcoming": "Coming up",
     "inClinic": "In clinic",
     "finished": "Finished",
-    "missed": "Cancelled / no-show"
+    "missed": "Cancelled / no-show",
+    "tasksWaiting": "{count, plural, one {# task needs attention} other {# tasks need attention}}"
   },
   "calendar": {
     "title": "Calendar",
@@ -322,6 +325,66 @@
       "emergency_slots": "emergency slot",
       "doctor_visiting_schedules": "visiting schedule",
       "branches": "branch"
+    }
+  },
+  "inbox": {
+    "title": "WhatsApp",
+    "empty": "No conversations yet.",
+    "filters": {
+      "all": "All",
+      "unread": "Unread",
+      "human": "Handled by staff",
+      "tasks": "Needs action"
+    },
+    "assistant": "Assistant replying",
+    "staff": "Staff handling",
+    "takeOver": "Take over",
+    "release": "Hand back to assistant",
+    "reply": "Type a reply…",
+    "send": "Send",
+    "windowClosed": "The patient last wrote more than 24 hours ago. WhatsApp only allows approved templates now; please call instead.",
+    "takenOverNote": "You are handling this chat. The assistant will not reply until you hand it back.",
+    "blocked": "Not sent",
+    "failed": "Failed",
+    "emergency": "Emergency",
+    "you": "Staff",
+    "bot": "Assistant",
+    "system": "Automatic",
+    "voiceNote": "Voice note",
+    "transcript": "Transcript"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "empty": "Nothing needs attention.",
+    "done": "Done",
+    "openChat": "Open chat",
+    "call": "Call",
+    "kinds": {
+      "callback": "Call back",
+      "followup": "Follow up",
+      "escalation": "Escalation",
+      "emergency": "Emergency",
+      "complaint": "Complaint",
+      "unconfirmed": "Not confirmed",
+      "data_request": "Data request"
+    }
+  },
+  "whatsapp": {
+    "title": "WhatsApp",
+    "connected": "Connected: {phone}",
+    "notConnected": "Not connected",
+    "phoneNumberId": "Phone number ID (from Meta)",
+    "displayPhone": "WhatsApp number",
+    "accessToken": "Access token",
+    "connect": "Connect",
+    "templates": "Message templates",
+    "templatesHelp": "Submit these in Meta Business Manager, then mark each as approved here. Reminders outside the 24-hour window need approved templates.",
+    "statuses": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "paused": "Paused"
     }
   }
 }

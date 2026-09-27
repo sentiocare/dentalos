@@ -27,6 +27,7 @@ function Section({ title, children, open }: { title: string; children: ReactNode
 
 export default function SettingsPage() {
   const t = useTranslations("settings");
+  const tw = useTranslations("whatsapp");
   const tc = useTranslations("common");
   const { api, can } = useSession();
   const toast = useToast();
@@ -80,6 +81,11 @@ export default function SettingsPage() {
       {manage ? (
         <Section title={t("emergency")}>
           <Emergency config={c} save={save} />
+        </Section>
+      ) : null}
+      {manage ? (
+        <Section title={tw("title")}>
+          <WhatsApp />
         </Section>
       ) : null}
       {can("staff.manage") ? (
@@ -864,6 +870,139 @@ function Staff({ save }: { save: Save }) {
           + {t("addStaff")}
         </Button>
       </div>
+    </>
+  );
+}
+
+interface WhatsAppStatus {
+  connected: boolean;
+  phoneNumberId?: string;
+  displayPhone?: string;
+  templates: {
+    id: string;
+    purpose: string;
+    name: string;
+    language: string;
+    body: string;
+    meta_status: string;
+  }[];
+}
+
+const TEMPLATE_STATUSES = ["draft", "submitted", "approved", "rejected", "paused"] as const;
+
+function WhatsApp() {
+  const t = useTranslations("whatsapp");
+  const tc = useTranslations("common");
+  const { api } = useSession();
+  const toast = useToast();
+  const [status, setStatus] = useState<WhatsAppStatus | null>(null);
+  const [form, setForm] = useState({ phoneNumberId: "", displayPhone: "", accessToken: "" });
+  const [busy, setBusy] = useState(false);
+  const load = () =>
+    api<WhatsAppStatus>("/v1/whatsapp")
+      .then(setStatus)
+      .catch(() => {});
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const call = async (method: string, path: string, body: unknown) => {
+    setBusy(true);
+    try {
+      await api(path, { method, body });
+      toast(tc("saved"));
+      await load();
+      return true;
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : tc("error"), "error");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (!status) return <Spinner />;
+  return (
+    <>
+      <p className={status.connected ? "font-medium text-emerald-700" : "text-slate-600"}>
+        {status.connected ? t("connected", { phone: status.displayPhone ?? "" }) : t("notConnected")}
+      </p>
+      <div className="grid gap-2">
+        <Field label={t("phoneNumberId")}>
+          {(id) => (
+            <Input
+              id={id}
+              inputMode="numeric"
+              value={form.phoneNumberId}
+              onChange={(e) => setForm({ ...form, phoneNumberId: e.target.value })}
+            />
+          )}
+        </Field>
+        <Field label={t("displayPhone")}>
+          {(id) => (
+            <Input
+              id={id}
+              type="tel"
+              placeholder="98765 43210"
+              value={form.displayPhone}
+              onChange={(e) => setForm({ ...form, displayPhone: e.target.value })}
+            />
+          )}
+        </Field>
+        <Field label={t("accessToken")}>
+          {(id) => (
+            <Input
+              id={id}
+              type="password"
+              autoComplete="off"
+              value={form.accessToken}
+              onChange={(e) => setForm({ ...form, accessToken: e.target.value })}
+            />
+          )}
+        </Field>
+        <Button
+          busy={busy}
+          disabled={
+            !form.phoneNumberId.trim() || !form.displayPhone.trim() || form.accessToken.trim().length < 20
+          }
+          onClick={async () => {
+            if (await call("PUT", "/v1/whatsapp", form))
+              setForm({ phoneNumberId: "", displayPhone: "", accessToken: "" });
+          }}
+        >
+          {t("connect")}
+        </Button>
+      </div>
+      {status.templates.length ? (
+        <div className="space-y-2">
+          <p className="font-medium">{t("templates")}</p>
+          <p className="text-xs text-slate-500">{t("templatesHelp")}</p>
+          <ul className="divide-y divide-slate-100 text-sm">
+            {status.templates.map((tpl) => (
+              <li key={tpl.id} className="flex items-center justify-between gap-2 py-2">
+                <div className="min-w-0">
+                  <p className="truncate font-mono text-xs">
+                    {tpl.name} · {tpl.language}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">{tpl.body}</p>
+                </div>
+                <Select
+                  className="w-32 shrink-0"
+                  value={tpl.meta_status}
+                  onChange={(e) =>
+                    void call("PATCH", `/v1/whatsapp/templates/${tpl.id}`, { metaStatus: e.target.value })
+                  }
+                >
+                  {TEMPLATE_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {t(`statuses.${s}`)}
+                    </option>
+                  ))}
+                </Select>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </>
   );
 }

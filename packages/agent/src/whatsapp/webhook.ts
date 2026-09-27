@@ -49,7 +49,7 @@ export async function ingestMessagingEvents(
       continue;
     }
 
-    const messageId = await withClinic(pool, ctx, async (c) => {
+    const { messageId, conversationId } = await withClinic(pool, ctx, async (c) => {
       const conversation = await ensureConversation(c, event.from);
       const content = event.content;
       const id = await logMessage(c, {
@@ -81,9 +81,14 @@ export async function ingestMessagingEvents(
           [conversation.id, event.from],
         );
       }
-      return id;
+      return { messageId: id, conversationId: conversation.id };
     });
-    await jobs.add("process_inbound", { clinicId, messageId }, { jobKey: `inbound:${messageId}` });
+    // One queue per chat: a patient's messages are answered one at a time, in the order they arrived.
+    await jobs.add(
+      "process_inbound",
+      { clinicId, messageId },
+      { jobKey: `inbound:${messageId}`, queueName: `chat:${conversationId}` },
+    );
   }
   return { accepted, duplicates, unrouted };
 }

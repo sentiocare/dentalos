@@ -102,6 +102,8 @@ describe.skipIf(!hasTestDatabase)("WhatsApp webhook endpoint", () => {
     expect((await send()).statusCode).toBe(200);
     expect((await send()).statusCode).toBe(200);
     expect(jobs.jobs.filter((j) => j.task === "process_inbound")).toHaveLength(1);
+    // Answered one at a time per chat, in order.
+    expect(jobs.jobs.find((j) => j.task === "process_inbound")?.queueName).toMatch(/^chat:[0-9a-f-]{36}$/);
     const { rows } = await db.pool.query(
       "select m.body, c.phone from messages m join conversations c on c.id = m.conversation_id",
     );

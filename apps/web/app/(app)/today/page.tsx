@@ -1,7 +1,8 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { AppointmentSheet, nextSteps } from "../../../components/appointment-sheet";
 import { BookingSheet, type BookingDraft } from "../../../components/booking-sheet";
 import { ConfirmWarnings } from "../../../components/confirm-warnings";
@@ -22,7 +23,7 @@ const GROUPS = [
 export default function TodayPage() {
   const t = useTranslations();
   const locale = useLocale();
-  const { can } = useSession();
+  const { api, can } = useSession();
   const config = useClinicConfig();
   const tz = config.data?.clinic.timezone ?? "Asia/Kolkata";
   const today = todayIn(tz);
@@ -31,6 +32,14 @@ export default function TodayPage() {
   const actions = useAppointmentActions(appts.setData, appts.reload);
   const [selected, setSelected] = useState<Appointment | null>(null);
   const [draft, setDraft] = useState<BookingDraft | null>(null);
+  const [openTasks, setOpenTasks] = useState<{ priority: string }[]>([]);
+  const seesTasks = can("appointments.read");
+  useEffect(() => {
+    if (!seesTasks) return;
+    api<{ priority: string }[]>("/v1/tasks")
+      .then(setOpenTasks)
+      .catch(() => {});
+  }, [api, seesTasks]);
 
   const list = appts.data ?? [];
   const counts = {
@@ -59,6 +68,15 @@ export default function TodayPage() {
           </Button>
         ) : null}
       </div>
+
+      {openTasks.length ? (
+        <Link
+          href="/tasks"
+          className={`block rounded-xl px-3 py-2 text-sm font-medium ${openTasks.some((x) => x.priority === "critical") ? "bg-red-600 text-white" : "bg-amber-100 text-amber-900"}`}
+        >
+          {t("today.tasksWaiting", { count: openTasks.length })} ›
+        </Link>
+      ) : null}
 
       {appts.cachedAt ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">

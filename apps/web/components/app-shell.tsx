@@ -11,6 +11,7 @@ import { Button, Spinner } from "./ui";
 const NAV = [
   { href: "/today", key: "today", icon: "◉" },
   { href: "/calendar", key: "calendar", icon: "▦" },
+  { href: "/inbox", key: "inbox", icon: "✉" },
   { href: "/patients", key: "patients", icon: "☺" },
   { href: "/more", key: "more", icon: "☰" },
 ] as const;
@@ -98,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SyncBanner />
         <main className="flex-1 pb-20 md:pb-6">{children}</main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
         {NAV.map((item) => {
           const active = pathname.startsWith(item.href);
           return (

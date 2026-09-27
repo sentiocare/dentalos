@@ -2,7 +2,7 @@
 
 The full design and its reasoning are in [PLAN.md](PLAN.md). This page describes **what exists in the code today** and how the pieces fit. It is updated at the end of every phase.
 
-## Current state: Phase 1 (foundation)
+## Current state: Phase 2 (WhatsApp)
 
 ```
 apps/
@@ -15,17 +15,37 @@ apps/
               /v1/appointments, /v1/slots         booking, move/resize, status, cancel, free-slot search
               /v1/imports/…                       Excel/CSV import: preview, then commit
               /v1/audit                           activity log
+              /webhooks/whatsapp                  Meta webhook: signature check, store, hand to the worker
+              /v1/inbox, /v1/tasks                WhatsApp chats, take over / hand back, staff replies, tasks
+              /v1/whatsapp                        connect a clinic's number, template approval status
               src/admin/                          Sentio admin commands (create a clinic, demo data)
-  worker/     Graphile Worker jobs: heartbeat (1 min), release expired holds (1 min),
-              keep emergency reserves 14 days ahead (hourly)
-  web/        Next.js staff dashboard (installable on Android): Today, Calendar, Patients, Import,
-              Settings, Activity; English/Hindi; offline cache and outbox; Playwright tests in e2e/
+  worker/     Graphile Worker jobs: heartbeat, release expired holds, emergency reserves,
+              process_inbound (run the assistant on a message), send_outbox (+ a sweeper),
+              plan_messages (booking confirmations, reminders, cancellations, unconfirmed tasks)
+  web/        Next.js staff dashboard (installable on Android): Today, Calendar, WhatsApp inbox, Tasks,
+              Patients, Import, Settings (incl. WhatsApp), Activity; English/Hindi; offline cache and outbox
 packages/
-  shared/     Money in paise, Indian phone numbers, UUIDv7, PII scrubbing, redacting logger, env loader
-  adapters/   Interfaces for all 7 external providers, a fake for each, contract test suites
+  shared/     Money in paise, Indian phone numbers, UUIDv7, PII scrubbing, redacting logger, env loader,
+              encryption of provider credentials
+  adapters/   Interfaces for all 7 external providers, a fake for each, contract test suites;
+              real adapters so far: WhatsApp Cloud API, Anthropic (LLM)
   db/         SQL migrations, migration runner, clinic-scoped transactions, test helpers
-  core/       Domain logic: scheduling engine and service, patients, imports, permissions, clinic creation
+  core/       Domain logic: scheduling engine and service, patients, imports, permissions, clinic creation,
+              comms (contact policy, outbox, templates, reminders, conversations)
+  agent/      The WhatsApp assistant: language and date understanding, intent detection, emergency
+              detector, output safety filter, fixed reply texts (English, Hindi, Hinglish), test harness
 ```
+
+## How a WhatsApp message flows
+
+1. **In.** Meta calls `/webhooks/whatsapp`. The API checks the signature, finds the clinic from the phone number ID, ignores repeats (`webhook_events`), stores the message and queues `process_inbound`. It answers Meta within milliseconds.
+2. **Understand.** The worker runs the assistant for that one chat (chats are processed one message at a time). Emergencies are checked first, by keyword rules that need no AI. Then the message is understood: buttons and simple phrases by rules, free text by the LLM, which only returns a structured guess (intent, date, time, name). Every guess is checked against the clinic's real data.
+3. **Act.** The assistant uses the same scheduling engine as the dashboard: slots are held for a few minutes while the patient chooses, and the booking is saved with the same double-booking protection.
+4. **Reply.** Replies are chosen from fixed, reviewed texts, never written by the AI. They go through the safety filter and into the **outbox** in the same database transaction as the booking, so a reply is never sent for a booking that didn't save.
+5. **Send.** `send_outbox` sends each message once (atomic claim, dedupe key) and checks the rules again at send time: opt-outs, quiet hours, the 24-hour window and template approval. Failures retry with backoff. Everything sent or blocked is recorded in the chat.
+6. **People.** Staff see every chat in the inbox. Replying or tapping **Take over** silences the assistant for that chat until they hand it back. Anything the assistant can't or mustn't handle becomes a **task** (call back, emergency, complaint, unconfirmed booking).
+
+Reminders work the same way: any booking change queues `plan_messages`, which decides what each appointment needs (confirmation, day-before and same-day reminders, cancellation notice) and queues it with a key that includes the appointment time. If the appointment moves or is cancelled before sending, the old message is dropped at send time.
 
 ## How a booking stays correct
 
@@ -50,9 +70,11 @@ packages/
 
 ## Tests
 
-| Suite           | What it proves                                                                                                                                                                                     |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/db`   | Double booking is impossible, including 50 rounds of 20 simultaneous bookings; isolation across all 18 tenant tables; audit trail; append-only tables                                              |
-| `packages/core` | Availability rules (shifts, visiting days, buffers, leave, holidays, equipment, dates around month and year ends); holds and races; staff overrides; 5,000-patient import with duplicate detection |
-| `apps/api`      | Sign-in, roles and permissions, cross-clinic isolation over HTTP, 20 simultaneous HTTP bookings giving one success, validation                                                                     |
-| `apps/web/e2e`  | At 360px on a touch phone: book, drag to move, drag to resize, cancel; offline change queued then synced; app opens offline; Hindi                                                                 |
+| Suite                 | What it proves                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/db`         | Double booking is impossible, including 50 rounds of 20 simultaneous bookings; isolation across all 26 tenant tables; audit trail; append-only tables                                                                                                                                                                                                                                                                                                                                                                                     |
+| `packages/core`       | Availability rules (shifts, visiting days, buffers, leave, holidays, equipment, dates around month and year ends); holds and races; staff overrides; 5,000-patient import with duplicate detection                                                                                                                                                                                                                                                                                                                                        |
+| `apps/api`            | Sign-in, roles and permissions, cross-clinic isolation over HTTP, 20 simultaneous HTTP bookings giving one success, validation                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `packages/agent`      | Whole chats with a simulated patient: consent; a new patient books end to end (three held times, read-back, explicit yes); confirm, reschedule and cancel; never confirms a booking the database did not save; staff takeover; STOP/START; duplicate webhooks answered once; emergencies (fixed script, 112 advice, critical task, doctor alert, even before consent); prices only from the clinic's list; honest "are you a robot?"; replies in the patient's language; voice notes; the safety filter; Hindi/Hinglish dates and intents |
+| `apps/api` (WhatsApp) | Webhook signature and verification, duplicate webhooks ignored, inbox, take over / hand back, 24-hour window enforced on staff replies, tasks, WhatsApp connection and templates                                                                                                                                                                                                                                                                                                                                                          |
+| `apps/web/e2e`        | At 360px on a touch phone: book, drag to move, drag to resize, cancel; offline change queued then synced; app opens offline; Hindi; take over a WhatsApp chat, reply, hand back, close a task                                                                                                                                                                                                                                                                                                                                             |

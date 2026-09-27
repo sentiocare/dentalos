@@ -3,13 +3,24 @@ export interface JobQueue {
   add(
     task: string,
     payload: Record<string, unknown>,
-    options?: { jobKey?: string; runAt?: Date },
+    /** queueName: jobs sharing a queue run one at a time, in order (e.g. one patient's messages). */
+    options?: { jobKey?: string; runAt?: Date; queueName?: string },
   ): Promise<void>;
 }
 
 export class MemoryJobQueue implements JobQueue {
-  readonly jobs: { task: string; payload: Record<string, unknown>; jobKey?: string; runAt?: Date }[] = [];
-  async add(task: string, payload: Record<string, unknown>, options: { jobKey?: string; runAt?: Date } = {}) {
+  readonly jobs: {
+    task: string;
+    payload: Record<string, unknown>;
+    jobKey?: string;
+    runAt?: Date;
+    queueName?: string;
+  }[] = [];
+  async add(
+    task: string,
+    payload: Record<string, unknown>,
+    options: { jobKey?: string; runAt?: Date; queueName?: string } = {},
+  ) {
     if (options.jobKey) {
       const i = this.jobs.findIndex((j) => j.jobKey === options.jobKey);
       if (i >= 0) this.jobs.splice(i, 1);

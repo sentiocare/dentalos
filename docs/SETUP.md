@@ -103,7 +103,10 @@ Staff sign in with their mobile number and an SMS code.
    AUTH_JWKS_URL=https://abcdefghijkl.supabase.co/auth/v1/.well-known/jwks.json
    WEB_ORIGINS=https://YOUR-WEB-DOMAIN
    SENTRY_DSN=
+   CHANNEL_SECRET_KEY=PASTE-A-RANDOM-KEY
    ```
+
+   - `CHANNEL_SECRET_KEY` locks the clinics' WhatsApp access tokens in the database. Make one on any computer with `openssl rand -base64 32` (or ask engineering), paste it here, and **keep a copy in your password manager**. If it is lost, every clinic has to reconnect WhatsApp. Use a different key for production.
 
    - Use your own values from Part B steps 8 and 10.
    - You will know `YOUR-WEB-DOMAIN` after step C4. Come back then and fill it in, for example `WEB_ORIGINS=https://web-staging-xxxx.up.railway.app`.
@@ -127,6 +130,7 @@ Staff sign in with their mobile number and an SMS code.
    APP_ENV=staging
    LOG_LEVEL=info
    DATABASE_URL=(the same value as the api)
+   CHANNEL_SECRET_KEY=(the same value as the api)
    ```
 
 5. Do **not** generate a domain. The worker does not receive visitors.
@@ -224,6 +228,51 @@ New clinics are created by Sentio, not by the clinics themselves. You need the R
    This creates "Sharma Dental Clinic (Demo)" with about 80 patients and this week's appointments. The owner logs in with `90000 00001` and the receptionist with `90000 00002`. Use code `123456` if you added the test numbers in Part B2 step 3.
 
 5. Type `exit` to leave. The owner can now open the dashboard, sign in with their number, and add staff under **More → Clinic settings → Staff**.
+
+---
+
+## Part D3: Connect WhatsApp (Phase 2)
+
+Until this part is done, the system uses a pretend WhatsApp: nothing reaches real phones.
+
+### One time, for Sentio (about 1 hour, plus Meta's review time)
+
+1. Open [business.facebook.com](https://business.facebook.com) and create a **Meta Business account** for Sentio Care. Complete **business verification** (GST certificate or company documents). Meta takes 1–3 days.
+2. Open [developers.facebook.com](https://developers.facebook.com) → **My Apps** → **Create app** → type **Business** → add the **WhatsApp** product.
+3. In the app, go to **App settings → Basic** and copy the **App secret**.
+4. Make up a long random **verify token**, for example the output of `openssl rand -hex 24`.
+5. In Railway, add these variables to **both** `api` and `worker`, then redeploy:
+
+   ```
+   MESSAGING_PROVIDER=whatsapp_cloud
+   WHATSAPP_APP_SECRET=(the app secret from step 3)
+   WHATSAPP_VERIFY_TOKEN=(the token from step 4)
+   LLM_PROVIDER=anthropic
+   ANTHROPIC_API_KEY=(from console.anthropic.com → API keys)
+   ```
+
+   - `LLM_PROVIDER=anthropic` lets the assistant understand free-form messages such as "kal shaam ko aa sakta hoon?". Without it, the assistant still works through buttons and simple keywords.
+   - In the Anthropic console, make sure your data is not used for training. Names and phone numbers are removed before any text is sent (COMPLIANCE decision 2).
+
+6. In the Meta app, go to **WhatsApp → Configuration → Webhook → Edit**:
+   - **Callback URL:** `https://YOUR-API-DOMAIN/webhooks/whatsapp`
+   - **Verify token:** the token from step 4
+   - Click **Verify and save**, then **Subscribe** to the `messages` field.
+
+### For each clinic
+
+1. In Meta Business Manager, add the clinic's WhatsApp number (**WhatsApp Manager → Phone numbers → Add**). The number must not be in use on the normal WhatsApp app; many clinics buy a new SIM for this.
+2. Create a **system user** (Business settings → Users → System users), give it the WhatsApp permissions, and **generate a permanent access token** for the app.
+3. The clinic owner opens the dashboard → **More → Clinic settings → WhatsApp** and enters:
+   - the **Phone number ID** (WhatsApp Manager → the number; it is a long ID, not the phone number itself),
+   - the WhatsApp number, and
+   - the access token. It is stored encrypted and can't be read back from the dashboard.
+4. After connecting, the same screen lists **14 message templates** (7 messages in English and Hindi). Create each one in **WhatsApp Manager → Message templates** with the same name, language and text. When Meta approves one, set its status to **Approved** in the dashboard.
+   - Until a template is approved, its message is only sent while the patient's 24-hour chat window is open. Otherwise it is held back and shows as "Not sent" in the chat.
+
+### Check it works
+
+Send "Hi" from your own phone to the clinic's number. Within a few seconds you should get the welcome message with the privacy notice, and the chat appears in the dashboard under **WhatsApp**.
 
 ---
 

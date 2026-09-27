@@ -47,7 +47,9 @@
     "activity": "गतिविधि लॉग",
     "signOut": "साइन आउट",
     "language": "भाषा",
-    "switchClinic": "क्लिनिक बदलें"
+    "switchClinic": "क्लिनिक बदलें",
+    "inbox": "WhatsApp",
+    "tasks": "काम"
   },
   "login": {
     "title": "साइन इन",
@@ -90,7 +92,8 @@
     "upcoming": "आने वाले",
     "inClinic": "क्लिनिक में",
     "finished": "हो गए",
-    "missed": "रद्द / नहीं आए"
+    "missed": "रद्द / नहीं आए",
+    "tasksWaiting": "{count} काम बाकी हैं"
   },
   "calendar": {
     "title": "कैलेंडर",
@@ -322,6 +325,66 @@
       "emergency_slots": "इमरजेंसी समय",
       "doctor_visiting_schedules": "विज़िटिंग समय",
       "branches": "ब्रांच"
+    }
+  },
+  "inbox": {
+    "title": "WhatsApp",
+    "empty": "अभी कोई बातचीत नहीं।",
+    "filters": {
+      "all": "सभी",
+      "unread": "बिना पढ़े",
+      "human": "स्टाफ़ देख रहा है",
+      "tasks": "कार्रवाई ज़रूरी"
+    },
+    "assistant": "असिस्टेंट जवाब दे रही है",
+    "staff": "स्टाफ़ देख रहा है",
+    "takeOver": "खुद संभालें",
+    "release": "असिस्टेंट को वापस दें",
+    "reply": "जवाब लिखें…",
+    "send": "भेजें",
+    "windowClosed": "मरीज़ ने 24 घंटे से ज़्यादा पहले लिखा था। अब WhatsApp सिर्फ़ मंज़ूर टेम्पलेट भेजने देता है; कृपया कॉल करें।",
+    "takenOverNote": "यह चैट आप देख रहे हैं। जब तक आप वापस नहीं देंगे, असिस्टेंट जवाब नहीं देगी।",
+    "blocked": "नहीं भेजा गया",
+    "failed": "नहीं गया",
+    "emergency": "इमरजेंसी",
+    "you": "स्टाफ़",
+    "bot": "असिस्टेंट",
+    "system": "अपने आप",
+    "voiceNote": "वॉइस नोट",
+    "transcript": "लिखित रूप"
+  },
+  "tasks": {
+    "title": "काम",
+    "empty": "अभी कुछ बाकी नहीं।",
+    "done": "हो गया",
+    "openChat": "चैट खोलें",
+    "call": "कॉल करें",
+    "kinds": {
+      "callback": "वापस कॉल",
+      "followup": "फ़ॉलो-अप",
+      "escalation": "आगे बढ़ाएँ",
+      "emergency": "इमरजेंसी",
+      "complaint": "शिकायत",
+      "unconfirmed": "पक्का नहीं",
+      "data_request": "डेटा अनुरोध"
+    }
+  },
+  "whatsapp": {
+    "title": "WhatsApp",
+    "connected": "जुड़ा है: {phone}",
+    "notConnected": "जुड़ा नहीं है",
+    "phoneNumberId": "फ़ोन नंबर ID (Meta से)",
+    "displayPhone": "WhatsApp नंबर",
+    "accessToken": "एक्सेस टोकन",
+    "connect": "जोड़ें",
+    "templates": "मैसेज टेम्पलेट",
+    "templatesHelp": "इन्हें Meta Business Manager में भेजें, फिर यहाँ हर एक को मंज़ूर मार्क करें। 24 घंटे के बाहर रिमाइंडर के लिए मंज़ूर टेम्पलेट ज़रूरी हैं।",
+    "statuses": {
+      "draft": "ड्राफ़्ट",
+      "submitted": "भेजा गया",
+      "approved": "मंज़ूर",
+      "rejected": "नामंज़ूर",
+      "paused": "रुका हुआ"
     }
   }
 }

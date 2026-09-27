@@ -345,6 +345,7 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
       }
     }
   }
+  await withClinic(pool, ctx, (c) => seedDemoChats(c, now));
   console.log(`Demo clinic ready: ${patients.length} patients, ${booked} appointments.`);
   return clinicId;
 }
@@ -371,3 +372,59 @@ if (process.argv[1]?.endsWith("seed-demo.ts")) {
 }
 
 export type { PoolClient };
+
+/** Two WhatsApp chats so the inbox is not empty: a booking in progress, and a patient asking for a call. */
+async function seedDemoChats(c: PoolClient, now: Date) {
+  const { rows } = await c.query(
+    "select id, name, phone from patients where phone is not null order by created_at limit 2",
+  );
+  const at = (minutesAgo: number) => new Date(now.getTime() - minutesAgo * 60_000);
+  const chats = [
+    {
+      patient: rows[0],
+      messages: [
+        ["in", "patient", "Hi, kal dant mein dard hai, appointment chahiye", 42],
+        ["out", "bot", "Namaste! Kal ke liye yeh time khaali hain. Kaunsa theek rahega?", 41],
+        ["in", "patient", "Kitna kharcha hoga RCT ka?", 5],
+      ],
+      task: null,
+    },
+    {
+      patient: rows[1],
+      messages: [
+        ["in", "patient", "Please call me back about my bill", 20],
+        ["out", "bot", "Sure, someone from the clinic will call you soon.", 19],
+      ],
+      task: { kind: "callback", priority: "high", title: "Patient asked for a call back about a bill" },
+    },
+  ];
+  for (const chat of chats) {
+    if (!chat.patient) continue;
+    const last = chat.messages[chat.messages.length - 1]!;
+    const lastIn = [...chat.messages].reverse().find((m) => m[0] === "in")!;
+    const conv = await c.query(
+      `insert into conversations (clinic_id, channel, phone, patient_id, last_inbound_at, last_message_at, last_preview, unread_count)
+       values (app.current_clinic_id(), 'whatsapp', $1, $2, $3, $4, $5, 1) returning id`,
+      [chat.patient.phone, chat.patient.id, at(lastIn[3] as number), at(last[3] as number), last[2]],
+    );
+    for (const [direction, author, body, minutesAgo] of chat.messages)
+      await c.query(
+        `insert into messages (clinic_id, conversation_id, direction, author, kind, body, status, created_at)
+         values (app.current_clinic_id(), $1, $2, $3, 'text', $4, $5, $6)`,
+        [
+          conv.rows[0].id,
+          direction,
+          author,
+          body,
+          direction === "in" ? "received" : "read",
+          at(minutesAgo as number),
+        ],
+      );
+    if (chat.task)
+      await c.query(
+        `insert into tasks (clinic_id, kind, priority, title, patient_id, conversation_id, created_by)
+         values (app.current_clinic_id(), $1, $2, $3, $4, $5, 'assistant')`,
+        [chat.task.kind, chat.task.priority, chat.task.title, chat.patient.id, conv.rows[0].id],
+      );
+  }
+}

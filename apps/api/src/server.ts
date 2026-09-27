@@ -21,9 +21,13 @@ const jobs = {
   add: async (
     task: string,
     payload: Record<string, unknown>,
-    options: { jobKey?: string; runAt?: Date } = {},
+    options: { jobKey?: string; runAt?: Date; queueName?: string } = {},
   ) => {
-    await workerUtils.addJob(task, payload, { jobKey: options.jobKey, runAt: options.runAt });
+    await workerUtils.addJob(task, payload, {
+      jobKey: options.jobKey,
+      runAt: options.runAt,
+      queueName: options.queueName,
+    });
   },
 };
 

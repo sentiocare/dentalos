@@ -12,6 +12,7 @@ import { appointmentRoutes } from "./routes/appointments";
 import { auditRoutes } from "./routes/audit";
 import { healthRoutes } from "./routes/health";
 import { importRoutes } from "./routes/imports";
+import { inboxRoutes } from "./routes/inbox";
 import { meRoutes } from "./routes/me";
 import { patientRoutes } from "./routes/patients";
 import { settingsRoutes } from "./routes/settings";
@@ -80,6 +81,7 @@ export function buildApp(deps: AppDeps) {
     appointmentRoutes(api, { staff, jobs: deps.jobs });
     importRoutes(api, { staff });
     auditRoutes(api, { staff });
+    inboxRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
   });
   return app;
 }
