@@ -30,15 +30,33 @@ export interface ExotelConfig {
   fetchImpl?: typeof fetch;
 }
 
+/** The fields we read from Exotel's stream messages. */
+interface ExotelMessage {
+  event?: string;
+  stream_sid?: string;
+  start?: {
+    stream_sid?: string;
+    call_sid?: string;
+    from?: string;
+    to?: string;
+    custom_parameters?: Record<string, string>;
+    media_format?: { sample_rate?: string | number };
+  };
+  media?: { payload?: string };
+  dtmf?: { digit?: string };
+  mark?: { name?: string };
+  stop?: { reason?: string };
+}
+
 /** Exotel wants media chunks in multiples of 320 bytes; 3,200 bytes = 200 ms at 8 kHz. */
 const CHUNK_BYTES = 3200;
 
 export const exotelStreamCodec: MediaStreamCodec = {
   sampleRate: 8000,
   parse(message: string): StreamEvent {
-    let m: Record<string, any>;
+    let m: ExotelMessage;
     try {
-      m = JSON.parse(message);
+      m = JSON.parse(message) as ExotelMessage;
     } catch {
       return { type: "unknown" };
     }
