@@ -293,6 +293,14 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       "slot_holds",
       "resource_occupancy",
       "audit_log",
+      "clinic_channels",
+      "conversations",
+      "messages",
+      "outbox",
+      "message_templates",
+      "consents",
+      "opt_outs",
+      "tasks",
     ];
 
     beforeAll(async () => {
@@ -337,6 +345,38 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       );
       await withClinic(db.pool, { clinicId: b.clinicId, actor: "system" }, (c) =>
         c.query("update patients set notes = 'x' where clinic_id = $1", [b.clinicId]),
+      );
+      await q(
+        "insert into clinic_channels (clinic_id, kind, external_id, display_phone) values ($1,'whatsapp','pnid-b','+916512000000')",
+        [b.clinicId],
+      );
+      const conv = await q(
+        "insert into conversations (clinic_id, channel, phone) values ($1,'whatsapp','+919876543210') returning id",
+        [b.clinicId],
+      );
+      await q(
+        "insert into messages (clinic_id, conversation_id, direction, author, kind, body, status) values ($1,$2,'in','patient','text','hi','received')",
+        [b.clinicId, conv.rows[0].id],
+      );
+      await q(
+        "insert into outbox (clinic_id, channel, to_phone, category, purpose, payload, dedupe_key) values ($1,'whatsapp','+919876543210','service','test','{}','k1')",
+        [b.clinicId],
+      );
+      await q(
+        "insert into message_templates (clinic_id, purpose, name, language, category, body) values ($1,'x','x','en','utility','x')",
+        [b.clinicId],
+      );
+      await q(
+        "insert into consents (clinic_id, phone, purpose, channel, granted, notice_version, captured_via) values ($1,'+919876543210','reminders','whatsapp',true,'v1','test')",
+        [b.clinicId],
+      );
+      await q(
+        "insert into opt_outs (clinic_id, phone, channel, category, source) values ($1,'+919876543210','all','promotional','test')",
+        [b.clinicId],
+      );
+      await q(
+        "insert into tasks (clinic_id, kind, title, created_by) values ($1,'callback','Call back','bot')",
+        [b.clinicId],
       );
     });
 
