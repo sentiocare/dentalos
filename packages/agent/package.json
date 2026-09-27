@@ -9,7 +9,8 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval:voice": "vitest run src/voice/eval"
   },
   "dependencies": {
     "@dentalos/adapters": "workspace:*",

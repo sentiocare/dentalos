@@ -50,11 +50,11 @@ const INTENT_RULES: [Intent, RegExp][] = [
   ["start", /^\s*(start|resume|shuru|शुरू)\s*[.!]*\s*$/i],
   [
     "bot_question",
-    /\b(are you|r u|kya (aap|tum))\s+(a\s+)?(bot|robot|human|real|machine|insaan|asli)|\b(bot|robot|machine)\s+(ho|hai)\b|(रोबोट|मशीन)\s*(हो|है)/i,
+    /\b(are you|r u|kya (aap|tum))\s+(a\s+)?(bot|robot|human|real|machine|insaan|asli)|\b(machine|robot|bot|computer)\s+se\s+baat|\b(am i|kya main)\s+.*\b(machine|robot|bot|computer|insaan|human)\b|\b(bot|robot|machine)\s+(ho|hai)\b|(रोबोट|मशीन)\s*(हो|है)/i,
   ],
   [
     "human",
-    /\b(human|real person|staff|receptionist|reception|manager|insaan|kisi se baat|baat karni|baat karna|call (me|karo|kijiye|back)|phone (karo|kijiye)|callback|doctor se baat)\b|(किसी से बात|बात करनी|कॉल करें|फ़ोन करें)/i,
+    /\b(baat karao|baat karwao|baat karwa do|baat kara do|baat karvao|connect karo|connect kar do|connect kijiye)\b|\b(speak|talk)\s+(to|with)\s+(someone|somebody|a person|anyone|the staff|staff|the doctor|a doctor)|\b(human|real person|staff|receptionist|reception|manager|insaan|kisi se baat|baat karni|baat karna|call (me|karo|kijiye|back)|phone (karo|kijiye)|callback|doctor se baat)\b|(किसी से बात|बात करनी|कॉल करें|फ़ोन करें)/i,
   ],
   [
     // Questions about medicines or home treatment: never answered, always sent to the doctor.
@@ -75,7 +75,7 @@ const INTENT_RULES: [Intent, RegExp][] = [
   ],
   [
     "price",
-    /\b(price|cost|charges?|fees?|rate|kitna|kitne ka|kitne ki|kharcha|kharch|paisa|paise|rupees?|₹|emi)\b|(कितना|कितने का|खर्च|फीस|कीमत)/i,
+    /\b(how much|price|cost|charges?|fees?|rate|kitna|kitne ka|kitne ki|kharcha|kharch|paisa|paise|rupees?|₹|emi)\b|(कितना|कितने का|खर्च|फीस|कीमत)/i,
   ],
   [
     "timings",
@@ -83,11 +83,11 @@ const INTENT_RULES: [Intent, RegExp][] = [
   ],
   [
     "location",
-    /\b(address|location|where|kaha|kahan|direction|directions|map|rasta|raasta|parking|kidhar)\b|(पता|कहाँ|कहां|रास्ता|पार्किंग)/i,
+    /\b(kis jagah|kaunsi jagah|kaun si jagah|jagah (pe|par)|address|location|where|kaha|kahan|direction|directions|map|rasta|raasta|parking|kidhar)\b|(पता|कहाँ|कहां|रास्ता|पार्किंग)/i,
   ],
   [
     "doctors",
-    /\b(which doctor|kaun (se|sa) doctor|doctor( sahab| saheb| sir| madam)?( aaj| kal| abhi)?\s*(hai|hain|aaye|aaenge|available|milenge)|orthodontist|braces wale|specialist|doctor aaj)\b|(डॉक्टर (साहब )?(हैं|आए|मिलेंगे))/i,
+    /\b(which doctors?|doctors? (do you have|are there|available)|kaun (se|sa) doctor|doctor( sahab| saheb| sir| madam)?( aaj| kal| abhi)?\s*(hai|hain|aaye|aaenge|available|milenge)|orthodontist|braces wale|specialist|doctor aaj)\b|(डॉक्टर (साहब )?(हैं|आए|मिलेंगे))/i,
   ],
   [
     "book",
@@ -100,7 +100,7 @@ const INTENT_RULES: [Intent, RegExp][] = [
   ["thanks", /\b(thanks|thank you|thx|shukriya|dhanyavad|dhanyawad|धन्यवाद|शुक्रिया)\b/i],
   [
     "yes",
-    /^\s*(ji\s+)?(yes|y|yeah|yep|ok|okay|haan|han|haa|ha|ji|theek|thik|sahi|confirm|pakka|done|bilkul|sure|zaroor|jarur|correct|right|हाँ|हां|जी|ठीक)(\s+(ji|haan|han|hai|he|h|kar do|kardo|karo|karein|kijiye|please|theek|sahi|bilkul|thik|that's right|go ahead|जी|हाँ|है))*\s*[.!]*\s*$/i,
+    /^\s*(ji\s+)?(yes|y|yeah|yep|ok|okay|haan|han|haa|ha|ji|theek|thik|sahi|confirm|pakka|done|bilkul|sure|zaroor|jarur|correct|right|हाँ|हां|जी|ठीक)(\s+(ji|haan|han|hai|he|h|kar do|kardo|karo|karein|kijiye|please|theek|sahi|bilkul|thik|that's right|go ahead|bolo|boliye|batao|bataiye|जी|हाँ|है|बोलिए|बताइए))*\s*[.!]*\s*$/i,
   ],
   [
     "no",

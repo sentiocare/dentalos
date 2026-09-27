@@ -12,3 +12,4 @@ evals/reports/
 next-env.d.ts
 apps/web/test-results/
 apps/web/playwright-report/
+eval-results/

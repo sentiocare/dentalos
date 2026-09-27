@@ -16,7 +16,8 @@
     "db:migrate": "pnpm --filter @dentalos/db migrate",
     "dev:db": "bash scripts/dev-db.sh",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
-    "e2e": "bash scripts/e2e.sh"
+    "e2e": "bash scripts/e2e.sh",
+    "eval:voice": "pnpm --filter @dentalos/agent eval:voice"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

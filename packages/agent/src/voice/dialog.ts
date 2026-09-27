@@ -954,9 +954,9 @@ export class VoiceDialog {
 
   private async slotAnswer(text: string, u: Understanding) {
     const options = this.s.options ?? [];
-    // A single offer is a yes/no question.
-    if (options.length === 1 && (u.intent === "yes" || u.choice === 1))
-      return this.chooseSlot(options[0]!.holdId);
+    // "Haan" / "theek hai" to "A or B?" takes the first; the read-back that follows still asks for a clear yes.
+    if ((u.intent === "yes" || (options.length === 1 && u.choice === 1)) && options[0])
+      return this.chooseSlot(options[0].holdId);
     if (u.choice && options[u.choice - 1]) return this.chooseSlot(options[u.choice - 1]!.holdId);
     const minutes = parseClockPreference(text);
     if (minutes !== null) {
