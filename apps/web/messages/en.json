@@ -49,7 +49,8 @@
     "language": "Language",
     "switchClinic": "Switch clinic",
     "inbox": "WhatsApp",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "calls": "Phone calls"
   },
   "login": {
     "title": "Sign in",
@@ -386,5 +387,72 @@
       "rejected": "Rejected",
       "paused": "Paused"
     }
+  },
+  "calls": {
+    "title": "Phone calls",
+    "empty": "No calls yet.",
+    "filters": {
+      "all": "All",
+      "assistant": "Answered by assistant",
+      "forwarded": "Forwarded",
+      "emergency": "Emergencies",
+      "test": "Test calls"
+    },
+    "routes": {
+      "assistant": "Assistant",
+      "forwarded_hours": "Forwarded (clinic hours)",
+      "forwarded_disabled": "Forwarded (assistant off)",
+      "forwarded_unhealthy": "Forwarded (assistant unavailable)",
+      "forwarded_busy": "Forwarded"
+    },
+    "outcomes": {
+      "booked": "Booked",
+      "rescheduled": "Rescheduled",
+      "cancelled": "Cancelled",
+      "confirmed": "Confirmed",
+      "information": "Information",
+      "transferred": "Transferred to staff",
+      "transfer_failed": "Transfer not answered",
+      "callback": "Call back",
+      "emergency": "Emergency",
+      "caller_hung_up": "Caller hung up",
+      "no_input": "No answer from caller",
+      "forwarded": "Forwarded",
+      "error": "Error"
+    },
+    "unknownCaller": "Unknown caller",
+    "duration": "{sec} sec",
+    "transcript": "Transcript",
+    "caller": "Caller",
+    "assistant": "Assistant",
+    "system": "—",
+    "recording": "Recording",
+    "noRecording": "No recording yet.",
+    "summary": "Summary",
+    "latency": "Reply time: typical {p50} ms, slowest {max} ms",
+    "usage": "Speech: {stt} s heard, {tts} characters spoken",
+    "testCall": "Test call result",
+    "pass": "Pass",
+    "fail": "Fail",
+    "notes": "Notes (what went wrong?)",
+    "saveResult": "Save result",
+    "testProgress": "Test calls: {passed} passed, {failed} failed (target {target})",
+    "tasks": "Tasks from this call"
+  },
+  "voice": {
+    "title": "Phone assistant",
+    "enabled": "Answer calls with the assistant",
+    "answerMode": "When",
+    "modes": {
+      "all": "Every call that reaches the assistant",
+      "after_hours": "Only outside clinic hours"
+    },
+    "virtualNumber": "Assistant's phone number (from Exotel)",
+    "staffPhones": "Staff numbers for transfers (in order)",
+    "addPhone": "Add number",
+    "clinicPhoneNote": "If nobody answers, the clinic's own number ({phone}) is tried last.",
+    "healthy": "Assistant service: running",
+    "unhealthy": "Assistant service: not running (calls go to the clinic phone)",
+    "save": "Save"
   }
 }

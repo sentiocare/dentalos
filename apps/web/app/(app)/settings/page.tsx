@@ -28,6 +28,7 @@ function Section({ title, children, open }: { title: string; children: ReactNode
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const tw = useTranslations("whatsapp");
+  const tv = useTranslations("voice");
   const tc = useTranslations("common");
   const { api, can } = useSession();
   const toast = useToast();
@@ -86,6 +87,11 @@ export default function SettingsPage() {
       {manage ? (
         <Section title={tw("title")}>
           <WhatsApp />
+        </Section>
+      ) : null}
+      {manage ? (
+        <Section title={tv("title")}>
+          <VoiceSettings />
         </Section>
       ) : null}
       {can("staff.manage") ? (
@@ -1003,6 +1009,125 @@ function WhatsApp() {
           </ul>
         </div>
       ) : null}
+    </>
+  );
+}
+
+interface VoiceConfig {
+  enabled: boolean;
+  answerMode: "all" | "after_hours";
+  staffPhones: string[];
+  virtualNumber: string | null;
+  clinicPhone: string | null;
+  serviceHealthy: boolean;
+}
+
+function VoiceSettings() {
+  const t = useTranslations("voice");
+  const tc = useTranslations("common");
+  const { api } = useSession();
+  const toast = useToast();
+  const [v, setV] = useState<VoiceConfig | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void api<VoiceConfig>("/v1/voice")
+      .then((cfg) =>
+        setV({ ...cfg, virtualNumber: cfg.virtualNumber ? displayPhone(cfg.virtualNumber) : "" }),
+      )
+      .catch(() => {});
+  }, [api]);
+  if (!v) return <Spinner />;
+  return (
+    <>
+      <p className={v.serviceHealthy ? "text-sm text-emerald-700" : "text-sm text-amber-800"}>
+        {v.serviceHealthy ? t("healthy") : t("unhealthy")}
+      </p>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={v.enabled}
+          onChange={(e) => setV({ ...v, enabled: e.target.checked })}
+        />
+        {t("enabled")}
+      </label>
+      <Field label={t("answerMode")}>
+        {(id) => (
+          <Select
+            id={id}
+            value={v.answerMode}
+            onChange={(e) => setV({ ...v, answerMode: e.target.value as VoiceConfig["answerMode"] })}
+          >
+            <option value="all">{t("modes.all")}</option>
+            <option value="after_hours">{t("modes.after_hours")}</option>
+          </Select>
+        )}
+      </Field>
+      <Field label={t("virtualNumber")}>
+        {(id) => (
+          <Input
+            id={id}
+            type="tel"
+            value={v.virtualNumber ?? ""}
+            onChange={(e) => setV({ ...v, virtualNumber: e.target.value })}
+          />
+        )}
+      </Field>
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t("staffPhones")}</p>
+        {v.staffPhones.map((p, i) => (
+          <div key={i} className="flex gap-2">
+            <Input
+              type="tel"
+              aria-label={`${t("staffPhones")} ${i + 1}`}
+              value={p}
+              onChange={(e) =>
+                setV({ ...v, staffPhones: v.staffPhones.map((x, j) => (j === i ? e.target.value : x)) })
+              }
+            />
+            <Button
+              variant="secondary"
+              onClick={() => setV({ ...v, staffPhones: v.staffPhones.filter((_, j) => j !== i) })}
+            >
+              ✕
+            </Button>
+          </div>
+        ))}
+        {v.staffPhones.length < 5 ? (
+          <Button variant="secondary" onClick={() => setV({ ...v, staffPhones: [...v.staffPhones, ""] })}>
+            + {t("addPhone")}
+          </Button>
+        ) : null}
+        {v.clinicPhone ? (
+          <p className="text-xs text-slate-500">
+            {t("clinicPhoneNote", { phone: displayPhone(v.clinicPhone) })}
+          </p>
+        ) : null}
+      </div>
+      <Button
+        busy={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await api("/v1/voice", {
+              method: "PUT",
+              body: {
+                enabled: v.enabled,
+                answerMode: v.answerMode,
+                staffPhones: v.staffPhones.map((p) => p.trim()).filter(Boolean),
+                virtualNumber: v.virtualNumber?.trim() || null,
+              },
+            });
+            toast(tc("saved"));
+          } catch (e) {
+            toast(e instanceof ApiError ? e.message : tc("error"), "error");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {t("save")}
+      </Button>
     </>
   );
 }

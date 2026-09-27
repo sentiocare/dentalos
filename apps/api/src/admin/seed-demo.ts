@@ -346,6 +346,7 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
     }
   }
   await withClinic(pool, ctx, (c) => seedDemoChats(c, now));
+  await withClinic(pool, ctx, (c) => seedDemoCalls(c, now));
   console.log(`Demo clinic ready: ${patients.length} patients, ${booked} appointments.`);
   return clinicId;
 }
@@ -425,6 +426,97 @@ async function seedDemoChats(c: PoolClient, now: Date) {
         `insert into tasks (clinic_id, kind, priority, title, patient_id, conversation_id, created_by)
          values (app.current_clinic_id(), $1, $2, $3, $4, $5, 'assistant')`,
         [chat.task.kind, chat.task.priority, chat.task.title, chat.patient.id, conv.rows[0].id],
+      );
+  }
+}
+
+/** Two phone calls handled by the assistant, so the Calls screen has something to show. */
+async function seedDemoCalls(c: PoolClient, now: Date) {
+  await c.query(
+    "insert into clinic_channels (clinic_id, kind, external_id, display_phone) values (app.current_clinic_id(), 'voice', '+918047100000', '+918047100000') on conflict do nothing",
+  );
+  const { rows } = await c.query(
+    "select id, name, phone from patients where phone is not null order by created_at offset 2 limit 2",
+  );
+  const at = (minutesAgo: number) => new Date(now.getTime() - minutesAgo * 60_000);
+  const calls = [
+    {
+      patient: rows[0],
+      outcome: "booked",
+      summary: `Booked ${rows[0]?.name} for tomorrow at 5 PM (Consultation)`,
+      minutesAgo: 90,
+      duration: 96,
+      turns: [
+        [
+          "assistant",
+          "नमस्ते, Demo Dental में फ़ोन करने के लिए धन्यवाद। मैं क्लिनिक की डिजिटल असिस्टेंट हूँ। बताइए, मैं आपकी क्या मदद कर सकती हूँ?",
+          null,
+        ],
+        ["caller", "मुझे कल शाम को चेकअप के लिए आना है", null],
+        ["assistant", "परामर्श के लिए कल शाम 5 बजे या कल शाम साढ़े 6 बजे खाली है। कौन-सा ठीक रहेगा?", 820],
+        ["caller", "पहला वाला", null],
+        ["assistant", "तो कल शाम 5 बजे, Dr. Rakesh Sharma के साथ। बुक कर दूँ?", 640],
+        ["caller", "हाँ", null],
+        [
+          "assistant",
+          "हो गया! Appointment कल शाम 5 बजे के लिए बुक हो गया है। आपको WhatsApp पर confirmation मिल जाएगा।",
+          910,
+        ],
+      ],
+    },
+    {
+      patient: rows[1],
+      outcome: "emergency",
+      summary: "Emergency transfer: urgent: facial_swelling",
+      minutesAgo: 30,
+      duration: 41,
+      turns: [
+        [
+          "assistant",
+          "नमस्ते, Demo Dental में फ़ोन करने के लिए धन्यवाद। बताइए, मैं आपकी क्या मदद कर सकती हूँ?",
+          null,
+        ],
+        ["caller", "gaal mein bahut sujan aa gayi hai", null],
+        [
+          "assistant",
+          "इसमें जल्दी ध्यान देना ज़रूरी है। मैं आपको तुरंत डॉक्टर से जोड़ रही हूँ। कृपया लाइन पर बने रहिए।",
+          700,
+        ],
+      ],
+    },
+  ];
+  for (const [i, call] of calls.entries()) {
+    if (!call.patient) continue;
+    const { rows: made } = await c.query(
+      `insert into calls (clinic_id, provider, provider_call_id, from_phone, to_phone, patient_id, route, status, outcome,
+                          language, summary, started_at, answered_at, ended_at, duration_sec, latency, usage,
+                          transfer_kind)
+       values (app.current_clinic_id(), 'fake-telephony', $1, $2, '+918047100000', $3, 'assistant', 'ended', $4,
+               'hi-IN', $5, $6, $6, $7, $8, '{"p50": 820, "p95": 910, "max": 910, "turns": 3}', '{"stt_ms": 9000, "tts_chars": 420}', $9)
+       returning id`,
+      [
+        `demo-call-${i}-${now.getTime()}`,
+        call.patient.phone,
+        call.patient.id,
+        call.outcome,
+        call.summary,
+        at(call.minutesAgo),
+        at(call.minutesAgo - 2),
+        call.duration,
+        call.outcome === "emergency" ? "emergency" : null,
+      ],
+    );
+    for (const [seq, [speaker, text, latency]] of call.turns.entries())
+      await c.query(
+        "insert into call_turns (clinic_id, call_id, seq, speaker, text, latency_ms, flags) values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6)",
+        [
+          made[0].id,
+          seq + 1,
+          speaker,
+          text,
+          latency,
+          call.outcome === "emergency" && speaker === "assistant" && seq > 0 ? ["emergency"] : [],
+        ],
       );
   }
 }

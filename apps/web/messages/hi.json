@@ -49,7 +49,8 @@
     "language": "भाषा",
     "switchClinic": "क्लिनिक बदलें",
     "inbox": "WhatsApp",
-    "tasks": "काम"
+    "tasks": "काम",
+    "calls": "फ़ोन कॉल"
   },
   "login": {
     "title": "साइन इन",
@@ -386,5 +387,72 @@
       "rejected": "नामंज़ूर",
       "paused": "रुका हुआ"
     }
+  },
+  "calls": {
+    "title": "फ़ोन कॉल",
+    "empty": "अभी कोई कॉल नहीं।",
+    "filters": {
+      "all": "सभी",
+      "assistant": "असिस्टेंट ने उठाई",
+      "forwarded": "क्लिनिक को भेजी",
+      "emergency": "इमरजेंसी",
+      "test": "टेस्ट कॉल"
+    },
+    "routes": {
+      "assistant": "असिस्टेंट",
+      "forwarded_hours": "क्लिनिक को (खुले समय में)",
+      "forwarded_disabled": "क्लिनिक को (असिस्टेंट बंद)",
+      "forwarded_unhealthy": "क्लिनिक को (असिस्टेंट उपलब्ध नहीं)",
+      "forwarded_busy": "क्लिनिक को"
+    },
+    "outcomes": {
+      "booked": "बुक हुआ",
+      "rescheduled": "समय बदला",
+      "cancelled": "रद्द",
+      "confirmed": "पक्का",
+      "information": "जानकारी",
+      "transferred": "स्टाफ़ को जोड़ा",
+      "transfer_failed": "किसी ने नहीं उठाया",
+      "callback": "वापस कॉल",
+      "emergency": "इमरजेंसी",
+      "caller_hung_up": "कॉलर ने काट दिया",
+      "no_input": "कॉलर नहीं बोले",
+      "forwarded": "क्लिनिक को भेजी",
+      "error": "गड़बड़ी"
+    },
+    "unknownCaller": "अनजान नंबर",
+    "duration": "{sec} सेकंड",
+    "transcript": "बातचीत",
+    "caller": "कॉलर",
+    "assistant": "असिस्टेंट",
+    "system": "—",
+    "recording": "रिकॉर्डिंग",
+    "noRecording": "अभी रिकॉर्डिंग नहीं है।",
+    "summary": "सार",
+    "latency": "जवाब का समय: आमतौर पर {p50} ms, सबसे धीमा {max} ms",
+    "usage": "आवाज़: {stt} सेकंड सुना, {tts} अक्षर बोले",
+    "testCall": "टेस्ट कॉल का नतीजा",
+    "pass": "सही",
+    "fail": "गलत",
+    "notes": "नोट (क्या गलत हुआ?)",
+    "saveResult": "नतीजा सेव करें",
+    "testProgress": "टेस्ट कॉल: {passed} सही, {failed} गलत (लक्ष्य {target})",
+    "tasks": "इस कॉल से बने काम"
+  },
+  "voice": {
+    "title": "फ़ोन असिस्टेंट",
+    "enabled": "कॉल असिस्टेंट से उठवाएँ",
+    "answerMode": "कब",
+    "modes": {
+      "all": "असिस्टेंट तक पहुँचने वाली हर कॉल",
+      "after_hours": "सिर्फ़ क्लिनिक बंद होने पर"
+    },
+    "virtualNumber": "असिस्टेंट का फ़ोन नंबर (Exotel से)",
+    "staffPhones": "ट्रांसफ़र के लिए स्टाफ़ नंबर (क्रम से)",
+    "addPhone": "नंबर जोड़ें",
+    "clinicPhoneNote": "कोई न उठाए तो आखिर में क्लिनिक का नंबर ({phone}) लगाया जाता है।",
+    "healthy": "असिस्टेंट सेवा: चालू",
+    "unhealthy": "असिस्टेंट सेवा: बंद (कॉल क्लिनिक फ़ोन पर जाएँगी)",
+    "save": "सेव करें"
   }
 }
