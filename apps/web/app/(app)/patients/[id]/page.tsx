@@ -10,6 +10,7 @@ import { BookingSheet, type BookingDraft } from "../../../../components/booking-
 import { ConfirmWarnings } from "../../../../components/confirm-warnings";
 import { PatientForm } from "../../../../components/patient-form";
 import { PatientPicker } from "../../../../components/patient-picker";
+import { TreatmentPlans } from "../../../../components/treatment-plans";
 import { Button, Card, Field, Input, Sheet, Spinner, StatusBadge, useToast } from "../../../../components/ui";
 import { ApiError } from "../../../../lib/api";
 import { useAppointmentActions } from "../../../../lib/appointment-actions";
@@ -129,6 +130,26 @@ export default function PatientPage() {
         {p.notes ? (
           <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm whitespace-pre-line">{p.notes}</p>
         ) : null}
+        {p.phone && can("patients.write") ? (
+          <div className="mt-3 flex gap-2 text-xs">
+            {([true, false] as const).map((granted) => (
+              <button
+                key={String(granted)}
+                className="rounded-full border border-slate-300 px-3 py-1"
+                onClick={async () => {
+                  try {
+                    await api(`/v1/patients/${id}/marketing-consent`, { method: "POST", body: { granted } });
+                    toast(t("common.saved"));
+                  } catch (e) {
+                    toast(e instanceof ApiError ? e.message : t("common.error"), "error");
+                  }
+                }}
+              >
+                {t(granted ? "campaigns.marketingYes" : "campaigns.marketingNo")}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <p className="mt-3 text-xs text-slate-500">
           {t("patients.lastVisit")}:{" "}
           {p.lastVisitAt ? localDateOf(new Date(p.lastVisitAt), tz) : t("patients.never")}
@@ -160,6 +181,20 @@ export default function PatientPage() {
           </ul>
         )}
       </Card>
+
+      <TreatmentPlans
+        patientId={p.id}
+        timezone={tz}
+        onBookSitting={(step) =>
+          setDraft({
+            date: step.date,
+            startMin: 10 * 60,
+            patient: p,
+            procedureId: step.procedureTypeId,
+            treatmentStepId: step.treatmentStepId,
+          })
+        }
+      />
 
       <Card>
         <h2 className="mb-2 font-semibold">{t("patients.history")}</h2>

@@ -47,7 +47,7 @@ describe.skipIf(!hasTestDatabase)("staff API", () => {
   let ownerB: string;
 
   beforeAll(async () => {
-    db = await createTestDatabase();
+    db = await createTestDatabase({ max: 25 });
     const client = await db.pool.connect();
     try {
       clinicA = (

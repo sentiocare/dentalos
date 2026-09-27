@@ -24,6 +24,8 @@ const bookBody = z.object({
   acknowledgeWarnings: z.boolean().optional(),
   useEmergencyReserve: z.boolean().optional(),
   walkIn: z.boolean().optional(),
+  // The treatment sitting this visit is for; the plan updates itself.
+  treatmentStepId: uuid.nullish(),
   // Sent by the dashboard with every change so a retry after a dropped connection never double-books.
   idempotencyKey: z.string().min(8).max(100).optional(),
 });

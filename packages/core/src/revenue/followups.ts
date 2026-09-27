@@ -229,14 +229,19 @@ export async function planFollowups(
       const due = localDateOf(a.ends_at, tz);
       const [y, m, d] = due.split("-").map(Number) as [number, number, number];
       const target = new Date(Date.UTC(y, m - 1 + a.recall_months, Math.min(d, 28)));
-      await add({
-        kind: "recall",
-        subjectType: "appointment",
-        subjectId: a.id,
-        patientId: a.patient_id,
-        phone: a.phone,
-        startAt: at10(target.toISOString().slice(0, 10), tz),
-      });
+      const startAt = at10(target.toISOString().slice(0, 10), tz);
+      // Only recalls falling due now or later (or within the last month): on the first run for a clinic
+      // with years of history, old visits must not all get a recall at once. Those patients are reached
+      // with an owner-approved reactivation campaign instead.
+      if (startAt.getTime() > now.getTime() - 30 * 86_400_000)
+        await add({
+          kind: "recall",
+          subjectType: "appointment",
+          subjectId: a.id,
+          patientId: a.patient_id,
+          phone: a.phone,
+          startAt: startAt > now ? startAt : now,
+        });
     }
     const recent = now.getTime() - a.ends_at.getTime() < 2 * 86_400_000;
     if (recent && (a.checkin || a.aftercare_ok))

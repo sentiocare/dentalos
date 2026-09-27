@@ -17,6 +17,7 @@ import { meRoutes } from "./routes/me";
 import { patientRoutes } from "./routes/patients";
 import { settingsRoutes } from "./routes/settings";
 import { staffRoutes } from "./routes/staff";
+import { revenueRoutes } from "./routes/revenue";
 import { callRoutes } from "./routes/calls";
 import { telephonyRoutes } from "./routes/telephony";
 import { webhookRoutes } from "./routes/webhooks";
@@ -86,6 +87,7 @@ export function buildApp(deps: AppDeps) {
     auditRoutes(api, { staff });
     inboxRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
     callRoutes(api, { staff, pool: deps.pool, storage: deps.adapters.storage });
+    revenueRoutes(api, { staff, storage: deps.adapters.storage, jobs: deps.jobs });
   });
   return app;
 }

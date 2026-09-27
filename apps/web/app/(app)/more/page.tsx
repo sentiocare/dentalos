@@ -14,6 +14,9 @@ export default function MorePage() {
   const links = [
     { href: "/tasks", label: t("tasks"), show: session.can("appointments.read") },
     { href: "/calls", label: t("calls"), show: session.can("patients.read") },
+    { href: "/treatments", label: t("treatments"), show: session.can("patients.read") },
+    { href: "/followups", label: t("followups"), show: session.can("appointments.read") },
+    { href: "/campaigns", label: t("campaigns"), show: session.can("settings.manage") },
     { href: "/import", label: t("import"), show: session.can("patients.import") },
     { href: "/settings", label: t("settings"), show: true },
     { href: "/activity", label: t("activity"), show: session.can("audit.read") },

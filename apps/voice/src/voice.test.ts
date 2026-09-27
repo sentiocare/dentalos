@@ -133,7 +133,7 @@ describe.skipIf(!hasTestDatabase)("voice service (media stream, audio pipeline)"
   const phone = () => `+9192000${String(10000 + ++n)}`;
 
   beforeAll(async () => {
-    db = await createTestDatabase();
+    db = await createTestDatabase({ max: 25 });
     ({ clinicId } = await setupVoiceClinic(db.pool));
     voice = createVoiceServer({
       pool: db.pool,

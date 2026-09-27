@@ -29,6 +29,7 @@ export default function SettingsPage() {
   const t = useTranslations("settings");
   const tw = useTranslations("whatsapp");
   const tv = useTranslations("voice");
+  const tf = useTranslations("followups");
   const tc = useTranslations("common");
   const { api, can } = useSession();
   const toast = useToast();
@@ -87,6 +88,11 @@ export default function SettingsPage() {
       {manage ? (
         <Section title={tw("title")}>
           <WhatsApp />
+        </Section>
+      ) : null}
+      {manage ? (
+        <Section title={tf("ladders")}>
+          <Ladders />
         </Section>
       ) : null}
       {manage ? (
@@ -514,6 +520,7 @@ function Procedures({ config, save, manage }: { config: ClinicConfig; save: Save
                 </label>
               ))}
             </div>
+            <ProcedureFollowups editing={editing} setEditing={setEditing} />
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -534,6 +541,13 @@ function Procedures({ config, save, manage }: { config: ClinicConfig; save: Save
                   pricePublic: editing.price_public && min !== "" && max !== "",
                   allowedDoctorIds: editing.allowed_doctor_ids,
                   active: editing.active,
+                  recallMonths: editing.recall_months ?? null,
+                  checkin: editing.checkin ?? false,
+                  aftercare:
+                    editing.aftercare && (editing.aftercare.en || editing.aftercare.hi)
+                      ? editing.aftercare
+                      : null,
+                  depositPaise: editing.deposit_paise ?? null,
                 });
                 if (ok) setEditing(null);
               }}
@@ -1129,5 +1143,145 @@ function VoiceSettings() {
         {t("save")}
       </Button>
     </>
+  );
+}
+
+/** Recall, check-in, after-care and advance settings for one treatment (Phase 4 follow-ups). */
+function ProcedureFollowups({
+  editing,
+  setEditing,
+}: {
+  editing: Procedure;
+  setEditing: (p: Procedure) => void;
+}) {
+  const t = useTranslations("procedureExtra");
+  const care = editing.aftercare ?? { en: "", hi: "", approved: false };
+  return (
+    <div className="space-y-3 rounded-xl bg-slate-50 p-3">
+      <div className="grid grid-cols-2 gap-3">
+        <Field label={t("recallMonths")}>
+          {(id) => (
+            <Input
+              id={id}
+              type="number"
+              min={1}
+              max={36}
+              value={editing.recall_months ?? ""}
+              onChange={(e) =>
+                setEditing({ ...editing, recall_months: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          )}
+        </Field>
+        <Field label={t("deposit")}>
+          {(id) => (
+            <Input
+              id={id}
+              type="number"
+              min={0}
+              value={editing.deposit_paise ? editing.deposit_paise / 100 : ""}
+              onChange={(e) =>
+                setEditing({
+                  ...editing,
+                  deposit_paise: e.target.value ? Math.round(Number(e.target.value) * 100) : null,
+                })
+              }
+            />
+          )}
+        </Field>
+      </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={!!editing.checkin}
+          onChange={(e) => setEditing({ ...editing, checkin: e.target.checked })}
+        />
+        {t("checkin")}
+      </label>
+      {(["en", "hi"] as const).map((lang) => (
+        <Field key={lang} label={t(lang === "en" ? "aftercareEn" : "aftercareHi")}>
+          {(id) => (
+            <textarea
+              id={id}
+              rows={3}
+              maxLength={900}
+              value={care[lang]}
+              // Any change to the wording needs the doctor's approval again.
+              onChange={(e) =>
+                setEditing({ ...editing, aftercare: { ...care, [lang]: e.target.value, approved: false } })
+              }
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            />
+          )}
+        </Field>
+      ))}
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={care.approved}
+          disabled={!care.en && !care.hi}
+          onChange={(e) => setEditing({ ...editing, aftercare: { ...care, approved: e.target.checked } })}
+        />
+        {t("aftercareApproved")}
+      </label>
+    </div>
+  );
+}
+
+interface Ladder {
+  kind: string;
+  active: boolean;
+  steps: { afterHours: number; action: string; atLocalTime?: string; template?: string }[];
+}
+
+/** Each kind of automatic follow-up can be switched off (ladders are edited through the API for now). */
+function Ladders() {
+  const t = useTranslations("followups");
+  const tc = useTranslations("common");
+  const { api } = useSession();
+  const toast = useToast();
+  const [ladders, setLadders] = useState<Ladder[] | null>(null);
+  const load = () =>
+    api<Ladder[]>("/v1/followup-ladders")
+      .then(setLadders)
+      .catch(() => {});
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  if (!ladders) return <Spinner />;
+  return (
+    <ul className="divide-y divide-slate-100 text-sm">
+      {ladders.map((l) => (
+        <li key={l.kind} className="flex items-center justify-between py-2">
+          <div>
+            <p className="font-medium">{t(`kinds.${l.kind}`)}</p>
+            <p className="text-xs text-slate-500">{t("ladderSteps", { count: l.steps.length })}</p>
+          </div>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              className="size-5"
+              checked={l.active}
+              onChange={async (e) => {
+                try {
+                  await api(`/v1/followup-ladders/${l.kind}`, {
+                    method: "PUT",
+                    body: { active: e.target.checked, steps: l.steps },
+                  });
+                  toast(tc("saved"));
+                  await load();
+                } catch (err) {
+                  toast(err instanceof ApiError ? err.message : tc("error"), "error");
+                }
+              }}
+            />
+            {t("ladderOn")}
+          </label>
+        </li>
+      ))}
+    </ul>
   );
 }

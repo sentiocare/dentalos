@@ -280,6 +280,13 @@ describe.skipIf(!hasTestDatabase)("follow-up engine", () => {
       ["recall", "6"],
     ]);
 
+    // A cleaning from years ago does not start a recall today (no blast on the first run).
+    const old = await patient();
+    const o = await book(old.id, "2030-01-12T11:00:00", { procedure: "scaling" });
+    await run((c) => setAppointmentStatus(c, o.id, "completed"));
+    await plan(at("2031-06-01T12:00:00"));
+    expect((await runsFor(old.id)).filter((r) => r.kind === "recall")).toEqual([]);
+
     const q = await patient();
     const b = await book(q.id, "2030-01-11T11:00:00", { procedure: "scaling" });
     await run((c) => setAppointmentStatus(c, b.id, "completed"));

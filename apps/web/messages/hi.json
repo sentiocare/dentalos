@@ -50,7 +50,10 @@
     "switchClinic": "क्लिनिक बदलें",
     "inbox": "WhatsApp",
     "tasks": "काम",
-    "calls": "फ़ोन कॉल"
+    "calls": "फ़ोन कॉल",
+    "treatments": "अधूरे इलाज",
+    "followups": "फ़ॉलो-अप",
+    "campaigns": "अभियान"
   },
   "login": {
     "title": "साइन इन",
@@ -454,5 +457,131 @@
     "healthy": "असिस्टेंट सेवा: चालू",
     "unhealthy": "असिस्टेंट सेवा: बंद (कॉल क्लिनिक फ़ोन पर जाएँगी)",
     "save": "सेव करें"
+  },
+  "plans": {
+    "title": "इलाज की योजना",
+    "none": "अभी कोई योजना नहीं।",
+    "new": "नई योजना",
+    "template": "इलाज",
+    "teeth": "दाँत (जैसे 36, 46)",
+    "startDate": "पहली सिटिंग से",
+    "acceptedNow": "मरीज़ योजना के लिए सहमत है",
+    "create": "योजना बनाएँ",
+    "accept": "मरीज़ सहमत",
+    "abandon": "योजना रोकें",
+    "abandonReason": "योजना क्यों रोकी?",
+    "bookSitting": "बुक करें",
+    "skip": "छोड़ें",
+    "value": "राशि",
+    "done": "{total} में से {done} सिटिंग हो गईं",
+    "window": "{from} – {to}",
+    "estimate": "अनुमान बनाएँ",
+    "status": {
+      "proposed": "प्रस्तावित",
+      "accepted": "सहमत",
+      "in_progress": "चल रहा",
+      "completed": "पूरा",
+      "abandoned": "रोका गया"
+    },
+    "stepStatus": {
+      "pending": "बुक करना है",
+      "scheduled": "बुक है",
+      "done": "हो गया",
+      "missed": "छूट गया",
+      "skipped": "छोड़ा"
+    }
+  },
+  "estimates": {
+    "title": "अनुमान (Estimate)",
+    "none": "अभी कोई अनुमान नहीं।",
+    "send": "WhatsApp पर भेजें",
+    "sent": "मरीज़ को भेजा",
+    "accepted": "स्वीकार",
+    "declined": "अस्वीकार",
+    "markAccepted": "मरीज़ ने माना",
+    "markDeclined": "मरीज़ ने मना किया",
+    "viewPdf": "PDF देखें",
+    "validUntil": "{date} तक मान्य",
+    "status": {
+      "draft": "नहीं भेजा",
+      "sent": "भेजा",
+      "accepted": "स्वीकार",
+      "declined": "अस्वीकार",
+      "expired": "समाप्त"
+    }
+  },
+  "treatments": {
+    "title": "अधूरे इलाज",
+    "empty": "कोई अधूरा इलाज नहीं।",
+    "plans": "योजनाएँ",
+    "remaining": "बाकी",
+    "overdue": "देर हो चुकी",
+    "sittingsLeft": "{count} सिटिंग बाकी",
+    "overdueDays": "{days} दिन की देरी",
+    "booked": "अगली सिटिंग बुक है",
+    "next": "अगली: {procedure}, {window}",
+    "call": "कॉल"
+  },
+  "followups": {
+    "title": "फ़ॉलो-अप",
+    "empty": "कुछ नहीं।",
+    "active": "चल रहे",
+    "finished": "पूरे",
+    "stop": "रोकें",
+    "nextAt": "अगला कदम {when}",
+    "stopReason": "क्यों रोकें? (वैकल्पिक)",
+    "kinds": {
+      "treatment_continuity": "अगली सिटिंग",
+      "estimate": "अनुमान",
+      "no_show": "छूटी विज़िट",
+      "unconfirmed": "पक्का नहीं",
+      "recall": "रिकॉल",
+      "aftercare_checkin": "देखभाल"
+    },
+    "status": {
+      "active": "चल रहा",
+      "stopped_success": "पूरा: लक्ष्य मिला",
+      "stopped_optout": "रुका: मरीज़ ने मना किया",
+      "stopped_staff": "स्टाफ़ ने रोका",
+      "stopped_obsolete": "अब ज़रूरी नहीं",
+      "exhausted": "पूरा, स्टाफ़ को सौंपा"
+    },
+    "ladders": "अपने आप होने वाले फ़ॉलो-अप",
+    "ladderOn": "चालू",
+    "ladderSteps": "{count} कदम"
+  },
+  "campaigns": {
+    "title": "अभियान",
+    "empty": "अभी कोई अभियान नहीं।",
+    "new": "पुराने मरीज़ों के लिए नया अभियान",
+    "name": "नाम",
+    "inactiveMonths": "कितने महीनों से नहीं आए",
+    "message": "आपका संदेश (सिर्फ़ तथ्य, इलाज पर छूट नहीं)",
+    "audience": "{eligible} को जाएगा · {noConsent} ने ऑफ़र के लिए सहमति नहीं दी · {optedOut} ने मना किया",
+    "problems": "कृपया बदलें: {list}",
+    "create": "ड्राफ़्ट सेव करें",
+    "submit": "मालिक की मंज़ूरी के लिए भेजें",
+    "approve": "मंज़ूर करें (मालिक)",
+    "run": "अभी भेजें",
+    "cancel": "रद्द करें",
+    "stats": "{queued} भेजे जाएँगे",
+    "status": {
+      "draft": "ड्राफ़्ट",
+      "awaiting_owner": "मालिक की मंज़ूरी बाकी",
+      "approved": "मंज़ूर",
+      "running": "भेजा जा रहा",
+      "done": "भेजा गया",
+      "cancelled": "रद्द"
+    },
+    "marketingYes": "ऑफ़र के लिए सहमत",
+    "marketingNo": "ऑफ़र नहीं"
+  },
+  "procedureExtra": {
+    "recallMonths": "कितने महीने बाद रिकॉल",
+    "deposit": "ऑनलाइन बुकिंग पर एडवांस (₹)",
+    "checkin": "अगले दिन हालचाल का मैसेज",
+    "aftercareEn": "देखभाल (अंग्रेज़ी)",
+    "aftercareHi": "देखभाल (हिंदी)",
+    "aftercareApproved": "डॉक्टर ने यह देखभाल वाला संदेश मंज़ूर किया है"
   }
 }

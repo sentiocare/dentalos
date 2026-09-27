@@ -18,7 +18,7 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
   let ctxA: ClinicContext;
 
   beforeAll(async () => {
-    db = await createTestDatabase();
+    db = await createTestDatabase({ max: 25 });
     a = await seedMinimalClinic(db.pool, "Sharma Dental");
     b = await seedMinimalClinic(db.pool, "Other Dental");
     ctxA = { clinicId: a.clinicId, actor: "user:test", userId: undefined, role: "receptionist" };

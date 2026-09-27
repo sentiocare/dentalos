@@ -1,0 +1,1348 @@
+aftercare_checkin exhausted: 24
+estimate active: 5
+estimate exhausted: 15
+estimate stopped_obsolete: 4
+estimate stopped_success: 6
+no_show exhausted: 21
+no_show stopped_optout: 2
+no_show stopped_success: 11
+recall active: 63
+recall exhausted: 14
+recall stopped_optout: 5
+recall stopped_success: 6
+treatment_continuity active: 2
+treatment_continuity exhausted: 33
+treatment_continuity stopped_optout: 8
+treatment_continuity stopped_success: 9
+unconfirmed exhausted: 62
+unconfirmed stopped_obsolete: 16
+unconfirmed stopped_success: 78
+
+03-01 10:00  P000 step treatment_continuity whatsapp queued
+03-01 10:00  P000 whatsapp treatment_next_sitting [transactional]
+03-01 12:00  P150 whatsapp estimate_ready [transactional]
+03-01 17:00  P020 whatsapp reminder_day_before [transactional]
+03-01 17:00  P040 whatsapp reminder_day_before [transactional]
+03-01 17:00  P100 whatsapp reminder_day_before [transactional]
+03-01 17:00  P125 whatsapp reminder_day_before [transactional]
+03-01 18:00  P020 ai_call answered: confirmed
+03-01 18:00  P020 step unconfirmed ai_call requested
+03-01 18:00  P040 ai_call answered: confirmed
+03-01 18:00  P040 step unconfirmed ai_call requested
+03-01 19:00  P100 ai_call answered: confirmed
+03-01 19:00  P100 step unconfirmed ai_call requested
+03-01 19:00  P125 ai_call no answer
+03-01 19:00  P125 step unconfirmed ai_call requested
+03-01 21:00  P125 step unconfirmed staff_task created
+03-02 08:00  P020 whatsapp reminder_same_day [transactional]
+03-02 08:00  P040 whatsapp reminder_same_day [transactional]
+03-02 09:00  P100 whatsapp reminder_same_day [transactional]
+03-02 09:00  P125 whatsapp reminder_same_day [transactional]
+03-02 10:00  P021 step treatment_continuity whatsapp queued
+03-02 10:00  P021 whatsapp treatment_next_sitting [transactional]
+03-02 12:00  P151 whatsapp estimate_ready [transactional]
+03-02 13:00  P100 step no_show whatsapp queued
+03-02 13:00  P100 whatsapp no_show [transactional]
+03-02 13:00  P125 step no_show whatsapp queued
+03-02 13:00  P125 whatsapp no_show [transactional]
+03-03 10:00  P021 whatsapp booking_confirmation [transactional]
+03-03 10:00  P042 step treatment_continuity whatsapp queued
+03-03 10:00  P042 whatsapp treatment_next_sitting [transactional]
+03-03 10:00  P078 step recall whatsapp queued
+03-03 10:00  P078 whatsapp recall [transactional]
+03-03 10:00  P079 step recall whatsapp queued
+03-03 10:00  P079 whatsapp recall [transactional]
+03-03 12:00  P150 step estimate whatsapp queued
+03-03 12:00  P150 whatsapp estimate_followup [transactional]
+03-03 12:00  P152 whatsapp estimate_ready [transactional]
+03-03 17:00  P001 whatsapp reminder_day_before [transactional]
+03-03 17:00  P002 whatsapp reminder_day_before [transactional]
+03-03 17:00  P022 whatsapp reminder_day_before [transactional]
+03-03 17:00  P041 whatsapp reminder_day_before [transactional]
+03-03 17:00  P101 whatsapp reminder_day_before [transactional]
+03-03 17:00  P102 whatsapp reminder_day_before [transactional]
+03-03 17:00  P126 whatsapp reminder_day_before [transactional]
+03-03 17:00  P127 whatsapp reminder_day_before [transactional]
+03-03 17:00  P182 whatsapp reminder_day_before [transactional]
+03-03 17:00  P183 whatsapp reminder_day_before [transactional]
+03-03 17:00  P208 whatsapp reminder_day_before [transactional]
+03-03 17:00  P209 whatsapp reminder_day_before [transactional]
+03-03 18:00  P001 ai_call no answer
+03-03 18:00  P001 step unconfirmed ai_call requested
+03-03 18:00  P002 ai_call answered: confirmed
+03-03 18:00  P002 step unconfirmed ai_call requested
+03-03 19:00  P022 ai_call answered: confirmed
+03-03 19:00  P022 step unconfirmed ai_call requested
+03-03 19:00  P041 ai_call no answer
+03-03 19:00  P041 step unconfirmed ai_call requested
+03-03 19:00  P101 ai_call no answer
+03-03 19:00  P101 step unconfirmed ai_call requested
+03-03 19:00  P102 ai_call answered: confirmed
+03-03 19:00  P102 step unconfirmed ai_call requested
+03-03 20:00  P001 step unconfirmed staff_task created
+03-03 21:00  P041 step unconfirmed staff_task created
+03-03 21:00  P101 step unconfirmed staff_task created
+03-04 08:00  P001 whatsapp reminder_same_day [transactional]
+03-04 08:00  P002 whatsapp reminder_same_day [transactional]
+03-04 09:00  P022 whatsapp reminder_same_day [transactional]
+03-04 09:00  P041 whatsapp reminder_same_day [transactional]
+03-04 09:00  P101 whatsapp reminder_same_day [transactional]
+03-04 09:00  P102 whatsapp reminder_same_day [transactional]
+03-04 09:00  P126 ai_call answered: confirmed
+03-04 09:00  P126 step unconfirmed ai_call requested
+03-04 09:00  P127 ai_call no answer
+03-04 09:00  P127 step unconfirmed ai_call requested
+03-04 09:00  P183 ai_call no answer
+03-04 09:00  P183 step unconfirmed ai_call requested
+03-04 09:00  P208 ai_call answered: confirmed
+03-04 09:00  P208 step unconfirmed ai_call requested
+03-04 10:00  P003 step treatment_continuity whatsapp queued
+03-04 10:00  P003 whatsapp treatment_next_sitting [transactional]
+03-04 10:00  P020 step treatment_continuity whatsapp queued
+03-04 10:00  P020 whatsapp treatment_next_sitting [transactional]
+03-04 10:00  P040 step treatment_continuity whatsapp queued
+03-04 10:00  P040 whatsapp treatment_next_sitting [transactional]
+03-04 10:00  P080 step recall whatsapp queued
+03-04 10:00  P080 whatsapp recall [transactional]
+03-04 10:00  P126 whatsapp reminder_same_day [transactional]
+03-04 10:00  P127 whatsapp reminder_same_day [transactional]
+03-04 10:00  P182 whatsapp reminder_same_day [transactional]
+03-04 10:00  P183 whatsapp reminder_same_day [transactional]
+03-04 11:00  P000 step treatment_continuity whatsapp queued
+03-04 11:00  P000 whatsapp treatment_next_sitting [transactional]
+03-04 11:00  P183 step unconfirmed staff_task created
+03-04 11:00  P208 whatsapp reminder_same_day [transactional]
+03-04 11:00  P209 whatsapp reminder_same_day [transactional]
+03-04 12:00  P002 step aftercare_checkin whatsapp skipped_no_content
+03-04 12:00  P022 step aftercare_checkin whatsapp skipped_no_content
+03-04 12:00  P151 step estimate whatsapp queued
+03-04 12:00  P151 whatsapp estimate_followup [transactional]
+03-04 12:00  P153 whatsapp estimate_ready [transactional]
+03-04 13:00  P080 whatsapp assistant_reply [service]
+03-04 14:00  P101 step no_show whatsapp queued
+03-04 14:00  P101 whatsapp no_show [transactional]
+03-04 14:00  P102 step no_show whatsapp queued
+03-04 14:00  P102 whatsapp no_show [transactional]
+03-04 14:00  P126 step no_show whatsapp queued
+03-04 14:00  P126 whatsapp no_show [transactional]
+03-04 14:00  P127 step no_show whatsapp queued
+03-04 14:00  P127 whatsapp no_show [transactional]
+03-04 17:00  P021 whatsapp reminder_day_before [transactional]
+03-04 17:00  P023 whatsapp reminder_day_before [transactional]
+03-04 17:00  P043 whatsapp reminder_day_before [transactional]
+03-04 17:00  P103 whatsapp reminder_day_before [transactional]
+03-04 17:00  P128 whatsapp reminder_day_before [transactional]
+03-04 17:00  P184 whatsapp reminder_day_before [transactional]
+03-04 17:00  P210 whatsapp reminder_day_before [transactional]
+03-04 18:00  P023 ai_call no answer
+03-04 18:00  P023 step unconfirmed ai_call requested
+03-04 18:00  P043 ai_call no answer
+03-04 18:00  P043 step unconfirmed ai_call requested
+03-04 19:00  P103 ai_call no answer
+03-04 19:00  P103 step unconfirmed ai_call requested
+03-04 19:00  P128 ai_call answered: confirmed
+03-04 19:00  P128 step unconfirmed ai_call requested
+03-04 19:00  P184 ai_call answered: confirmed
+03-04 19:00  P184 step unconfirmed ai_call requested
+03-04 19:00  P210 ai_call answered: confirmed
+03-04 19:00  P210 step unconfirmed ai_call requested
+03-04 20:00  P023 step unconfirmed staff_task created
+03-04 20:00  P043 step unconfirmed staff_task created
+03-04 21:00  P103 step unconfirmed staff_task created
+03-05 08:00  P023 whatsapp reminder_same_day [transactional]
+03-05 08:00  P043 whatsapp reminder_same_day [transactional]
+03-05 09:00  P021 ai_call no answer
+03-05 09:00  P021 step unconfirmed ai_call requested
+03-05 09:00  P103 whatsapp reminder_same_day [transactional]
+03-05 09:00  P128 whatsapp reminder_same_day [transactional]
+03-05 09:00  P184 whatsapp reminder_same_day [transactional]
+03-05 09:00  P210 whatsapp reminder_same_day [transactional]
+03-05 10:00  P002 step aftercare_checkin whatsapp queued
+03-05 10:00  P002 whatsapp checkin [transactional]
+03-05 10:00  P021 whatsapp reminder_same_day [transactional]
+03-05 10:00  P022 step aftercare_checkin whatsapp queued
+03-05 10:00  P022 whatsapp checkin [transactional]
+03-05 10:00  P024 step treatment_continuity whatsapp queued
+03-05 10:00  P024 whatsapp treatment_next_sitting [transactional]
+03-05 10:00  P081 step recall whatsapp queued
+03-05 10:00  P081 whatsapp recall [transactional]
+03-05 10:00  P100 step no_show staff_task created
+03-05 10:00  P102 whatsapp booking_confirmation [transactional]
+03-05 10:00  P125 step no_show staff_task created
+03-05 10:00  P126 whatsapp booking_confirmation [transactional]
+03-05 12:00  P023 step aftercare_checkin whatsapp skipped_no_content
+03-05 12:00  P043 step aftercare_checkin whatsapp skipped_no_content
+03-05 12:00  P152 step estimate whatsapp queued
+03-05 12:00  P152 whatsapp estimate_followup [transactional]
+03-05 12:00  P154 whatsapp estimate_ready [transactional]
+03-05 13:00  P103 step no_show whatsapp queued
+03-05 13:00  P103 whatsapp no_show [transactional]
+03-05 13:00  P128 step no_show whatsapp queued
+03-05 13:00  P128 whatsapp no_show [transactional]
+03-05 13:00  P210 step aftercare_checkin whatsapp skipped_no_content
+03-05 17:00  P004 whatsapp reminder_day_before [transactional]
+03-05 17:00  P044 whatsapp reminder_day_before [transactional]
+03-05 17:00  P104 whatsapp reminder_day_before [transactional]
+03-05 17:00  P129 whatsapp reminder_day_before [transactional]
+03-05 17:00  P185 whatsapp reminder_day_before [transactional]
+03-05 17:00  P211 whatsapp reminder_day_before [transactional]
+03-05 18:00  P004 ai_call answered: confirmed
+03-05 18:00  P004 step unconfirmed ai_call requested
+03-05 18:00  P044 ai_call answered: confirmed
+03-05 18:00  P044 step unconfirmed ai_call requested
+03-05 19:00  P104 ai_call answered: confirmed
+03-05 19:00  P104 step unconfirmed ai_call requested
+03-05 19:00  P129 ai_call no answer
+03-05 19:00  P129 step unconfirmed ai_call requested
+03-05 19:00  P211 ai_call no answer
+03-05 19:00  P211 step unconfirmed ai_call requested
+03-05 21:00  P129 step unconfirmed staff_task created
+03-05 21:00  P211 step unconfirmed staff_task created
+03-06 08:00  P004 whatsapp reminder_same_day [transactional]
+03-06 08:00  P044 whatsapp reminder_same_day [transactional]
+03-06 09:00  P104 whatsapp reminder_same_day [transactional]
+03-06 09:00  P129 whatsapp reminder_same_day [transactional]
+03-06 09:00  P185 whatsapp reminder_same_day [transactional]
+03-06 09:00  P211 whatsapp reminder_same_day [transactional]
+03-06 10:00  P001 step treatment_continuity whatsapp queued
+03-06 10:00  P001 whatsapp treatment_next_sitting [transactional]
+03-06 10:00  P023 step aftercare_checkin whatsapp queued
+03-06 10:00  P023 whatsapp checkin [transactional]
+03-06 10:00  P041 step treatment_continuity whatsapp queued
+03-06 10:00  P041 whatsapp treatment_next_sitting [transactional]
+03-06 10:00  P043 step aftercare_checkin whatsapp queued
+03-06 10:00  P043 whatsapp checkin [transactional]
+03-06 10:00  P045 step treatment_continuity whatsapp queued
+03-06 10:00  P045 whatsapp treatment_next_sitting [transactional]
+03-06 10:00  P082 step recall whatsapp queued
+03-06 10:00  P082 whatsapp recall [transactional]
+03-06 10:00  P210 step aftercare_checkin whatsapp queued
+03-06 10:00  P210 whatsapp checkin [transactional]
+03-06 11:00  P042 step treatment_continuity whatsapp queued
+03-06 11:00  P042 whatsapp treatment_next_sitting [transactional]
+03-06 12:00  P041 whatsapp assistant_reply [service]
+03-06 12:00  P130 whatsapp estimate_ready [transactional]
+03-06 12:00  P153 step estimate whatsapp queued
+03-06 12:00  P153 whatsapp estimate_followup [transactional]
+03-06 12:00  P155 whatsapp estimate_ready [transactional]
+03-06 13:00  P104 step no_show whatsapp queued
+03-06 13:00  P104 whatsapp no_show [transactional]
+03-06 13:00  P129 step no_show whatsapp queued
+03-06 13:00  P129 whatsapp no_show [transactional]
+03-06 13:00  P185 step aftercare_checkin whatsapp skipped_no_content
+03-06 17:00  P005 whatsapp reminder_day_before [transactional]
+03-06 17:00  P025 whatsapp reminder_day_before [transactional]
+03-06 17:00  P102 whatsapp reminder_day_before [transactional]
+03-06 17:00  P105 whatsapp reminder_day_before [transactional]
+03-06 17:00  P126 whatsapp reminder_day_before [transactional]
+03-06 17:00  P160 whatsapp reminder_day_before [transactional]
+03-06 17:00  P186 whatsapp reminder_day_before [transactional]
+03-06 17:00  P212 whatsapp reminder_day_before [transactional]
+03-06 18:00  P005 ai_call no answer
+03-06 18:00  P005 step unconfirmed ai_call requested
+03-06 18:00  P025 ai_call no answer
+03-06 18:00  P025 step unconfirmed ai_call requested
+03-06 19:00  P105 ai_call no answer
+03-06 19:00  P105 step unconfirmed ai_call requested
+03-06 19:00  P160 ai_call answered: confirmed
+03-06 19:00  P160 step unconfirmed ai_call requested
+03-06 19:00  P186 ai_call answered: confirmed
+03-06 19:00  P186 step unconfirmed ai_call requested
+03-06 20:00  P005 step unconfirmed staff_task created
+03-06 20:00  P025 step unconfirmed staff_task created
+03-06 21:00  P105 step unconfirmed staff_task created
+03-07 08:00  P005 whatsapp reminder_same_day [transactional]
+03-07 08:00  P025 whatsapp reminder_same_day [transactional]
+03-07 09:00  P102 ai_call answered: confirmed
+03-07 09:00  P102 step unconfirmed ai_call requested
+03-07 09:00  P105 whatsapp reminder_same_day [transactional]
+03-07 09:00  P126 ai_call answered: confirmed
+03-07 09:00  P126 step unconfirmed ai_call requested
+03-07 09:00  P129 whatsapp booking_confirmation [transactional]
+03-07 09:00  P160 whatsapp reminder_same_day [transactional]
+03-07 09:00  P186 whatsapp reminder_same_day [transactional]
+03-07 09:00  P212 whatsapp reminder_same_day [transactional]
+03-07 10:00  P001 whatsapp booking_confirmation [transactional]
+03-07 10:00  P006 step treatment_continuity whatsapp queued
+03-07 10:00  P006 whatsapp treatment_next_sitting [transactional]
+03-07 10:00  P045 whatsapp booking_confirmation [transactional]
+03-07 10:00  P083 step recall whatsapp queued
+03-07 10:00  P083 whatsapp recall [transactional]
+03-07 10:00  P101 step no_show staff_task created
+03-07 10:00  P102 whatsapp reminder_same_day [transactional]
+03-07 10:00  P126 whatsapp reminder_same_day [transactional]
+03-07 10:00  P127 step no_show staff_task created
+03-07 10:00  P185 step aftercare_checkin whatsapp queued
+03-07 10:00  P185 whatsapp checkin [transactional]
+03-07 11:00  P003 step treatment_continuity whatsapp queued
+03-07 11:00  P003 whatsapp treatment_next_sitting [transactional]
+03-07 11:00  P020 step treatment_continuity whatsapp queued
+03-07 11:00  P020 whatsapp treatment_next_sitting [transactional]
+03-07 11:00  P040 step treatment_continuity whatsapp queued
+03-07 11:00  P040 whatsapp treatment_next_sitting [transactional]
+03-07 12:00  P131 whatsapp estimate_ready [transactional]
+03-07 12:00  P154 step estimate whatsapp queued
+03-07 12:00  P154 whatsapp estimate_followup [transactional]
+03-07 12:00  P156 whatsapp estimate_ready [transactional]
+03-07 12:00  P160 step aftercare_checkin whatsapp skipped_no_content
+03-07 13:00  P105 step no_show whatsapp queued
+03-07 13:00  P105 whatsapp no_show [transactional]
+03-07 17:00  P026 whatsapp reminder_day_before [transactional]
+03-07 17:00  P046 whatsapp reminder_day_before [transactional]
+03-07 17:00  P106 whatsapp reminder_day_before [transactional]
+03-07 17:00  P161 whatsapp reminder_day_before [transactional]
+03-07 17:00  P187 whatsapp reminder_day_before [transactional]
+03-07 17:00  P213 whatsapp reminder_day_before [transactional]
+03-07 18:00  P026 ai_call answered: confirmed
+03-07 18:00  P026 step unconfirmed ai_call requested
+03-07 18:00  P046 ai_call answered: confirmed
+03-07 18:00  P046 step unconfirmed ai_call requested
+03-07 19:00  P106 ai_call answered: confirmed
+03-07 19:00  P106 step unconfirmed ai_call requested
+03-07 19:00  P187 ai_call no answer
+03-07 19:00  P187 step unconfirmed ai_call requested
+03-07 19:00  P213 ai_call no answer
+03-07 19:00  P213 step unconfirmed ai_call requested
+03-07 21:00  P187 step unconfirmed staff_task created
+03-07 21:00  P213 step unconfirmed staff_task created
+03-08 08:00  P026 whatsapp reminder_same_day [transactional]
+03-08 08:00  P046 whatsapp reminder_same_day [transactional]
+03-08 09:00  P105 whatsapp booking_confirmation [transactional]
+03-08 09:00  P106 whatsapp reminder_same_day [transactional]
+03-08 09:00  P161 whatsapp reminder_same_day [transactional]
+03-08 09:00  P187 whatsapp reminder_same_day [transactional]
+03-08 09:00  P213 whatsapp reminder_same_day [transactional]
+03-08 10:00  P000 step treatment_continuity staff_task created
+03-08 10:00  P027 step treatment_continuity whatsapp queued
+03-08 10:00  P027 whatsapp treatment_next_sitting [transactional]
+03-08 10:00  P084 step recall whatsapp queued
+03-08 10:00  P084 whatsapp recall [transactional]
+03-08 10:00  P103 step no_show staff_task created
+03-08 10:00  P128 step no_show staff_task created
+03-08 10:00  P160 step aftercare_checkin whatsapp queued
+03-08 10:00  P160 whatsapp checkin [transactional]
+03-08 11:00  P024 step treatment_continuity whatsapp queued
+03-08 11:00  P024 whatsapp treatment_next_sitting [transactional]
+03-08 12:00  P130 step estimate whatsapp queued
+03-08 12:00  P130 whatsapp estimate_followup [transactional]
+03-08 12:00  P132 whatsapp estimate_ready [transactional]
+03-08 12:00  P155 step estimate whatsapp queued
+03-08 12:00  P155 whatsapp estimate_followup [transactional]
+03-08 12:00  P157 whatsapp estimate_ready [transactional]
+03-08 13:00  P106 step no_show whatsapp queued
+03-08 13:00  P106 whatsapp no_show [transactional]
+03-08 17:00  P001 whatsapp reminder_day_before [transactional]
+03-08 17:00  P007 whatsapp reminder_day_before [transactional]
+03-08 17:00  P045 whatsapp reminder_day_before [transactional]
+03-08 17:00  P047 whatsapp reminder_day_before [transactional]
+03-08 17:00  P107 whatsapp reminder_day_before [transactional]
+03-08 17:00  P129 whatsapp reminder_day_before [transactional]
+03-08 17:00  P162 whatsapp reminder_day_before [transactional]
+03-08 17:00  P188 whatsapp reminder_day_before [transactional]
+03-08 17:00  P214 whatsapp reminder_day_before [transactional]
+03-08 18:00  P007 ai_call no answer
+03-08 18:00  P007 step unconfirmed ai_call requested
+03-08 18:00  P047 ai_call no answer
+03-08 18:00  P047 step unconfirmed ai_call requested
+03-08 19:00  P107 ai_call no answer
+03-08 19:00  P107 step unconfirmed ai_call requested
+03-08 19:00  P162 ai_call answered: confirmed
+03-08 19:00  P162 step unconfirmed ai_call requested
+03-08 19:00  P214 ai_call answered: confirmed
+03-08 19:00  P214 step unconfirmed ai_call requested
+03-08 20:00  P007 step unconfirmed staff_task created
+03-08 20:00  P047 step unconfirmed staff_task created
+03-08 21:00  P107 step unconfirmed staff_task created
+03-09 08:00  P007 whatsapp reminder_same_day [transactional]
+03-09 08:00  P047 whatsapp reminder_same_day [transactional]
+03-09 09:00  P001 ai_call no answer
+03-09 09:00  P001 step unconfirmed ai_call requested
+03-09 09:00  P045 ai_call no answer
+03-09 09:00  P045 step unconfirmed ai_call requested
+03-09 09:00  P107 whatsapp reminder_same_day [transactional]
+03-09 09:00  P129 ai_call no answer
+03-09 09:00  P129 step unconfirmed ai_call requested
+03-09 09:00  P162 whatsapp reminder_same_day [transactional]
+03-09 09:00  P188 whatsapp reminder_same_day [transactional]
+03-09 09:00  P214 whatsapp reminder_same_day [transactional]
+03-09 10:00  P001 whatsapp reminder_same_day [transactional]
+03-09 10:00  P005 step treatment_continuity whatsapp queued
+03-09 10:00  P005 whatsapp treatment_next_sitting [transactional]
+03-09 10:00  P025 step treatment_continuity whatsapp queued
+03-09 10:00  P025 whatsapp treatment_next_sitting [transactional]
+03-09 10:00  P045 whatsapp reminder_same_day [transactional]
+03-09 10:00  P048 step treatment_continuity whatsapp queued
+03-09 10:00  P048 whatsapp treatment_next_sitting [transactional]
+03-09 10:00  P104 step no_show staff_task created
+03-09 10:00  P129 whatsapp reminder_same_day [transactional]
+03-09 11:00  P007 step treatment_continuity whatsapp queued
+03-09 11:00  P007 whatsapp treatment_next_sitting [transactional]
+03-09 11:00  P045 step unconfirmed staff_task created
+03-09 11:00  P047 step treatment_continuity whatsapp queued
+03-09 11:00  P047 whatsapp treatment_next_sitting [transactional]
+03-09 11:00  P150 step estimate whatsapp queued
+03-09 11:00  P150 whatsapp estimate_followup [transactional]
+03-09 12:00  P005 whatsapp assistant_reply [service]
+03-09 12:00  P131 step estimate whatsapp queued
+03-09 12:00  P131 whatsapp estimate_followup [transactional]
+03-09 12:00  P133 whatsapp estimate_ready [transactional]
+03-09 12:00  P156 step estimate whatsapp queued
+03-09 12:00  P156 whatsapp estimate_followup [transactional]
+03-09 12:00  P158 whatsapp estimate_ready [transactional]
+03-09 13:00  P007 step no_show whatsapp queued
+03-09 13:00  P007 whatsapp no_show [transactional]
+03-09 13:00  P047 whatsapp assistant_reply [service]
+03-09 13:00  P107 step no_show whatsapp queued
+03-09 13:00  P107 whatsapp no_show [transactional]
+03-10 10:00  P002 step treatment_continuity whatsapp queued
+03-10 10:00  P002 whatsapp treatment_next_sitting [transactional]
+03-10 10:00  P009 step treatment_continuity whatsapp queued
+03-10 10:00  P009 whatsapp treatment_next_sitting [transactional]
+03-10 10:00  P022 step treatment_continuity whatsapp queued
+03-10 10:00  P022 whatsapp treatment_next_sitting [transactional]
+03-10 10:00  P025 whatsapp booking_confirmation [transactional]
+03-10 10:00  P026 step treatment_continuity whatsapp queued
+03-10 10:00  P026 whatsapp treatment_next_sitting [transactional]
+03-10 10:00  P042 step treatment_continuity staff_task created
+03-10 10:00  P046 step treatment_continuity whatsapp queued
+03-10 10:00  P046 whatsapp treatment_next_sitting [transactional]
+03-10 10:00  P060 step recall whatsapp queued
+03-10 10:00  P060 whatsapp recall [transactional]
+03-10 10:00  P085 step recall whatsapp queued
+03-10 10:00  P085 whatsapp recall [transactional]
+03-10 10:00  P086 step recall whatsapp queued
+03-10 10:00  P086 whatsapp recall [transactional]
+03-10 11:00  P006 step treatment_continuity whatsapp queued
+03-10 11:00  P006 whatsapp treatment_next_sitting [transactional]
+03-10 11:00  P078 step recall whatsapp queued
+03-10 11:00  P078 whatsapp recall [transactional]
+03-10 11:00  P079 step recall whatsapp queued
+03-10 11:00  P079 whatsapp recall [transactional]
+03-10 11:00  P151 step estimate whatsapp queued
+03-10 11:00  P151 whatsapp estimate_followup [transactional]
+03-10 12:00  P132 step estimate whatsapp queued
+03-10 12:00  P132 whatsapp estimate_followup [transactional]
+03-10 12:00  P134 whatsapp estimate_ready [transactional]
+03-10 12:00  P159 whatsapp estimate_ready [transactional]
+03-10 17:00  P008 whatsapp reminder_day_before [transactional]
+03-10 17:00  P028 whatsapp reminder_day_before [transactional]
+03-10 17:00  P029 whatsapp reminder_day_before [transactional]
+03-10 17:00  P049 whatsapp reminder_day_before [transactional]
+03-10 17:00  P105 whatsapp reminder_day_before [transactional]
+03-10 17:00  P108 whatsapp reminder_day_before [transactional]
+03-10 17:00  P109 whatsapp reminder_day_before [transactional]
+03-10 17:00  P163 whatsapp reminder_day_before [transactional]
+03-10 17:00  P164 whatsapp reminder_day_before [transactional]
+03-10 17:00  P189 whatsapp reminder_day_before [transactional]
+03-10 17:00  P190 whatsapp reminder_day_before [transactional]
+03-10 17:00  P215 whatsapp reminder_day_before [transactional]
+03-10 17:00  P216 whatsapp reminder_day_before [transactional]
+03-10 18:00  P008 ai_call answered: confirmed
+03-10 18:00  P008 step unconfirmed ai_call requested
+03-10 18:00  P028 ai_call answered: confirmed
+03-10 18:00  P028 step unconfirmed ai_call requested
+03-10 19:00  P029 ai_call no answer
+03-10 19:00  P029 step unconfirmed ai_call requested
+03-10 19:00  P049 ai_call no answer
+03-10 19:00  P049 step unconfirmed ai_call requested
+03-10 19:00  P108 ai_call answered: confirmed
+03-10 19:00  P108 step unconfirmed ai_call requested
+03-10 19:00  P109 ai_call no answer
+03-10 19:00  P109 step unconfirmed ai_call requested
+03-10 21:00  P029 step unconfirmed staff_task created
+03-10 21:00  P049 step unconfirmed staff_task created
+03-10 21:00  P109 step unconfirmed staff_task created
+03-11 08:00  P008 whatsapp reminder_same_day [transactional]
+03-11 08:00  P028 whatsapp reminder_same_day [transactional]
+03-11 09:00  P029 whatsapp reminder_same_day [transactional]
+03-11 09:00  P049 whatsapp reminder_same_day [transactional]
+03-11 09:00  P105 ai_call no answer
+03-11 09:00  P105 step unconfirmed ai_call requested
+03-11 09:00  P108 whatsapp reminder_same_day [transactional]
+03-11 09:00  P109 whatsapp reminder_same_day [transactional]
+03-11 09:00  P163 ai_call no answer
+03-11 09:00  P163 step unconfirmed ai_call requested
+03-11 09:00  P189 ai_call no answer
+03-11 09:00  P189 step unconfirmed ai_call requested
+03-11 09:00  P190 ai_call answered: confirmed
+03-11 09:00  P190 step unconfirmed ai_call requested
+03-11 09:00  P216 ai_call answered: confirmed
+03-11 09:00  P216 step unconfirmed ai_call requested
+03-11 10:00  P003 step treatment_continuity staff_task created
+03-11 10:00  P009 whatsapp booking_confirmation [transactional]
+03-11 10:00  P020 step treatment_continuity staff_task created
+03-11 10:00  P023 step treatment_continuity whatsapp queued
+03-11 10:00  P023 whatsapp treatment_next_sitting [transactional]
+03-11 10:00  P030 step treatment_continuity whatsapp queued
+03-11 10:00  P030 whatsapp treatment_next_sitting [transactional]
+03-11 10:00  P040 step treatment_continuity staff_task created
+03-11 10:00  P043 step treatment_continuity whatsapp queued
+03-11 10:00  P043 whatsapp treatment_next_sitting [transactional]
+03-11 10:00  P061 step recall whatsapp queued
+03-11 10:00  P061 whatsapp recall [transactional]
+03-11 10:00  P087 step recall whatsapp queued
+03-11 10:00  P087 whatsapp recall [transactional]
+03-11 10:00  P106 step no_show staff_task created
+03-11 10:00  P163 whatsapp reminder_same_day [transactional]
+03-11 10:00  P164 whatsapp reminder_same_day [transactional]
+03-11 10:00  P189 whatsapp reminder_same_day [transactional]
+03-11 10:00  P190 whatsapp reminder_same_day [transactional]
+03-11 11:00  P027 step treatment_continuity whatsapp queued
+03-11 11:00  P027 whatsapp treatment_next_sitting [transactional]
+03-11 11:00  P105 step unconfirmed staff_task created
+03-11 11:00  P105 whatsapp reminder_same_day [transactional]
+03-11 11:00  P189 step unconfirmed staff_task created
+03-11 11:00  P215 whatsapp reminder_same_day [transactional]
+03-11 11:00  P216 whatsapp reminder_same_day [transactional]
+03-11 12:00  P008 step aftercare_checkin whatsapp skipped_no_content
+03-11 12:00  P023 whatsapp assistant_reply [service]
+03-11 12:00  P028 step aftercare_checkin whatsapp skipped_no_content
+03-11 12:00  P133 step estimate whatsapp queued
+03-11 12:00  P133 whatsapp estimate_followup [transactional]
+03-11 12:00  P135 whatsapp estimate_ready [transactional]
+03-11 12:00  P158 step estimate whatsapp queued
+03-11 12:00  P158 whatsapp estimate_followup [transactional]
+03-11 13:00  P087 whatsapp assistant_reply [service]
+03-11 14:00  P108 step no_show whatsapp queued
+03-11 14:00  P108 whatsapp no_show [transactional]
+03-11 14:00  P109 step no_show whatsapp queued
+03-11 14:00  P109 whatsapp no_show [transactional]
+03-11 14:00  P190 step aftercare_checkin whatsapp skipped_no_content
+03-11 14:00  P215 step aftercare_checkin whatsapp skipped_no_content
+03-11 17:00  P010 whatsapp reminder_day_before [transactional]
+03-11 17:00  P025 whatsapp reminder_day_before [transactional]
+03-11 17:00  P050 whatsapp reminder_day_before [transactional]
+03-11 17:00  P110 whatsapp reminder_day_before [transactional]
+03-11 17:00  P165 whatsapp reminder_day_before [transactional]
+03-11 17:00  P191 whatsapp reminder_day_before [transactional]
+03-11 17:00  P217 whatsapp reminder_day_before [transactional]
+03-11 18:00  P010 ai_call answered: confirmed
+03-11 18:00  P010 step unconfirmed ai_call requested
+03-11 18:00  P050 ai_call answered: confirmed
+03-11 18:00  P050 step unconfirmed ai_call requested
+03-11 19:00  P110 ai_call answered: confirmed
+03-11 19:00  P110 step unconfirmed ai_call requested
+03-11 19:00  P165 ai_call no answer
+03-11 19:00  P165 step unconfirmed ai_call requested
+03-11 19:00  P217 ai_call no answer
+03-11 19:00  P217 step unconfirmed ai_call requested
+03-11 21:00  P165 step unconfirmed staff_task created
+03-11 21:00  P217 step unconfirmed staff_task created
+03-12 08:00  P010 whatsapp reminder_same_day [transactional]
+03-12 08:00  P050 whatsapp reminder_same_day [transactional]
+03-12 09:00  P025 ai_call no answer
+03-12 09:00  P025 step unconfirmed ai_call requested
+03-12 09:00  P110 whatsapp reminder_same_day [transactional]
+03-12 09:00  P165 whatsapp reminder_same_day [transactional]
+03-12 09:00  P191 whatsapp reminder_same_day [transactional]
+03-12 09:00  P217 whatsapp reminder_same_day [transactional]
+03-12 10:00  P007 step no_show staff_task created
+03-12 10:00  P008 step aftercare_checkin whatsapp queued
+03-12 10:00  P008 whatsapp checkin [transactional]
+03-12 10:00  P024 step treatment_continuity staff_task created
+03-12 10:00  P025 whatsapp reminder_same_day [transactional]
+03-12 10:00  P028 step aftercare_checkin whatsapp queued
+03-12 10:00  P028 whatsapp checkin [transactional]
+03-12 10:00  P051 step treatment_continuity whatsapp queued
+03-12 10:00  P051 whatsapp treatment_next_sitting [transactional]
+03-12 10:00  P060 whatsapp booking_confirmation [transactional]
+03-12 10:00  P062 step recall whatsapp queued
+03-12 10:00  P062 whatsapp recall [transactional]
+03-12 10:00  P085 whatsapp booking_confirmation [transactional]
+03-12 10:00  P088 step recall whatsapp queued
+03-12 10:00  P088 whatsapp recall [transactional]
+03-12 10:00  P107 step no_show staff_task created
+03-12 10:00  P108 whatsapp booking_confirmation [transactional]
+03-12 10:00  P190 step aftercare_checkin whatsapp queued
+03-12 10:00  P190 whatsapp checkin [transactional]
+03-12 10:00  P215 step aftercare_checkin whatsapp queued
+03-12 10:00  P215 whatsapp checkin [transactional]
+03-12 11:00  P048 step treatment_continuity whatsapp queued
+03-12 11:00  P048 whatsapp treatment_next_sitting [transactional]
+03-12 11:00  P081 step recall whatsapp queued
+03-12 11:00  P081 whatsapp recall [transactional]
+03-12 11:00  P153 step estimate whatsapp queued
+03-12 11:00  P153 whatsapp estimate_followup [transactional]
+03-12 12:00  P134 step estimate whatsapp queued
+03-12 12:00  P134 whatsapp estimate_followup [transactional]
+03-12 12:00  P136 whatsapp estimate_ready [transactional]
+03-12 12:00  P159 step estimate whatsapp queued
+03-12 12:00  P159 whatsapp estimate_followup [transactional]
+03-12 12:00  P165 step aftercare_checkin whatsapp skipped_no_content
+03-12 13:00  P110 step no_show whatsapp queued
+03-12 13:00  P110 whatsapp no_show [transactional]
+03-12 17:00  P009 whatsapp reminder_day_before [transactional]
+03-12 17:00  P011 whatsapp reminder_day_before [transactional]
+03-12 17:00  P031 whatsapp reminder_day_before [transactional]
+03-12 17:00  P111 whatsapp reminder_day_before [transactional]
+03-12 17:00  P166 whatsapp reminder_day_before [transactional]
+03-12 17:00  P192 whatsapp reminder_day_before [transactional]
+03-12 17:00  P218 whatsapp reminder_day_before [transactional]
+03-12 18:00  P011 ai_call no answer
+03-12 18:00  P011 step unconfirmed ai_call requested
+03-12 18:00  P031 ai_call no answer
+03-12 18:00  P031 step unconfirmed ai_call requested
+03-12 19:00  P111 ai_call no answer
+03-12 19:00  P111 step unconfirmed ai_call requested
+03-12 19:00  P166 ai_call answered: confirmed
+03-12 19:00  P166 step unconfirmed ai_call requested
+03-12 19:00  P192 ai_call answered: confirmed
+03-12 19:00  P192 step unconfirmed ai_call requested
+03-12 20:00  P011 step unconfirmed staff_task created
+03-12 20:00  P031 step unconfirmed staff_task created
+03-12 21:00  P111 step unconfirmed staff_task created
+03-13 08:00  P011 whatsapp reminder_same_day [transactional]
+03-13 08:00  P031 whatsapp reminder_same_day [transactional]
+03-13 09:00  P009 ai_call no answer
+03-13 09:00  P009 step unconfirmed ai_call requested
+03-13 09:00  P111 whatsapp reminder_same_day [transactional]
+03-13 09:00  P166 whatsapp reminder_same_day [transactional]
+03-13 09:00  P192 whatsapp reminder_same_day [transactional]
+03-13 09:00  P218 whatsapp reminder_same_day [transactional]
+03-13 10:00  P009 whatsapp reminder_same_day [transactional]
+03-13 10:00  P012 step treatment_continuity whatsapp queued
+03-13 10:00  P012 whatsapp treatment_next_sitting [transactional]
+03-13 10:00  P063 step recall whatsapp queued
+03-13 10:00  P063 whatsapp recall [transactional]
+03-13 10:00  P089 step recall whatsapp queued
+03-13 10:00  P089 whatsapp recall [transactional]
+03-13 10:00  P150 step estimate staff_task created
+03-13 10:00  P165 step aftercare_checkin whatsapp queued
+03-13 10:00  P165 whatsapp checkin [transactional]
+03-13 11:00  P002 step treatment_continuity whatsapp queued
+03-13 11:00  P002 whatsapp treatment_next_sitting [transactional]
+03-13 11:00  P007 step treatment_continuity whatsapp queued
+03-13 11:00  P007 whatsapp treatment_next_sitting [transactional]
+03-13 11:00  P022 step treatment_continuity whatsapp queued
+03-13 11:00  P022 whatsapp treatment_next_sitting [transactional]
+03-13 11:00  P026 step treatment_continuity whatsapp queued
+03-13 11:00  P026 whatsapp treatment_next_sitting [transactional]
+03-13 11:00  P046 step treatment_continuity whatsapp queued
+03-13 11:00  P046 whatsapp treatment_next_sitting [transactional]
+03-13 11:00  P082 step recall whatsapp queued
+03-13 11:00  P082 whatsapp recall [transactional]
+03-13 11:00  P154 step estimate whatsapp queued
+03-13 11:00  P154 whatsapp estimate_followup [transactional]
+03-13 12:00  P135 step estimate whatsapp queued
+03-13 12:00  P135 whatsapp estimate_followup [transactional]
+03-13 12:00  P137 whatsapp estimate_ready [transactional]
+03-13 13:00  P111 step no_show whatsapp queued
+03-13 13:00  P111 whatsapp no_show [transactional]
+03-13 17:00  P032 whatsapp reminder_day_before [transactional]
+03-13 17:00  P052 whatsapp reminder_day_before [transactional]
+03-13 17:00  P108 whatsapp reminder_day_before [transactional]
+03-13 17:00  P112 whatsapp reminder_day_before [transactional]
+03-13 17:00  P167 whatsapp reminder_day_before [transactional]
+03-13 17:00  P193 whatsapp reminder_day_before [transactional]
+03-13 17:00  P219 whatsapp reminder_day_before [transactional]
+03-13 18:00  P032 ai_call answered: confirmed
+03-13 18:00  P032 step unconfirmed ai_call requested
+03-13 18:00  P052 ai_call answered: confirmed
+03-13 18:00  P052 step unconfirmed ai_call requested
+03-13 19:00  P112 ai_call answered: confirmed
+03-13 19:00  P112 step unconfirmed ai_call requested
+03-13 19:00  P193 ai_call no answer
+03-13 19:00  P193 step unconfirmed ai_call requested
+03-13 19:00  P219 ai_call no answer
+03-13 19:00  P219 step unconfirmed ai_call requested
+03-13 21:00  P193 step unconfirmed staff_task created
+03-13 21:00  P219 step unconfirmed staff_task created
+03-14 08:00  P032 whatsapp reminder_same_day [transactional]
+03-14 08:00  P052 whatsapp reminder_same_day [transactional]
+03-14 09:00  P108 ai_call answered: confirmed
+03-14 09:00  P108 step unconfirmed ai_call requested
+03-14 09:00  P111 whatsapp booking_confirmation [transactional]
+03-14 09:00  P112 whatsapp reminder_same_day [transactional]
+03-14 09:00  P167 whatsapp reminder_same_day [transactional]
+03-14 09:00  P193 whatsapp reminder_same_day [transactional]
+03-14 09:00  P219 whatsapp reminder_same_day [transactional]
+03-14 10:00  P006 step treatment_continuity staff_task created
+03-14 10:00  P010 step treatment_continuity whatsapp queued
+03-14 10:00  P010 whatsapp treatment_next_sitting [transactional]
+03-14 10:00  P033 step treatment_continuity whatsapp queued
+03-14 10:00  P033 whatsapp treatment_next_sitting [transactional]
+03-14 10:00  P050 step treatment_continuity whatsapp queued
+03-14 10:00  P050 whatsapp treatment_next_sitting [transactional]
+03-14 10:00  P064 step recall whatsapp queued
+03-14 10:00  P064 whatsapp recall [transactional]
+03-14 10:00  P090 step recall whatsapp queued
+03-14 10:00  P090 whatsapp recall [transactional]
+03-14 10:00  P108 whatsapp reminder_same_day [transactional]
+03-14 10:00  P109 step no_show staff_task created
+03-14 10:00  P151 step estimate staff_task created
+03-14 11:00  P030 step treatment_continuity whatsapp queued
+03-14 11:00  P030 whatsapp treatment_next_sitting [transactional]
+03-14 11:00  P043 step treatment_continuity whatsapp queued
+03-14 11:00  P043 whatsapp treatment_next_sitting [transactional]
+03-14 11:00  P083 step recall whatsapp queued
+03-14 11:00  P083 whatsapp recall [transactional]
+03-14 11:00  P130 step estimate whatsapp queued
+03-14 11:00  P130 whatsapp estimate_followup [transactional]
+03-14 11:00  P155 step estimate whatsapp queued
+03-14 11:00  P155 whatsapp estimate_followup [transactional]
+03-14 12:00  P032 step aftercare_checkin whatsapp skipped_no_content
+03-14 12:00  P052 step aftercare_checkin whatsapp skipped_no_content
+03-14 12:00  P136 step estimate whatsapp queued
+03-14 12:00  P136 whatsapp estimate_followup [transactional]
+03-14 12:00  P138 whatsapp estimate_ready [transactional]
+03-14 13:00  P112 step no_show whatsapp queued
+03-14 13:00  P112 whatsapp no_show [transactional]
+03-14 17:00  P013 whatsapp reminder_day_before [transactional]
+03-14 17:00  P053 whatsapp reminder_day_before [transactional]
+03-14 17:00  P060 whatsapp reminder_day_before [transactional]
+03-14 17:00  P085 whatsapp reminder_day_before [transactional]
+03-14 17:00  P113 whatsapp reminder_day_before [transactional]
+03-14 17:00  P168 whatsapp reminder_day_before [transactional]
+03-14 17:00  P194 whatsapp reminder_day_before [transactional]
+03-14 18:00  P013 ai_call no answer
+03-14 18:00  P013 step unconfirmed ai_call requested
+03-14 18:00  P053 ai_call no answer
+03-14 18:00  P053 step unconfirmed ai_call requested
+03-14 19:00  P060 ai_call answered: confirmed
+03-14 19:00  P060 step unconfirmed ai_call requested
+03-14 19:00  P113 ai_call no answer
+03-14 19:00  P113 step unconfirmed ai_call requested
+03-14 19:00  P168 ai_call answered: confirmed
+03-14 19:00  P168 step unconfirmed ai_call requested
+03-14 20:00  P013 step unconfirmed staff_task created
+03-14 20:00  P053 step unconfirmed staff_task created
+03-14 21:00  P113 step unconfirmed staff_task created
+03-15 08:00  P013 whatsapp reminder_same_day [transactional]
+03-15 08:00  P053 whatsapp reminder_same_day [transactional]
+03-15 09:00  P060 whatsapp reminder_same_day [transactional]
+03-15 09:00  P085 ai_call no answer
+03-15 09:00  P085 step unconfirmed ai_call requested
+03-15 09:00  P113 whatsapp reminder_same_day [transactional]
+03-15 09:00  P168 whatsapp reminder_same_day [transactional]
+03-15 09:00  P194 whatsapp reminder_same_day [transactional]
+03-15 09:00  P230 whatsapp reactivation [promotional]
+03-15 09:00  P250 whatsapp reactivation [promotional]
+03-15 09:00  P270 whatsapp reactivation [promotional]
+03-15 09:00  P290 whatsapp reactivation [promotional]
+03-15 10:00  P011 step treatment_continuity whatsapp queued
+03-15 10:00  P011 whatsapp treatment_next_sitting [transactional]
+03-15 10:00  P027 step treatment_continuity staff_task created
+03-15 10:00  P031 step treatment_continuity whatsapp queued
+03-15 10:00  P031 whatsapp treatment_next_sitting [transactional]
+03-15 10:00  P032 step aftercare_checkin whatsapp queued
+03-15 10:00  P032 whatsapp checkin [transactional]
+03-15 10:00  P033 whatsapp booking_confirmation [transactional]
+03-15 10:00  P052 step aftercare_checkin whatsapp queued
+03-15 10:00  P052 whatsapp checkin [transactional]
+03-15 10:00  P054 step treatment_continuity whatsapp queued
+03-15 10:00  P054 whatsapp treatment_next_sitting [transactional]
+03-15 10:00  P065 step recall whatsapp queued
+03-15 10:00  P065 whatsapp recall [transactional]
+03-15 10:00  P085 whatsapp reminder_same_day [transactional]
+03-15 10:00  P091 step recall whatsapp queued
+03-15 10:00  P091 whatsapp recall [transactional]
+03-15 10:00  P110 step no_show staff_task created
+03-15 11:00  P051 step treatment_continuity whatsapp queued
+03-15 11:00  P051 whatsapp treatment_next_sitting [transactional]
+03-15 11:00  P084 step recall whatsapp queued
+03-15 11:00  P084 whatsapp recall [transactional]
+03-15 11:00  P131 step estimate whatsapp queued
+03-15 11:00  P131 whatsapp estimate_followup [transactional]
+03-15 12:00  P011 whatsapp assistant_reply [service]
+03-15 12:00  P013 step aftercare_checkin whatsapp skipped_no_content
+03-15 12:00  P053 step aftercare_checkin whatsapp skipped_no_content
+03-15 12:00  P139 whatsapp estimate_ready [transactional]
+03-15 13:00  P113 step no_show whatsapp queued
+03-15 13:00  P113 whatsapp no_show [transactional]
+03-15 17:00  P014 whatsapp reminder_day_before [transactional]
+03-15 17:00  P034 whatsapp reminder_day_before [transactional]
+03-15 17:00  P111 whatsapp reminder_day_before [transactional]
+03-15 17:00  P114 whatsapp reminder_day_before [transactional]
+03-15 17:00  P169 whatsapp reminder_day_before [transactional]
+03-15 17:00  P195 whatsapp reminder_day_before [transactional]
+03-15 18:00  P014 ai_call answered: confirmed
+03-15 18:00  P014 step unconfirmed ai_call requested
+03-15 18:00  P034 ai_call answered: confirmed
+03-15 18:00  P034 step unconfirmed ai_call requested
+03-15 19:00  P111 ai_call no answer
+03-15 19:00  P111 step unconfirmed ai_call requested
+03-15 19:00  P114 ai_call answered: confirmed
+03-15 19:00  P114 step unconfirmed ai_call requested
+03-15 19:00  P169 ai_call no answer
+03-15 19:00  P169 step unconfirmed ai_call requested
+03-15 19:00  P195 ai_call no answer
+03-15 19:00  P195 step unconfirmed ai_call requested
+03-15 21:00  P111 step unconfirmed staff_task created
+03-15 21:00  P169 step unconfirmed staff_task created
+03-15 21:00  P195 step unconfirmed staff_task created
+03-16 08:00  P014 whatsapp reminder_same_day [transactional]
+03-16 08:00  P034 whatsapp reminder_same_day [transactional]
+03-16 09:00  P111 whatsapp reminder_same_day [transactional]
+03-16 09:00  P114 whatsapp reminder_same_day [transactional]
+03-16 09:00  P169 whatsapp reminder_same_day [transactional]
+03-16 09:00  P195 whatsapp reminder_same_day [transactional]
+03-16 10:00  P013 step aftercare_checkin whatsapp queued
+03-16 10:00  P013 whatsapp checkin [transactional]
+03-16 10:00  P015 step treatment_continuity whatsapp queued
+03-16 10:00  P015 whatsapp treatment_next_sitting [transactional]
+03-16 10:00  P048 step treatment_continuity staff_task created
+03-16 10:00  P053 step aftercare_checkin whatsapp queued
+03-16 10:00  P053 whatsapp checkin [transactional]
+03-16 10:00  P090 whatsapp booking_confirmation [transactional]
+03-16 10:00  P153 step estimate staff_task created
+03-16 11:00  P012 step treatment_continuity whatsapp queued
+03-16 11:00  P012 whatsapp treatment_next_sitting [transactional]
+03-16 12:00  P138 step estimate whatsapp queued
+03-16 12:00  P138 whatsapp estimate_followup [transactional]
+03-16 12:00  P140 whatsapp estimate_ready [transactional]
+03-16 13:00  P114 step no_show whatsapp queued
+03-16 13:00  P114 whatsapp no_show [transactional]
+03-16 13:00  P195 step aftercare_checkin whatsapp skipped_no_content
+03-17 09:00  P114 whatsapp booking_confirmation [transactional]
+03-17 10:00  P002 step treatment_continuity staff_task created
+03-17 10:00  P007 step treatment_continuity staff_task created
+03-17 10:00  P008 step treatment_continuity whatsapp queued
+03-17 10:00  P008 whatsapp treatment_next_sitting [transactional]
+03-17 10:00  P022 step treatment_continuity staff_task created
+03-17 10:00  P026 step treatment_continuity staff_task created
+03-17 10:00  P028 step treatment_continuity whatsapp queued
+03-17 10:00  P028 whatsapp treatment_next_sitting [transactional]
+03-17 10:00  P036 step treatment_continuity whatsapp queued
+03-17 10:00  P036 whatsapp treatment_next_sitting [transactional]
+03-17 10:00  P046 step treatment_continuity staff_task created
+03-17 10:00  P065 whatsapp booking_confirmation [transactional]
+03-17 10:00  P066 step recall whatsapp queued
+03-17 10:00  P066 whatsapp recall [transactional]
+03-17 10:00  P067 step recall whatsapp queued
+03-17 10:00  P067 whatsapp recall [transactional]
+03-17 10:00  P092 step recall whatsapp queued
+03-17 10:00  P092 whatsapp recall [transactional]
+03-17 10:00  P093 step recall whatsapp queued
+03-17 10:00  P093 whatsapp recall [transactional]
+03-17 10:00  P112 step no_show staff_task created
+03-17 10:00  P154 step estimate staff_task created
+03-17 10:00  P195 step aftercare_checkin whatsapp queued
+03-17 10:00  P195 whatsapp checkin [transactional]
+03-17 11:00  P010 step treatment_continuity whatsapp queued
+03-17 11:00  P010 whatsapp treatment_next_sitting [transactional]
+03-17 11:00  P050 step treatment_continuity whatsapp queued
+03-17 11:00  P050 whatsapp treatment_next_sitting [transactional]
+03-17 11:00  P086 step recall whatsapp queued
+03-17 11:00  P086 whatsapp recall [transactional]
+03-17 11:00  P133 step estimate whatsapp queued
+03-17 11:00  P133 whatsapp estimate_followup [transactional]
+03-17 11:00  P158 step estimate whatsapp queued
+03-17 11:00  P158 whatsapp estimate_followup [transactional]
+03-17 12:00  P139 step estimate whatsapp queued
+03-17 12:00  P139 whatsapp estimate_followup [transactional]
+03-17 12:00  P141 whatsapp estimate_ready [transactional]
+03-17 13:00  P066 whatsapp assistant_reply [service]
+03-17 17:00  P016 whatsapp reminder_day_before [transactional]
+03-17 17:00  P033 whatsapp reminder_day_before [transactional]
+03-17 17:00  P035 whatsapp reminder_day_before [transactional]
+03-17 17:00  P055 whatsapp reminder_day_before [transactional]
+03-17 17:00  P056 whatsapp reminder_day_before [transactional]
+03-17 17:00  P115 whatsapp reminder_day_before [transactional]
+03-17 17:00  P116 whatsapp reminder_day_before [transactional]
+03-17 17:00  P170 whatsapp reminder_day_before [transactional]
+03-17 17:00  P171 whatsapp reminder_day_before [transactional]
+03-17 17:00  P196 whatsapp reminder_day_before [transactional]
+03-17 17:00  P197 whatsapp reminder_day_before [transactional]
+03-17 18:00  P016 ai_call answered: confirmed
+03-17 18:00  P016 step unconfirmed ai_call requested
+03-17 18:00  P035 ai_call no answer
+03-17 18:00  P035 step unconfirmed ai_call requested
+03-17 19:00  P055 ai_call no answer
+03-17 19:00  P055 step unconfirmed ai_call requested
+03-17 19:00  P056 ai_call answered: confirmed
+03-17 19:00  P056 step unconfirmed ai_call requested
+03-17 19:00  P115 ai_call no answer
+03-17 19:00  P115 step unconfirmed ai_call requested
+03-17 19:00  P116 ai_call answered: confirmed
+03-17 19:00  P116 step unconfirmed ai_call requested
+03-17 20:00  P035 step unconfirmed staff_task created
+03-17 21:00  P055 step unconfirmed staff_task created
+03-17 21:00  P115 step unconfirmed staff_task created
+03-18 08:00  P016 whatsapp reminder_same_day [transactional]
+03-18 08:00  P035 whatsapp reminder_same_day [transactional]
+03-18 09:00  P033 ai_call no answer
+03-18 09:00  P033 step unconfirmed ai_call requested
+03-18 09:00  P055 whatsapp reminder_same_day [transactional]
+03-18 09:00  P056 whatsapp reminder_same_day [transactional]
+03-18 09:00  P115 whatsapp reminder_same_day [transactional]
+03-18 09:00  P116 whatsapp reminder_same_day [transactional]
+03-18 09:00  P171 ai_call no answer
+03-18 09:00  P171 step unconfirmed ai_call requested
+03-18 09:00  P196 ai_call answered: confirmed
+03-18 09:00  P196 step unconfirmed ai_call requested
+03-18 10:00  P030 step treatment_continuity staff_task created
+03-18 10:00  P043 step treatment_continuity staff_task created
+03-18 10:00  P057 step treatment_continuity whatsapp queued
+03-18 10:00  P057 whatsapp treatment_next_sitting [transactional]
+03-18 10:00  P068 step recall whatsapp queued
+03-18 10:00  P068 whatsapp recall [transactional]
+03-18 10:00  P078 step recall staff_task created
+03-18 10:00  P079 step recall staff_task created
+03-18 10:00  P094 step recall whatsapp queued
+03-18 10:00  P094 whatsapp recall [transactional]
+03-18 10:00  P113 step no_show staff_task created
+03-18 10:00  P130 step estimate staff_task created
+03-18 10:00  P155 step estimate staff_task created
+03-18 10:00  P170 whatsapp reminder_same_day [transactional]
+03-18 10:00  P171 whatsapp reminder_same_day [transactional]
+03-18 10:00  P196 whatsapp reminder_same_day [transactional]
+03-18 10:00  P197 whatsapp reminder_same_day [transactional]
+03-18 11:00  P031 step treatment_continuity whatsapp queued
+03-18 11:00  P031 whatsapp treatment_next_sitting [transactional]
+03-18 11:00  P033 step unconfirmed staff_task created
+03-18 11:00  P033 whatsapp reminder_same_day [transactional]
+03-18 11:00  P054 step treatment_continuity whatsapp queued
+03-18 11:00  P054 whatsapp treatment_next_sitting [transactional]
+03-18 11:00  P061 step recall whatsapp queued
+03-18 11:00  P061 whatsapp recall [transactional]
+03-18 11:00  P134 step estimate whatsapp queued
+03-18 11:00  P134 whatsapp estimate_followup [transactional]
+03-18 11:00  P159 step estimate whatsapp queued
+03-18 11:00  P159 whatsapp estimate_followup [transactional]
+03-18 12:00  P140 step estimate whatsapp queued
+03-18 12:00  P140 whatsapp estimate_followup [transactional]
+03-18 12:00  P142 whatsapp estimate_ready [transactional]
+03-18 13:00  P094 whatsapp assistant_reply [service]
+03-18 13:00  P170 step aftercare_checkin whatsapp skipped_no_content
+03-18 14:00  P115 step no_show whatsapp queued
+03-18 14:00  P115 whatsapp no_show [transactional]
+03-18 14:00  P116 step no_show whatsapp queued
+03-18 14:00  P116 whatsapp no_show [transactional]
+03-18 17:00  P017 whatsapp reminder_day_before [transactional]
+03-18 17:00  P037 whatsapp reminder_day_before [transactional]
+03-18 17:00  P090 whatsapp reminder_day_before [transactional]
+03-18 17:00  P114 whatsapp reminder_day_before [transactional]
+03-18 17:00  P117 whatsapp reminder_day_before [transactional]
+03-18 17:00  P172 whatsapp reminder_day_before [transactional]
+03-18 17:00  P198 whatsapp reminder_day_before [transactional]
+03-18 18:00  P017 ai_call no answer
+03-18 18:00  P017 step unconfirmed ai_call requested
+03-18 18:00  P037 ai_call no answer
+03-18 18:00  P037 step unconfirmed ai_call requested
+03-18 19:00  P090 ai_call answered: confirmed
+03-18 19:00  P090 step unconfirmed ai_call requested
+03-18 19:00  P117 ai_call no answer
+03-18 19:00  P117 step unconfirmed ai_call requested
+03-18 19:00  P172 ai_call answered: confirmed
+03-18 19:00  P172 step unconfirmed ai_call requested
+03-18 19:00  P198 ai_call answered: confirmed
+03-18 19:00  P198 step unconfirmed ai_call requested
+03-18 20:00  P017 step unconfirmed staff_task created
+03-18 20:00  P037 step unconfirmed staff_task created
+03-18 21:00  P117 step unconfirmed staff_task created
+03-19 08:00  P017 whatsapp reminder_same_day [transactional]
+03-19 08:00  P037 whatsapp reminder_same_day [transactional]
+03-19 09:00  P090 whatsapp reminder_same_day [transactional]
+03-19 09:00  P114 ai_call answered: confirmed
+03-19 09:00  P114 step unconfirmed ai_call requested
+03-19 09:00  P117 whatsapp reminder_same_day [transactional]
+03-19 09:00  P172 whatsapp reminder_same_day [transactional]
+03-19 09:00  P198 whatsapp reminder_same_day [transactional]
+03-19 10:00  P018 step treatment_continuity whatsapp queued
+03-19 10:00  P018 whatsapp treatment_next_sitting [transactional]
+03-19 10:00  P051 step treatment_continuity staff_task created
+03-19 10:00  P057 whatsapp booking_confirmation [transactional]
+03-19 10:00  P069 step recall whatsapp queued
+03-19 10:00  P069 whatsapp recall [transactional]
+03-19 10:00  P095 step recall whatsapp queued
+03-19 10:00  P095 whatsapp recall [transactional]
+03-19 10:00  P114 whatsapp reminder_same_day [transactional]
+03-19 10:00  P131 step estimate staff_task created
+03-19 10:00  P170 step aftercare_checkin whatsapp queued
+03-19 10:00  P170 whatsapp checkin [transactional]
+03-19 11:00  P015 step treatment_continuity whatsapp queued
+03-19 11:00  P015 whatsapp treatment_next_sitting [transactional]
+03-19 11:00  P017 step treatment_continuity whatsapp queued
+03-19 11:00  P017 whatsapp treatment_next_sitting [transactional]
+03-19 11:00  P037 step treatment_continuity whatsapp queued
+03-19 11:00  P037 whatsapp treatment_next_sitting [transactional]
+03-19 11:00  P062 step recall whatsapp queued
+03-19 11:00  P062 whatsapp recall [transactional]
+03-19 11:00  P088 step recall whatsapp queued
+03-19 11:00  P088 whatsapp recall [transactional]
+03-19 11:00  P135 step estimate whatsapp queued
+03-19 11:00  P135 whatsapp estimate_followup [transactional]
+03-19 12:00  P141 step estimate whatsapp queued
+03-19 12:00  P141 whatsapp estimate_followup [transactional]
+03-19 12:00  P143 whatsapp estimate_ready [transactional]
+03-19 13:00  P017 whatsapp assistant_reply [service]
+03-19 13:00  P037 step no_show whatsapp queued
+03-19 13:00  P037 whatsapp no_show [transactional]
+03-19 13:00  P117 step no_show whatsapp queued
+03-19 13:00  P117 whatsapp no_show [transactional]
+03-19 17:00  P038 whatsapp reminder_day_before [transactional]
+03-19 17:00  P058 whatsapp reminder_day_before [transactional]
+03-19 17:00  P065 whatsapp reminder_day_before [transactional]
+03-19 17:00  P118 whatsapp reminder_day_before [transactional]
+03-19 17:00  P173 whatsapp reminder_day_before [transactional]
+03-19 17:00  P199 whatsapp reminder_day_before [transactional]
+03-19 18:00  P038 ai_call answered: confirmed
+03-19 18:00  P038 step unconfirmed ai_call requested
+03-19 18:00  P058 ai_call answered: confirmed
+03-19 18:00  P058 step unconfirmed ai_call requested
+03-19 19:00  P065 ai_call no answer
+03-19 19:00  P065 step unconfirmed ai_call requested
+03-19 19:00  P118 ai_call answered: confirmed
+03-19 19:00  P118 step unconfirmed ai_call requested
+03-19 19:00  P199 ai_call no answer
+03-19 19:00  P199 step unconfirmed ai_call requested
+03-19 21:00  P065 step unconfirmed staff_task created
+03-19 21:00  P199 step unconfirmed staff_task created
+03-20 08:00  P038 whatsapp reminder_same_day [transactional]
+03-20 08:00  P058 whatsapp reminder_same_day [transactional]
+03-20 09:00  P065 whatsapp reminder_same_day [transactional]
+03-20 09:00  P117 whatsapp booking_confirmation [transactional]
+03-20 09:00  P118 whatsapp reminder_same_day [transactional]
+03-20 09:00  P173 whatsapp reminder_same_day [transactional]
+03-20 09:00  P199 whatsapp reminder_same_day [transactional]
+03-20 10:00  P012 step treatment_continuity staff_task created
+03-20 10:00  P016 step treatment_continuity whatsapp queued
+03-20 10:00  P016 whatsapp treatment_next_sitting [transactional]
+03-20 10:00  P032 step treatment_continuity whatsapp queued
+03-20 10:00  P032 whatsapp treatment_next_sitting [transactional]
+03-20 10:00  P035 step treatment_continuity whatsapp queued
+03-20 10:00  P035 whatsapp treatment_next_sitting [transactional]
+03-20 10:00  P039 step treatment_continuity whatsapp queued
+03-20 10:00  P039 whatsapp treatment_next_sitting [transactional]
+03-20 10:00  P052 step treatment_continuity whatsapp queued
+03-20 10:00  P052 whatsapp treatment_next_sitting [transactional]
+03-20 10:00  P055 step treatment_continuity whatsapp queued
+03-20 10:00  P055 whatsapp treatment_next_sitting [transactional]
+03-20 10:00  P056 step treatment_continuity whatsapp queued
+03-20 10:00  P056 whatsapp treatment_next_sitting [transactional]
+03-20 10:00  P070 step recall whatsapp queued
+03-20 10:00  P070 whatsapp recall [transactional]
+03-20 10:00  P081 step recall staff_task created
+03-20 10:00  P096 step recall whatsapp queued
+03-20 10:00  P096 whatsapp recall [transactional]
+03-20 11:00  P008 step treatment_continuity whatsapp queued
+03-20 11:00  P008 whatsapp treatment_next_sitting [transactional]
+03-20 11:00  P028 step treatment_continuity whatsapp queued
+03-20 11:00  P028 whatsapp treatment_next_sitting [transactional]
+03-20 11:00  P036 step treatment_continuity whatsapp queued
+03-20 11:00  P036 whatsapp treatment_next_sitting [transactional]
+03-20 11:00  P037 whatsapp booking_confirmation [transactional]
+03-20 11:00  P063 step recall whatsapp queued
+03-20 11:00  P063 whatsapp recall [transactional]
+03-20 11:00  P089 step recall whatsapp queued
+03-20 11:00  P089 whatsapp recall [transactional]
+03-20 12:00  P035 whatsapp assistant_reply [service]
+03-20 12:00  P038 step aftercare_checkin whatsapp skipped_no_content
+03-20 12:00  P058 step aftercare_checkin whatsapp skipped_no_content
+03-20 12:00  P144 whatsapp estimate_ready [transactional]
+03-20 13:00  P118 step no_show whatsapp queued
+03-20 13:00  P118 whatsapp no_show [transactional]
+03-20 17:00  P019 whatsapp reminder_day_before [transactional]
+03-20 17:00  P057 whatsapp reminder_day_before [transactional]
+03-20 17:00  P059 whatsapp reminder_day_before [transactional]
+03-20 17:00  P119 whatsapp reminder_day_before [transactional]
+03-20 17:00  P174 whatsapp reminder_day_before [transactional]
+03-20 17:00  P200 whatsapp reminder_day_before [transactional]
+03-20 18:00  P019 ai_call no answer
+03-20 18:00  P019 step unconfirmed ai_call requested
+03-20 18:00  P059 ai_call no answer
+03-20 18:00  P059 step unconfirmed ai_call requested
+03-20 19:00  P057 ai_call no answer
+03-20 19:00  P057 step unconfirmed ai_call requested
+03-20 19:00  P119 ai_call no answer
+03-20 19:00  P119 step unconfirmed ai_call requested
+03-20 19:00  P174 ai_call answered: confirmed
+03-20 19:00  P174 step unconfirmed ai_call requested
+03-20 20:00  P019 step unconfirmed staff_task created
+03-20 20:00  P059 step unconfirmed staff_task created
+03-20 21:00  P057 step unconfirmed staff_task created
+03-20 21:00  P119 step unconfirmed staff_task created
+03-21 08:00  P019 whatsapp reminder_same_day [transactional]
+03-21 08:00  P059 whatsapp reminder_same_day [transactional]
+03-21 09:00  P057 whatsapp reminder_same_day [transactional]
+03-21 09:00  P119 whatsapp reminder_same_day [transactional]
+03-21 09:00  P174 whatsapp reminder_same_day [transactional]
+03-21 09:00  P200 whatsapp reminder_same_day [transactional]
+03-21 10:00  P010 step treatment_continuity staff_task created
+03-21 10:00  P013 step treatment_continuity whatsapp queued
+03-21 10:00  P013 whatsapp treatment_next_sitting [transactional]
+03-21 10:00  P038 step aftercare_checkin whatsapp queued
+03-21 10:00  P038 whatsapp checkin [transactional]
+03-21 10:00  P050 step treatment_continuity staff_task created
+03-21 10:00  P053 step treatment_continuity whatsapp queued
+03-21 10:00  P053 whatsapp treatment_next_sitting [transactional]
+03-21 10:00  P058 step aftercare_checkin whatsapp queued
+03-21 10:00  P058 whatsapp checkin [transactional]
+03-21 10:00  P071 step recall whatsapp queued
+03-21 10:00  P071 whatsapp recall [transactional]
+03-21 10:00  P082 step recall staff_task created
+03-21 10:00  P095 whatsapp booking_confirmation [transactional]
+03-21 10:00  P097 step recall whatsapp queued
+03-21 10:00  P097 whatsapp recall [transactional]
+03-21 10:00  P115 step no_show staff_task created
+03-21 10:00  P116 step no_show staff_task created
+03-21 10:00  P133 step estimate staff_task created
+03-21 10:00  P158 step estimate staff_task created
+03-21 11:00  P064 step recall whatsapp queued
+03-21 11:00  P064 whatsapp recall [transactional]
+03-21 12:00  P053 whatsapp assistant_reply [service]
+03-21 12:00  P143 step estimate whatsapp queued
+03-21 12:00  P143 whatsapp estimate_followup [transactional]
+03-21 12:00  P145 whatsapp estimate_ready [transactional]
+03-21 13:00  P119 step no_show whatsapp queued
+03-21 13:00  P119 whatsapp no_show [transactional]
+03-21 13:00  P200 step aftercare_checkin whatsapp skipped_no_content
+03-21 17:00  P037 whatsapp reminder_day_before [transactional]
+03-21 17:00  P117 whatsapp reminder_day_before [transactional]
+03-21 17:00  P120 whatsapp reminder_day_before [transactional]
+03-21 17:00  P175 whatsapp reminder_day_before [transactional]
+03-21 17:00  P201 whatsapp reminder_day_before [transactional]
+03-21 18:00  P120 ai_call answered: confirmed
+03-21 18:00  P120 step unconfirmed ai_call requested
+03-21 18:00  P175 ai_call no answer
+03-21 18:00  P175 step unconfirmed ai_call requested
+03-21 19:00  P037 ai_call no answer
+03-21 19:00  P037 step unconfirmed ai_call requested
+03-21 19:00  P117 ai_call no answer
+03-21 19:00  P117 step unconfirmed ai_call requested
+03-21 19:00  P201 ai_call no answer
+03-21 19:00  P201 step unconfirmed ai_call requested
+03-21 20:00  P175 step unconfirmed staff_task created
+03-21 21:00  P037 step unconfirmed staff_task created
+03-21 21:00  P117 step unconfirmed staff_task created
+03-21 21:00  P201 step unconfirmed staff_task created
+03-22 08:00  P120 whatsapp reminder_same_day [transactional]
+03-22 08:00  P175 whatsapp reminder_same_day [transactional]
+03-22 09:00  P037 whatsapp reminder_same_day [transactional]
+03-22 09:00  P117 whatsapp reminder_same_day [transactional]
+03-22 09:00  P201 whatsapp reminder_same_day [transactional]
+03-22 10:00  P013 whatsapp booking_confirmation [transactional]
+03-22 10:00  P031 step treatment_continuity staff_task created
+03-22 10:00  P054 step treatment_continuity staff_task created
+03-22 10:00  P070 whatsapp booking_confirmation [transactional]
+03-22 10:00  P072 step recall whatsapp queued
+03-22 10:00  P072 whatsapp recall [transactional]
+03-22 10:00  P083 step recall staff_task created
+03-22 10:00  P098 step recall whatsapp queued
+03-22 10:00  P098 whatsapp recall [transactional]
+03-22 10:00  P134 step estimate staff_task created
+03-22 10:00  P159 step estimate staff_task created
+03-22 10:00  P200 step aftercare_checkin whatsapp queued
+03-22 10:00  P200 whatsapp checkin [transactional]
+03-22 11:00  P018 step treatment_continuity whatsapp queued
+03-22 11:00  P018 whatsapp treatment_next_sitting [transactional]
+03-22 11:00  P091 step recall whatsapp queued
+03-22 11:00  P091 whatsapp recall [transactional]
+03-22 11:00  P138 step estimate whatsapp queued
+03-22 11:00  P138 whatsapp estimate_followup [transactional]
+03-22 12:00  P144 step estimate whatsapp queued
+03-22 12:00  P144 whatsapp estimate_followup [transactional]
+03-22 12:00  P146 whatsapp estimate_ready [transactional]
+03-22 12:00  P175 step aftercare_checkin whatsapp skipped_no_content
+03-22 13:00  P120 step no_show whatsapp queued
+03-22 13:00  P120 whatsapp no_show [transactional]
+03-22 17:00  P121 whatsapp reminder_day_before [transactional]
+03-22 17:00  P176 whatsapp reminder_day_before [transactional]
+03-22 17:00  P202 whatsapp reminder_day_before [transactional]
+03-22 18:00  P121 ai_call no answer
+03-22 18:00  P121 step unconfirmed ai_call requested
+03-22 19:00  P202 ai_call answered: confirmed
+03-22 19:00  P202 step unconfirmed ai_call requested
+03-22 20:00  P121 step unconfirmed staff_task created
+03-23 08:00  P121 whatsapp reminder_same_day [transactional]
+03-23 08:00  P176 whatsapp reminder_same_day [transactional]
+03-23 09:00  P120 whatsapp booking_confirmation [transactional]
+03-23 09:00  P202 whatsapp reminder_same_day [transactional]
+03-23 10:00  P015 step treatment_continuity staff_task created
+03-23 10:00  P084 step recall staff_task created
+03-23 10:00  P118 step no_show staff_task created
+03-23 10:00  P135 step estimate staff_task created
+03-23 10:00  P175 step aftercare_checkin whatsapp queued
+03-23 10:00  P175 whatsapp checkin [transactional]
+03-23 11:00  P016 step treatment_continuity whatsapp queued
+03-23 11:00  P016 whatsapp treatment_next_sitting [transactional]
+03-23 11:00  P032 step treatment_continuity whatsapp queued
+03-23 11:00  P032 whatsapp treatment_next_sitting [transactional]
+03-23 11:00  P039 step treatment_continuity whatsapp queued
+03-23 11:00  P039 whatsapp treatment_next_sitting [transactional]
+03-23 11:00  P052 step treatment_continuity whatsapp queued
+03-23 11:00  P052 whatsapp treatment_next_sitting [transactional]
+03-23 11:00  P055 step treatment_continuity whatsapp queued
+03-23 11:00  P055 whatsapp treatment_next_sitting [transactional]
+03-23 11:00  P056 step treatment_continuity whatsapp queued
+03-23 11:00  P056 whatsapp treatment_next_sitting [transactional]
+03-23 11:00  P139 step estimate whatsapp queued
+03-23 11:00  P139 whatsapp estimate_followup [transactional]
+03-23 12:00  P145 step estimate whatsapp queued
+03-23 12:00  P145 whatsapp estimate_followup [transactional]
+03-23 12:00  P147 whatsapp estimate_ready [transactional]
+03-23 13:00  P121 step no_show whatsapp queued
+03-23 13:00  P121 whatsapp no_show [transactional]
+03-24 10:00  P008 step treatment_continuity staff_task created
+03-24 10:00  P028 step treatment_continuity staff_task created
+03-24 10:00  P036 step treatment_continuity staff_task created
+03-24 10:00  P073 step recall whatsapp queued
+03-24 10:00  P073 whatsapp recall [transactional]
+03-24 10:00  P074 step recall whatsapp queued
+03-24 10:00  P074 whatsapp recall [transactional]
+03-24 10:00  P099 step recall whatsapp queued
+03-24 10:00  P099 whatsapp recall [transactional]
+03-24 10:00  P119 step no_show staff_task created
+03-24 11:00  P067 step recall whatsapp queued
+03-24 11:00  P067 whatsapp recall [transactional]
+03-24 11:00  P092 step recall whatsapp queued
+03-24 11:00  P092 whatsapp recall [transactional]
+03-24 11:00  P093 step recall whatsapp queued
+03-24 11:00  P093 whatsapp recall [transactional]
+03-24 12:00  P146 step estimate whatsapp queued
+03-24 12:00  P146 whatsapp estimate_followup [transactional]
+03-24 12:00  P148 whatsapp estimate_ready [transactional]
+03-24 13:00  P073 whatsapp assistant_reply [service]
+03-24 17:00  P013 whatsapp reminder_day_before [transactional]
+03-24 17:00  P070 whatsapp reminder_day_before [transactional]
+03-24 17:00  P095 whatsapp reminder_day_before [transactional]
+03-24 17:00  P120 whatsapp reminder_day_before [transactional]
+03-24 17:00  P122 whatsapp reminder_day_before [transactional]
+03-24 17:00  P123 whatsapp reminder_day_before [transactional]
+03-24 17:00  P177 whatsapp reminder_day_before [transactional]
+03-24 17:00  P178 whatsapp reminder_day_before [transactional]
+03-24 17:00  P203 whatsapp reminder_day_before [transactional]
+03-24 17:00  P204 whatsapp reminder_day_before [transactional]
+03-24 18:00  P122 ai_call answered: confirmed
+03-24 18:00  P122 step unconfirmed ai_call requested
+03-24 18:00  P123 ai_call no answer
+03-24 18:00  P123 step unconfirmed ai_call requested
+03-24 19:00  P177 ai_call no answer
+03-24 19:00  P177 step unconfirmed ai_call requested
+03-24 19:00  P178 ai_call answered: confirmed
+03-24 19:00  P178 step unconfirmed ai_call requested
+03-24 19:00  P204 ai_call answered: confirmed
+03-24 19:00  P204 step unconfirmed ai_call requested
+03-24 20:00  P123 step unconfirmed staff_task created
+03-24 21:00  P177 step unconfirmed staff_task created
+03-25 08:00  P122 whatsapp reminder_same_day [transactional]
+03-25 08:00  P123 whatsapp reminder_same_day [transactional]
+03-25 09:00  P013 ai_call no answer
+03-25 09:00  P013 step unconfirmed ai_call requested
+03-25 09:00  P070 ai_call answered: confirmed
+03-25 09:00  P070 step unconfirmed ai_call requested
+03-25 09:00  P095 ai_call no answer
+03-25 09:00  P095 step unconfirmed ai_call requested
+03-25 09:00  P120 ai_call answered: confirmed
+03-25 09:00  P120 step unconfirmed ai_call requested
+03-25 09:00  P177 whatsapp reminder_same_day [transactional]
+03-25 09:00  P178 whatsapp reminder_same_day [transactional]
+03-25 09:00  P203 whatsapp reminder_same_day [transactional]
+03-25 09:00  P204 whatsapp reminder_same_day [transactional]
+03-25 10:00  P013 whatsapp reminder_same_day [transactional]
+03-25 10:00  P070 whatsapp reminder_same_day [transactional]
+03-25 10:00  P075 step recall whatsapp queued
+03-25 10:00  P075 whatsapp recall [transactional]
+03-25 10:00  P086 step recall staff_task created
+03-25 10:00  P095 whatsapp reminder_same_day [transactional]
+03-25 10:00  P120 whatsapp reminder_same_day [transactional]
+03-25 11:00  P068 step recall whatsapp queued
+03-25 11:00  P068 whatsapp recall [transactional]
+03-25 11:00  P141 step estimate whatsapp queued
+03-25 11:00  P141 whatsapp estimate_followup [transactional]
+03-25 12:00  P149 whatsapp estimate_ready [transactional]
+03-25 13:00  P122 step no_show whatsapp queued
+03-25 13:00  P122 whatsapp no_show [transactional]
+03-25 13:00  P123 step no_show whatsapp queued
+03-25 13:00  P123 whatsapp no_show [transactional]
+03-25 17:00  P124 whatsapp reminder_day_before [transactional]
+03-25 17:00  P179 whatsapp reminder_day_before [transactional]
+03-25 17:00  P205 whatsapp reminder_day_before [transactional]
+03-25 18:00  P124 ai_call answered: confirmed
+03-25 18:00  P124 step unconfirmed ai_call requested
+03-25 19:00  P205 ai_call no answer
+03-25 19:00  P205 step unconfirmed ai_call requested
+03-25 21:00  P205 step unconfirmed staff_task created
+03-26 08:00  P124 whatsapp reminder_same_day [transactional]
+03-26 08:00  P179 whatsapp reminder_same_day [transactional]
+03-26 09:00  P123 whatsapp booking_confirmation [transactional]
+03-26 09:00  P205 whatsapp reminder_same_day [transactional]
+03-26 10:00  P018 step treatment_continuity staff_task created
+03-26 10:00  P038 step treatment_continuity whatsapp queued
+03-26 10:00  P038 whatsapp treatment_next_sitting [transactional]
+03-26 10:00  P058 step treatment_continuity whatsapp queued
+03-26 10:00  P058 whatsapp treatment_next_sitting [transactional]
+03-26 10:00  P061 step recall staff_task created
+03-26 10:00  P076 step recall whatsapp queued
+03-26 10:00  P076 whatsapp recall [transactional]
+03-26 10:00  P121 step no_show staff_task created
+03-26 10:00  P138 step estimate staff_task created
+03-26 11:00  P069 step recall whatsapp queued
+03-26 11:00  P069 whatsapp recall [transactional]
+03-26 12:00  P148 step estimate whatsapp queued
+03-26 12:00  P148 whatsapp estimate_followup [transactional]
+03-26 12:00  P205 step aftercare_checkin whatsapp skipped_no_content
+03-26 13:00  P124 step no_show whatsapp queued
+03-26 13:00  P124 whatsapp no_show [transactional]
+03-26 17:00  P180 whatsapp reminder_day_before [transactional]
+03-26 17:00  P206 whatsapp reminder_day_before [transactional]
+03-26 18:00  P180 ai_call answered: confirmed
+03-26 18:00  P180 step unconfirmed ai_call requested
+03-27 08:00  P180 whatsapp reminder_same_day [transactional]
+03-27 08:00  P206 whatsapp reminder_same_day [transactional]
+03-27 10:00  P016 step treatment_continuity staff_task created
+03-27 10:00  P032 step treatment_continuity staff_task created
+03-27 10:00  P039 step treatment_continuity staff_task created
+03-27 10:00  P052 step treatment_continuity staff_task created
+03-27 10:00  P055 step treatment_continuity staff_task created
+03-27 10:00  P056 step treatment_continuity staff_task created
+03-27 10:00  P062 step recall staff_task created
+03-27 10:00  P075 whatsapp booking_confirmation [transactional]
+03-27 10:00  P077 step recall whatsapp queued
+03-27 10:00  P077 whatsapp recall [transactional]
+03-27 10:00  P088 step recall staff_task created
+03-27 10:00  P139 step estimate staff_task created
+03-27 10:00  P205 step aftercare_checkin whatsapp queued
+03-27 10:00  P205 whatsapp checkin [transactional]
+03-27 11:00  P096 step recall whatsapp queued
+03-27 11:00  P096 whatsapp recall [transactional]
+03-27 11:00  P143 step estimate whatsapp queued
+03-27 11:00  P143 whatsapp estimate_followup [transactional]
+03-27 12:00  P149 step estimate whatsapp queued
+03-27 12:00  P149 whatsapp estimate_followup [transactional]
+03-27 12:00  P180 step aftercare_checkin whatsapp skipped_no_content
+03-27 17:00  P123 whatsapp reminder_day_before [transactional]
+03-27 17:00  P181 whatsapp reminder_day_before [transactional]
+03-27 17:00  P207 whatsapp reminder_day_before [transactional]
+03-27 18:00  P181 ai_call no answer
+03-27 18:00  P181 step unconfirmed ai_call requested
+03-27 18:00  P207 ai_call no answer
+03-27 18:00  P207 step unconfirmed ai_call requested
+03-27 19:00  P123 ai_call no answer
+03-27 19:00  P123 step unconfirmed ai_call requested
+03-27 20:00  P181 step unconfirmed staff_task created
+03-27 20:00  P207 step unconfirmed staff_task created
+03-27 21:00  P123 step unconfirmed staff_task created
+03-28 08:00  P181 whatsapp reminder_same_day [transactional]
+03-28 08:00  P207 whatsapp reminder_same_day [transactional]
+03-28 09:00  P123 whatsapp reminder_same_day [transactional]
+03-28 10:00  P063 step recall staff_task created
+03-28 10:00  P089 step recall staff_task created
+03-28 10:00  P122 step no_show staff_task created
+03-28 10:00  P180 step aftercare_checkin whatsapp queued
+03-28 10:00  P180 whatsapp checkin [transactional]
+03-28 11:00  P071 step recall whatsapp queued
+03-28 11:00  P071 whatsapp recall [transactional]
+03-28 11:00  P097 step recall whatsapp queued
+03-28 11:00  P097 whatsapp recall [transactional]
+03-29 10:00  P064 step recall staff_task created
+03-29 10:00  P124 step no_show staff_task created
+03-29 10:00  P141 step estimate staff_task created
+03-29 11:00  P038 step treatment_continuity whatsapp queued
+03-29 11:00  P038 whatsapp treatment_next_sitting [transactional]
+03-29 11:00  P058 step treatment_continuity whatsapp queued
+03-29 11:00  P058 whatsapp treatment_next_sitting [transactional]
+03-29 11:00  P072 step recall whatsapp queued
+03-29 11:00  P072 whatsapp recall [transactional]
+03-29 11:00  P098 step recall whatsapp queued
+03-29 11:00  P098 whatsapp recall [transactional]
+03-29 11:00  P145 step estimate whatsapp queued
+03-29 11:00  P145 whatsapp estimate_followup [transactional]
+03-29 17:00  P075 whatsapp reminder_day_before [transactional]
+03-29 18:00  P075 ai_call no answer
+03-29 18:00  P075 step unconfirmed ai_call requested
+03-29 20:00  P075 step unconfirmed staff_task created
+03-30 08:00  P075 whatsapp reminder_same_day [transactional]
+03-30 10:00  P091 step recall staff_task created
+03-30 11:00  P146 step estimate whatsapp queued
+03-30 11:00  P146 whatsapp estimate_followup [transactional]

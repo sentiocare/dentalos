@@ -176,8 +176,11 @@ export async function runCampaign(client: PoolClient, id: string, now: Date = ne
 export async function listCampaigns(client: PoolClient) {
   return (
     await client.query(
-      `select c.id, c.name, c.audience, c.offer_text, c.status, c.stats, c.created_at, c.owner_approved_at, u.name as approved_by
-       from campaigns c left join users u on u.id = c.owner_approved_by order by c.created_at desc limit 50`,
+      `select c.id, c.name, c.audience, c.offer_text, c.status, c.stats, c.created_at, c.owner_approved_at,
+              coalesce(m.display_name, u.name) as approved_by
+       from campaigns c left join users u on u.id = c.owner_approved_by
+       left join clinic_memberships m on m.user_id = c.owner_approved_by and m.clinic_id = c.clinic_id
+       order by c.created_at desc limit 50`,
     )
   ).rows;
 }

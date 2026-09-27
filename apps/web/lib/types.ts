@@ -35,6 +35,10 @@ export interface Procedure {
   is_consultation: boolean;
   active: boolean;
   synonyms: string[];
+  recall_months?: number | null;
+  checkin?: boolean;
+  aftercare?: { en: string; hi: string; approved: boolean } | null;
+  deposit_paise?: number | null;
 }
 
 export interface Window {

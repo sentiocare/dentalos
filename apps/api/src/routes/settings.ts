@@ -95,6 +95,13 @@ const procedureBody = z.object({
   requiresLabReceived: z.boolean().default(false),
   active: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
+  recallMonths: z.number().int().min(1).max(36).nullish(),
+  checkin: z.boolean().optional(),
+  // After-care wording is clinical advice: it is only sent once a doctor marks it approved.
+  aftercare: z
+    .object({ en: z.string().trim().max(900), hi: z.string().trim().max(900), approved: z.boolean() })
+    .nullish(),
+  depositPaise: paise.nullish(),
 });
 const PROCEDURE_COLUMNS = {
   name: "name",
@@ -115,6 +122,10 @@ const PROCEDURE_COLUMNS = {
   requiresLabReceived: "requires_lab_received",
   active: "active",
   sortOrder: "sort_order",
+  recallMonths: "recall_months",
+  checkin: "checkin",
+  aftercare: "aftercare",
+  depositPaise: "deposit_paise",
 };
 
 const clinicPatch = z

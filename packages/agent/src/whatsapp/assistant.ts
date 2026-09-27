@@ -477,6 +477,11 @@ class Assistant {
        on conflict do nothing`,
       [this.ctx.conversation.phone],
     );
+    // Follow-ups for this number stop at once, not just when their next step comes round.
+    await this.q.query(
+      "update followup_runs set status = 'stopped_optout', stop_reason = 'STOP on WhatsApp', finished_at = $2 where phone = $1 and status = 'active'",
+      [this.ctx.conversation.phone, this.ctx.now],
+    );
     this.resetFlow();
     this.reply(this.t("stopped"));
   }

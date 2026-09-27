@@ -13,6 +13,9 @@ export interface BookingDraft {
   doctorId?: string;
   chairId?: string;
   patient?: Patient | null;
+  /** Booking a sitting of a treatment plan. */
+  procedureId?: string;
+  treatmentStepId?: string;
 }
 
 export function BookingSheet({
@@ -49,7 +52,7 @@ export function BookingSheet({
   useEffect(() => {
     if (!open || !draft) return;
     setPatient(draft.patient ?? null);
-    setProcedureId("");
+    setProcedureId(draft.procedureId ?? "");
     setDoctorId(draft.doctorId ?? doctors[0]?.id ?? "");
     setChairId(draft.chairId ?? chairs[0]?.id ?? "");
     setDate(draft.date);
@@ -81,6 +84,7 @@ export function BookingSheet({
         endsAt: new Date(start.getTime() + duration * 60_000).toISOString(),
         notes: notes || undefined,
         walkIn,
+        treatmentStepId: draft?.treatmentStepId,
       },
       `${t("appointment.book")}: ${patient.name}`,
     );

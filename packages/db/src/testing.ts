@@ -24,7 +24,14 @@ export interface TestDatabase {
 }
 
 /** Creates a fresh, fully migrated database for one test file. */
-export async function createTestDatabase(options: { migrate?: boolean } = {}): Promise<TestDatabase> {
+export async function createTestDatabase(
+  options: {
+    migrate?: boolean;
+    /** Connections for this test file. Keep small (all test files run at once against one Postgres);
+     *  only tests of simultaneous requests need more. */
+    max?: number;
+  } = {},
+): Promise<TestDatabase> {
   if (!TEST_DATABASE_URL) throw new Error("TEST_DATABASE_URL is not set");
   const name = `dentalos_test_${randomBytes(6).toString("hex")}`;
   const admin = new pg.Client({ connectionString: TEST_DATABASE_URL });
@@ -34,7 +41,7 @@ export async function createTestDatabase(options: { migrate?: boolean } = {}): P
 
   const url = new URL(TEST_DATABASE_URL);
   url.pathname = `/${name}`;
-  const pool = createPool(url.toString(), { max: 25 });
+  const pool = createPool(url.toString(), { max: options.max ?? 6 });
   if (options.migrate !== false) await migrate(pool);
 
   return {

@@ -50,7 +50,10 @@
     "switchClinic": "Switch clinic",
     "inbox": "WhatsApp",
     "tasks": "Tasks",
-    "calls": "Phone calls"
+    "calls": "Phone calls",
+    "treatments": "Incomplete treatments",
+    "followups": "Follow-ups",
+    "campaigns": "Campaigns"
   },
   "login": {
     "title": "Sign in",
@@ -454,5 +457,131 @@
     "healthy": "Assistant service: running",
     "unhealthy": "Assistant service: not running (calls go to the clinic phone)",
     "save": "Save"
+  },
+  "plans": {
+    "title": "Treatment plans",
+    "none": "No treatment plans yet.",
+    "new": "New plan",
+    "template": "Treatment",
+    "teeth": "Teeth (e.g. 36, 46)",
+    "startDate": "First sitting from",
+    "acceptedNow": "Patient has agreed to the plan",
+    "create": "Create plan",
+    "accept": "Patient agreed",
+    "abandon": "Stop plan",
+    "abandonReason": "Why is the plan stopped?",
+    "bookSitting": "Book",
+    "skip": "Skip",
+    "value": "Value",
+    "done": "{done} of {total} sittings done",
+    "window": "{from} – {to}",
+    "estimate": "Make estimate",
+    "status": {
+      "proposed": "Proposed",
+      "accepted": "Agreed",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "abandoned": "Stopped"
+    },
+    "stepStatus": {
+      "pending": "To book",
+      "scheduled": "Booked",
+      "done": "Done",
+      "missed": "Missed",
+      "skipped": "Skipped"
+    }
+  },
+  "estimates": {
+    "title": "Estimates",
+    "none": "No estimates yet.",
+    "send": "Send on WhatsApp",
+    "sent": "Sent to the patient",
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "markAccepted": "Patient accepted",
+    "markDeclined": "Patient declined",
+    "viewPdf": "View PDF",
+    "validUntil": "Valid until {date}",
+    "status": {
+      "draft": "Not sent",
+      "sent": "Sent",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "expired": "Expired"
+    }
+  },
+  "treatments": {
+    "title": "Incomplete treatments",
+    "empty": "No unfinished treatments.",
+    "plans": "Plans",
+    "remaining": "Still to do",
+    "overdue": "Overdue",
+    "sittingsLeft": "{count, plural, one {# sitting left} other {# sittings left}}",
+    "overdueDays": "{days} days overdue",
+    "booked": "Next sitting booked",
+    "next": "Next: {procedure}, {window}",
+    "call": "Call"
+  },
+  "followups": {
+    "title": "Follow-ups",
+    "empty": "Nothing here.",
+    "active": "Active",
+    "finished": "Finished",
+    "stop": "Stop",
+    "nextAt": "Next step {when}",
+    "stopReason": "Why stop? (optional)",
+    "kinds": {
+      "treatment_continuity": "Next sitting",
+      "estimate": "Estimate",
+      "no_show": "Missed visit",
+      "unconfirmed": "Unconfirmed",
+      "recall": "Recall",
+      "aftercare_checkin": "After-care"
+    },
+    "status": {
+      "active": "Running",
+      "stopped_success": "Done: goal reached",
+      "stopped_optout": "Stopped: patient opted out",
+      "stopped_staff": "Stopped by staff",
+      "stopped_obsolete": "No longer needed",
+      "exhausted": "Finished, handed to staff"
+    },
+    "ladders": "Automatic follow-ups",
+    "ladderOn": "On",
+    "ladderSteps": "{count, plural, one {# step} other {# steps}}"
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "empty": "No campaigns yet.",
+    "new": "New reactivation campaign",
+    "name": "Name",
+    "inactiveMonths": "Patients not seen for (months)",
+    "message": "Your message (factual, no offers on treatment)",
+    "audience": "{eligible} will receive it · {noConsent} have not agreed to offers · {optedOut} opted out",
+    "problems": "Please change: {list}",
+    "create": "Save draft",
+    "submit": "Send to owner for approval",
+    "approve": "Approve (owner)",
+    "run": "Send now",
+    "cancel": "Cancel",
+    "stats": "Queued {queued}",
+    "status": {
+      "draft": "Draft",
+      "awaiting_owner": "Waiting for owner",
+      "approved": "Approved",
+      "running": "Sending",
+      "done": "Sent",
+      "cancelled": "Cancelled"
+    },
+    "marketingYes": "Agrees to offers",
+    "marketingNo": "No offers"
+  },
+  "procedureExtra": {
+    "recallMonths": "Recall after (months)",
+    "deposit": "Advance for online bookings (₹)",
+    "checkin": "Next-day check-in message",
+    "aftercareEn": "After-care (English)",
+    "aftercareHi": "After-care (Hindi)",
+    "aftercareApproved": "Doctor has approved this after-care wording"
   }
 }
