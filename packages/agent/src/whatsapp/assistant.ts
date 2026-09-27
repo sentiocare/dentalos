@@ -891,12 +891,10 @@ class Assistant {
       .join("\n");
     return this.reply(
       `${this.t("choose_appointment")}\n${lines}`,
-      list
-        .slice(0, 3)
-        .map((a) => ({
-          id: `appt:${a.id}`,
-          title: buttonLabel(a.starts_at, this.clinic.timezone, this.lang === "hi" ? "hi" : "en"),
-        })),
+      list.slice(0, 3).map((a) => ({
+        id: `appt:${a.id}`,
+        title: buttonLabel(a.starts_at, this.clinic.timezone, this.lang === "hi" ? "hi" : "en"),
+      })),
     );
   }
 
@@ -935,6 +933,8 @@ class Assistant {
     const a = this.state.appointmentId ? await this.ownAppointment(this.state.appointmentId) : undefined;
     if (!a) return this.welcome();
     await cancelAppointment(this.q, a.id, "Cancelled by patient on WhatsApp");
+    // The patient was told in this chat; no separate cancellation notice.
+    await this.q.query("update appointments set cancellation_notified_at = now() where id = $1", [a.id]);
     this.resetFlow();
     this.reply(this.t("cancelled", { patient: a.patient, when: this.when(a.starts_at) }), [
       { id: "book", title: this.t("btn_book") },
@@ -973,6 +973,7 @@ class Assistant {
         now: this.ctx.now,
       });
       await releaseHolds(this.q, `wa:${this.ctx.conversation.id}`);
+      await this.q.query("update appointments set notified_starts_at = starts_at where id = $1", [a.id]);
       const doctor =
         (await this.q.query("select name from doctors where id = $1", [appointment.doctorId])).rows[0]
           ?.name ?? "";

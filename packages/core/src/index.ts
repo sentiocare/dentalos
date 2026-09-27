@@ -18,3 +18,4 @@ export * from "./comms/policy";
 export * from "./comms/conversations";
 export * from "./comms/outbox";
 export * from "./comms/channels";
+export * from "./comms/reminders";

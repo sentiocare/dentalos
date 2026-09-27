@@ -26,6 +26,7 @@ const fakes = () =>
 describe.skipIf(!hasTestDatabase)("staff API", () => {
   let db: TestDatabase;
   let app: ReturnType<typeof buildApp>;
+  const jobs = new MemoryJobQueue();
   let clinicA: string;
   let clinicB: string;
 
@@ -70,7 +71,7 @@ describe.skipIf(!hasTestDatabase)("staff API", () => {
       logger,
       version: "test",
       auth,
-      jobs: new MemoryJobQueue(),
+      jobs,
       channelKey: null,
     });
     owner = await login("9835000001");
@@ -180,6 +181,18 @@ describe.skipIf(!hasTestDatabase)("staff API", () => {
       doctorId = (await call(owner, "POST", "/v1/doctors", { name: "Dr. Sharma" })).json().id;
       chairId = config.chairs[0].id;
       procedureId = config.procedures.find((p: { code: string }) => p.code === "scaling").id;
+    });
+
+    it("staff changes trigger the patient's confirmation planning", async () => {
+      jobs.jobs.length = 0;
+      await call(reception, "POST", "/v1/appointments", {
+        patientId,
+        doctorId,
+        chairId,
+        startsAt: "2031-03-12T10:00:00+05:30",
+        endsAt: "2031-03-12T10:30:00+05:30",
+      });
+      expect(jobs.jobs.some((j) => j.task === "plan_messages")).toBe(true);
     });
 
     it("books, and 20 simultaneous requests for the same slot give exactly one success", async () => {

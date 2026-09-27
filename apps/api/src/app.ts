@@ -77,7 +77,7 @@ export function buildApp(deps: AppDeps) {
     settingsRoutes(api, { staff });
     staffRoutes(api, { staff });
     patientRoutes(api, { staff });
-    appointmentRoutes(api, { staff });
+    appointmentRoutes(api, { staff, jobs: deps.jobs });
     importRoutes(api, { staff });
     auditRoutes(api, { staff });
   });

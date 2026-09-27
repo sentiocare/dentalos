@@ -6,6 +6,7 @@ import {
   moveAppointment,
   setAppointmentStatus,
 } from "@dentalos/core";
+import type { JobQueue } from "@dentalos/core";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { idParams, instant, localDate, parse, uuid } from "../http";
@@ -27,7 +28,16 @@ const bookBody = z.object({
   idempotencyKey: z.string().min(8).max(100).optional(),
 });
 
-export function appointmentRoutes(app: FastifyInstance, deps: { staff: StaffContextService }) {
+export function appointmentRoutes(
+  app: FastifyInstance,
+  deps: { staff: StaffContextService; jobs: JobQueue },
+) {
+  // After any change, plan the patient's confirmation or notice right away (the minute job is a backstop).
+  const plan = async <T>(clinicId: string, result: T) => {
+    await deps.jobs.add("plan_messages", { clinicId }, { jobKey: `plan:${clinicId}` }).catch(() => {});
+    return result;
+  };
+
   app.get("/v1/appointments", (request) =>
     deps.staff.inClinic(request, "appointments.read", (c) => {
       const q = parse(
@@ -72,35 +82,41 @@ export function appointmentRoutes(app: FastifyInstance, deps: { staff: StaffCont
   );
 
   app.post("/v1/appointments", (request) =>
-    deps.staff.inClinic(request, "appointments.write", (c, staff) => {
-      const b = parse(bookBody, request.body);
-      return bookDirect(c, {
-        ...b,
-        source: b.walkIn ? "walk_in" : "staff",
-        bookedByUserId: staff.user.userId,
-      });
-    }),
+    deps.staff
+      .inClinic(request, "appointments.write", async (c, staff) => {
+        const b = parse(bookBody, request.body);
+        const result = await bookDirect(c, {
+          ...b,
+          source: b.walkIn ? "walk_in" : "staff",
+          bookedByUserId: staff.user.userId,
+        });
+        return { staff, result };
+      })
+      .then(({ staff, result }) => plan(staff.clinicId, result)),
   );
 
   // Drag, drop and resize on the calendar.
   app.patch("/v1/appointments/:id", (request) =>
-    deps.staff.inClinic(request, "appointments.write", (c) =>
-      moveAppointment(
-        c,
-        parse(idParams, request.params).id,
-        parse(
-          z.object({
-            startsAt: instant.optional(),
-            endsAt: instant.optional(),
-            doctorId: uuid.optional(),
-            chairId: uuid.optional(),
-            acknowledgeWarnings: z.boolean().optional(),
-            useEmergencyReserve: z.boolean().optional(),
-          }),
-          request.body,
+    deps.staff
+      .inClinic(request, "appointments.write", async (c, staff) => ({
+        staff,
+        result: await moveAppointment(
+          c,
+          parse(idParams, request.params).id,
+          parse(
+            z.object({
+              startsAt: instant.optional(),
+              endsAt: instant.optional(),
+              doctorId: uuid.optional(),
+              chairId: uuid.optional(),
+              acknowledgeWarnings: z.boolean().optional(),
+              useEmergencyReserve: z.boolean().optional(),
+            }),
+            request.body,
+          ),
         ),
-      ),
-    ),
+      }))
+      .then(({ staff, result }) => plan(staff.clinicId, result)),
   );
 
   app.post("/v1/appointments/:id/status", (request) =>
@@ -119,12 +135,15 @@ export function appointmentRoutes(app: FastifyInstance, deps: { staff: StaffCont
   );
 
   app.post("/v1/appointments/:id/cancel", (request) =>
-    deps.staff.inClinic(request, "appointments.write", (c) =>
-      cancelAppointment(
-        c,
-        parse(idParams, request.params).id,
-        parse(z.object({ reason: z.string().max(300).optional() }), request.body ?? {}).reason,
-      ),
-    ),
+    deps.staff
+      .inClinic(request, "appointments.write", async (c, staff) => ({
+        staff,
+        result: await cancelAppointment(
+          c,
+          parse(idParams, request.params).id,
+          parse(z.object({ reason: z.string().max(300).optional() }), request.body ?? {}).reason,
+        ),
+      }))
+      .then(({ staff, result }) => plan(staff.clinicId, result)),
   );
 }

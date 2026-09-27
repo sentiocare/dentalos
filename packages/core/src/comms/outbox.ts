@@ -3,6 +3,7 @@ import type { PoolClient } from "pg";
 import type { JobQueue } from "../jobs";
 import { ensureConversation, logMessage } from "./conversations";
 import { decideContact, DEFAULT_HOURS, type Category, type ContactFacts } from "./policy";
+import { appointmentStillMatches } from "./reminders";
 import { renderTemplate, TEMPLATES, type TemplatePurpose } from "./templates";
 
 export type OutboundPayload =
@@ -15,6 +16,8 @@ export type OutboundPayload =
       params: string[];
       /** Payloads for the template's quick-reply buttons, in order. */
       buttonPayloads?: string[];
+      /** For appointment messages: what must still be true when it is sent. */
+      meta?: { appointmentStartsAt?: string; requireStatus?: "active" | "cancelled" };
     }
   | { kind: "document"; url: string; filename: string; caption?: string };
 
@@ -106,6 +109,19 @@ export async function processOutbox(
     );
     return { status: "retry", at, reason };
   };
+
+  // An appointment message whose appointment moved or was cancelled since it was queued is dropped.
+  if (
+    row.appointment_id &&
+    payload.kind === "template" &&
+    !(await appointmentStillMatches(client, row.appointment_id, payload.meta))
+  ) {
+    await client.query(
+      "update outbox set status = 'cancelled', last_error = 'appointment_changed' where id = $1",
+      [outboxId],
+    );
+    return { status: "skipped", reason: "appointment_changed" };
+  }
 
   const clinic = (
     await client.query("select name, timezone, settings from clinics where id = app.current_clinic_id()")

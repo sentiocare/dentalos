@@ -4,6 +4,7 @@ import type { Logger } from "@dentalos/shared/logger";
 import { Logger as GraphileLogger, type TaskList } from "graphile-worker";
 import { makeHeartbeatTask } from "./tasks/heartbeat";
 import { makeProcessInboundTask } from "./tasks/inbound";
+import { makePlanMessagesTask } from "./tasks/plan-messages";
 import { makeOutboxSweepTask, makeSendOutboxTask } from "./tasks/outbox";
 import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling";
 
@@ -27,6 +28,7 @@ export function buildTaskList(deps: WorkerDeps): TaskList {
     send_outbox: makeSendOutboxTask(deps),
     outbox_sweep: makeOutboxSweepTask(deps),
     process_inbound: makeProcessInboundTask(deps),
+    plan_messages: makePlanMessagesTask(deps),
   };
 }
 
@@ -35,6 +37,7 @@ export const CRONTAB = [
   "* * * * * heartbeat",
   "* * * * * sweep_holds",
   "* * * * * outbox_sweep",
+  "* * * * * plan_messages",
   // Hourly, and backfilled after downtime so reserves never lapse.
   "7 * * * * emergency_reserves ?fill=6h",
 ].join("\n");
