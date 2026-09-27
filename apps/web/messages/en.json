@@ -1,0 +1,11 @@
+{
+  "app": {
+    "name": "Sentio Dental OS",
+    "tagline": "Every call answered. Every patient reminded. Every rupee tracked."
+  },
+  "home": {
+    "setupTitle": "Setup in progress",
+    "setupBody": "This clinic dashboard is being prepared. Today's schedule, patients and calls will appear here.",
+    "language": "Language"
+  }
+}

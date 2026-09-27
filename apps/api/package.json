@@ -1,0 +1,26 @@
+{
+  "name": "@dentalos/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "node ../../scripts/build-node.mjs src/server.ts",
+    "start": "node --enable-source-maps dist/index.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dentalos/adapters": "workspace:*",
+    "@dentalos/db": "workspace:*",
+    "@dentalos/shared": "workspace:*",
+    "@sentry/node": "^11.0.0",
+    "fastify": "^5.12.5",
+    "pg": "^8.23.0",
+    "pino": "^10.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}
