@@ -303,6 +303,15 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       "tasks",
       "calls",
       "call_turns",
+      "treatment_templates",
+      "treatment_plans",
+      "treatment_steps",
+      "estimates",
+      "followup_ladders",
+      "followup_runs",
+      "followup_actions",
+      "campaigns",
+      "campaign_recipients",
     ];
 
     beforeAll(async () => {
@@ -387,6 +396,42 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       await q(
         "insert into call_turns (clinic_id, call_id, seq, speaker, text) values ($1,$2,1,'caller','hello')",
         [b.clinicId, call.rows[0].id],
+      );
+      const proc = (await q("select id from procedure_types where clinic_id = $1 limit 1", [b.clinicId]))
+        .rows[0].id;
+      const tpl = await q(
+        "insert into treatment_templates (clinic_id, code, name, steps) values ($1, 'x', 'X', '[{\"procedure_code\": \"x\"}]') returning id",
+        [b.clinicId],
+      );
+      const plan = await q(
+        "insert into treatment_plans (clinic_id, patient_id, template_id, title) values ($1, $2, $3, 'Plan') returning id",
+        [b.clinicId, b.patientIds[0], tpl.rows[0].id],
+      );
+      await q(
+        "insert into treatment_steps (clinic_id, plan_id, seq, procedure_type_id) values ($1, $2, 1, $3)",
+        [b.clinicId, plan.rows[0].id, proc],
+      );
+      await q(
+        "insert into estimates (clinic_id, patient_id, items, total_paise, valid_until) values ($1, $2, '[{\"label\": \"x\"}]', 100, '2030-01-01')",
+        [b.clinicId, b.patientIds[0]],
+      );
+      await q("insert into followup_ladders (clinic_id, kind, steps) values ($1, 'recall', '[{}]')", [
+        b.clinicId,
+      ]);
+      const run = await q(
+        "insert into followup_runs (clinic_id, kind, subject_type, subject_id, patient_id, next_at) values ($1, 'recall', 'appointment', gen_random_uuid(), $2, now()) returning id",
+        [b.clinicId, b.patientIds[0]],
+      );
+      await q(
+        "insert into followup_actions (clinic_id, run_id, step, action, result) values ($1, $2, 0, 'whatsapp', 'queued')",
+        [b.clinicId, run.rows[0].id],
+      );
+      const campaign = await q("insert into campaigns (clinic_id, name) values ($1, 'C') returning id", [
+        b.clinicId,
+      ]);
+      await q(
+        "insert into campaign_recipients (clinic_id, campaign_id, patient_id, phone) values ($1, $2, $3, '+919876543210')",
+        [b.clinicId, campaign.rows[0].id, b.patientIds[0]],
       );
     });
 

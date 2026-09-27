@@ -1,3 +1,4 @@
+import { ensureTreatmentTemplates } from "../revenue/treatments";
 import { normalizePhone } from "@dentalos/shared";
 import type { PoolClient } from "pg";
 import { DomainError } from "../errors";
@@ -55,8 +56,9 @@ export async function createClinic(
   for (const [i, p] of DEFAULT_PROCEDURES.entries()) {
     await client.query(
       `insert into procedure_types (clinic_id, code, name, name_hi, category, default_duration_min, buffer_after_min,
-                                    synonyms, is_consultation, requires_lab_received, price_public, sort_order)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, $11)`,
+                                    synonyms, is_consultation, requires_lab_received, price_public, sort_order,
+                                    recall_months, checkin, aftercare)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, $11, $12, $13, $14)`,
       [
         clinicId,
         p.code,
@@ -69,9 +71,14 @@ export async function createClinic(
         p.isConsultation ?? false,
         p.requiresLab ?? false,
         i,
+        p.recallMonths ?? null,
+        p.checkin ?? false,
+        p.aftercare ? JSON.stringify({ ...p.aftercare, approved: false }) : null,
       ],
     );
   }
+
+  await ensureTreatmentTemplates(client, clinicId);
 
   await client.query(
     `insert into clinic_memberships (clinic_id, invited_phone, display_name, role) values ($1, $2, $3, 'owner')`,

@@ -15,7 +15,21 @@ export interface DefaultProcedure {
   requiresLab?: boolean;
   /** Filled only by the visiting specialist of this kind, once one is added. */
   specialist?: "orthodontist" | "endodontist" | "oral_surgeon";
+  /** Months until a recall reminder (Build Prompt §5.4). */
+  recallMonths?: number;
+  /** Next-day "how are you feeling?" check-in. */
+  checkin?: boolean;
+  /**
+   * Standard after-care wording. Sent only once a doctor has reviewed it in settings (approved: false here),
+   * because it is clinical advice.
+   */
+  aftercare?: { en: string; hi: string };
 }
+
+const EXTRACTION_CARE = {
+  en: "Bite on the cotton for 30–45 minutes. Today, do not spit, rinse hard or use a straw, and avoid smoking. Eat soft, cool food. Call the clinic if bleeding does not stop or swelling increases.",
+  hi: "रुई को 30–45 मिनट दबाकर रखें। आज थूकें नहीं, ज़ोर से कुल्ला न करें, स्ट्रॉ का इस्तेमाल न करें और धूम्रपान न करें। नरम, ठंडा खाना खाएँ। खून न रुके या सूजन बढ़े तो क्लिनिक को फ़ोन करें।",
+};
 
 export const DEFAULT_PROCEDURES: DefaultProcedure[] = [
   {
@@ -27,6 +41,7 @@ export const DEFAULT_PROCEDURES: DefaultProcedure[] = [
     bufferMin: 0,
     isConsultation: true,
     synonyms: ["checkup", "check up", "consult", "dikhana hai", "doctor se milna", "jaanch"],
+    recallMonths: 6,
   },
   {
     code: "emergency_visit",
@@ -63,6 +78,7 @@ export const DEFAULT_PROCEDURES: DefaultProcedure[] = [
     durationMin: 30,
     bufferMin: 5,
     synonyms: ["cleaning", "safai", "daant saaf", "scaling", "polishing"],
+    recallMonths: 6,
   },
   {
     code: "filling",
@@ -90,6 +106,8 @@ export const DEFAULT_PROCEDURES: DefaultProcedure[] = [
     durationMin: 30,
     bufferMin: 10,
     synonyms: ["extraction", "daant nikalna", "daant nikalwana", "ukhadna"],
+    checkin: true,
+    aftercare: EXTRACTION_CARE,
   },
   {
     code: "surgical_extraction",
@@ -99,6 +117,8 @@ export const DEFAULT_PROCEDURES: DefaultProcedure[] = [
     durationMin: 60,
     bufferMin: 15,
     synonyms: ["wisdom tooth", "akal daadh", "akkal daadh", "impaction"],
+    checkin: true,
+    aftercare: EXTRACTION_CARE,
     specialist: "oral_surgeon",
   },
   {
@@ -128,6 +148,7 @@ export const DEFAULT_PROCEDURES: DefaultProcedure[] = [
     durationMin: 90,
     bufferMin: 15,
     synonyms: ["implant", "naya daant", "fixed daant"],
+    checkin: true,
   },
   {
     code: "implant_followup",

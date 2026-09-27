@@ -1,3 +1,4 @@
+import type { PoolClient } from "pg";
 /**
  * Standard messages, in English and Hindi. Each is registered with Meta as a template (needed outside the
  * 24-hour window) and the same text is sent as a normal message when the patient wrote to us recently.
@@ -11,7 +12,16 @@ export type TemplatePurpose =
   | "appointment_cancelled"
   | "appointment_rescheduled"
   | "missed_call"
-  | "staff_alert";
+  | "staff_alert"
+  | "estimate_ready"
+  | "estimate_followup"
+  | "treatment_next_sitting"
+  | "no_show"
+  | "recall"
+  | "aftercare"
+  | "checkin"
+  | "reactivation"
+  | "deposit_request";
 
 export interface TemplateDefinition {
   purpose: TemplatePurpose;
@@ -99,6 +109,119 @@ export const TEMPLATES: Record<TemplatePurpose, TemplateDefinition> = {
       hi: "Sentio अलर्ट ({{1}}): {{2}}। {{3}} कृपया जल्द से जल्द कॉल करें।",
     },
   },
+  estimate_ready: {
+    purpose: "estimate_ready",
+    name: "sentio_estimate_ready",
+    category: "utility",
+    params: ["patient name", "clinic name", "total", "link to the estimate"],
+    body: {
+      en: "Namaste {{1}}, your treatment estimate from {{2}} is ready: total {{3}}. You can see it here: {{4}}. Reply with any question.",
+      hi: "नमस्ते {{1}}, {{2}} से आपके इलाज का अनुमान (estimate) तैयार है: कुल {{3}}। यहाँ देखें: {{4}}। कोई सवाल हो तो जवाब दें।",
+    },
+    buttons: [
+      { en: "Go ahead", hi: "आगे बढ़ें" },
+      { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
+  },
+  estimate_followup: {
+    purpose: "estimate_followup",
+    name: "sentio_estimate_followup",
+    category: "utility",
+    params: ["patient name", "clinic name", "total"],
+    body: {
+      en: "{{1}}, this is {{2}}. Do you have any questions about your treatment estimate ({{3}})? We can book your first sitting whenever you are ready.",
+      hi: "{{1}}, यह {{2}} है। क्या आपके इलाज के अनुमान ({{3}}) के बारे में कोई सवाल है? जब आप तैयार हों, हम पहली सिटिंग बुक कर सकते हैं।",
+    },
+    buttons: [
+      { en: "Book sitting", hi: "सिटिंग बुक करें" },
+      { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
+  },
+  treatment_next_sitting: {
+    purpose: "treatment_next_sitting",
+    name: "sentio_treatment_next_sitting",
+    category: "utility",
+    params: ["patient name", "clinic name", "treatment", "when it is due"],
+    body: {
+      en: "{{1}}, your next sitting for {{3}} at {{2}} is due {{4}}. It is best to keep to the planned schedule. Shall we book it?",
+      hi: "{{1}}, {{2}} में {{3}} की आपकी अगली सिटिंग {{4}} होनी है। तय समय पर इलाज पूरा करना अच्छा रहता है। क्या बुक करें?",
+    },
+    buttons: [
+      { en: "Book now", hi: "अभी बुक करें" },
+      { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
+  },
+  no_show: {
+    purpose: "no_show",
+    name: "sentio_no_show",
+    category: "utility",
+    params: ["patient name", "clinic name", "day"],
+    body: {
+      en: "{{1}}, we missed you at {{2}} on {{3}}. Would you like to book a new time?",
+      hi: "{{1}}, {{3}} को {{2}} में आपका इंतज़ार था। क्या नया समय बुक करें?",
+    },
+    buttons: [
+      { en: "Book again", hi: "फिर से बुक करें" },
+      { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
+  },
+  recall: {
+    purpose: "recall",
+    name: "sentio_recall",
+    category: "utility",
+    params: ["patient name", "clinic name", "months since the last visit"],
+    body: {
+      en: "Namaste {{1}}, it has been {{3}} months since your last visit to {{2}}. It is time for your regular dental check-up. Shall we book it?",
+      hi: "नमस्ते {{1}}, {{2}} में आपकी पिछली विज़िट को {{3}} महीने हो गए हैं। नियमित दाँतों की जाँच का समय हो गया है। क्या बुक करें?",
+    },
+    buttons: [{ en: "Book check-up", hi: "जाँच बुक करें" }],
+  },
+  aftercare: {
+    purpose: "aftercare",
+    name: "sentio_aftercare",
+    category: "utility",
+    params: ["patient name", "clinic name", "treatment", "the doctor's after-care instructions"],
+    body: {
+      en: "{{1}}, after-care for your {{3}} at {{2}}: {{4}}",
+      hi: "{{1}}, {{2}} में आपके {{3}} के बाद ध्यान रखें: {{4}}",
+    },
+  },
+  checkin: {
+    purpose: "checkin",
+    name: "sentio_checkin",
+    category: "utility",
+    params: ["patient name", "clinic name", "treatment"],
+    body: {
+      en: "Namaste {{1}}, this is {{2}}. How are you feeling after your {{3}} yesterday?",
+      hi: "नमस्ते {{1}}, यह {{2}} है। कल के {{3}} के बाद आप कैसा महसूस कर रहे हैं?",
+    },
+    buttons: [
+      { en: "Feeling fine", hi: "ठीक हूँ" },
+      { en: "Some pain", hi: "थोड़ा दर्द है" },
+      { en: "Need help", hi: "मदद चाहिए" },
+    ],
+  },
+  reactivation: {
+    purpose: "reactivation",
+    name: "sentio_reactivation",
+    category: "marketing",
+    params: ["patient name", "clinic name", "the clinic's message"],
+    body: {
+      en: "Namaste {{1}}, it has been a while since your last visit to {{2}}. {{3}} Reply to book a check-up, or STOP to stop these messages.",
+      hi: "नमस्ते {{1}}, {{2}} में आपकी पिछली विज़िट को काफ़ी समय हो गया है। {{3}} जाँच बुक करने के लिए जवाब दें, या ये मैसेज बंद करने के लिए STOP लिखें।",
+    },
+    buttons: [{ en: "Book check-up", hi: "जाँच बुक करें" }],
+  },
+  deposit_request: {
+    purpose: "deposit_request",
+    name: "sentio_deposit_request",
+    category: "utility",
+    params: ["patient name", "clinic name", "amount", "payment link"],
+    body: {
+      en: "{{1}}, to confirm your appointment at {{2}}, please pay the advance of {{3}} here: {{4}}",
+      hi: "{{1}}, {{2}} में अपना अपॉइंटमेंट पक्का करने के लिए {{3}} का एडवांस यहाँ दें: {{4}}",
+    },
+  },
 };
 
 export function renderTemplate(purpose: TemplatePurpose, language: "en" | "hi", params: string[]): string {
@@ -106,4 +229,24 @@ export function renderTemplate(purpose: TemplatePurpose, language: "en" | "hi", 
     /\{\{(\d+)\}\}/g,
     (_, n: string) => params[Number(n) - 1] ?? "",
   );
+}
+
+/** Adds any standard template the clinic doesn't have yet (new ones arrive with updates). Keeps approvals. */
+export async function registerStandardTemplates(client: PoolClient): Promise<void> {
+  for (const t of Object.values(TEMPLATES)) {
+    for (const language of ["en", "hi"] as const) {
+      await client.query(
+        `insert into message_templates (clinic_id, purpose, name, language, category, body, buttons)
+         values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6) on conflict (clinic_id, purpose, language) do nothing`,
+        [
+          t.purpose,
+          t.name,
+          language,
+          t.category,
+          t.body[language],
+          JSON.stringify((t.buttons ?? []).map((b) => b[language])),
+        ],
+      );
+    }
+  }
 }

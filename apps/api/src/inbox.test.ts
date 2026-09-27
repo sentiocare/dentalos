@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { createAdapters } from "@dentalos/adapters";
-import { createClinic, MemoryJobQueue } from "@dentalos/core";
+import { createClinic, MemoryJobQueue, TEMPLATES } from "@dentalos/core";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import { createLogger } from "@dentalos/shared/logger";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -164,7 +164,7 @@ describe.skipIf(!hasTestDatabase)("staff inbox, tasks and WhatsApp settings", ()
       displayPhone: "+916512345678",
     });
     const status = (await call("GET", "/v1/whatsapp")).json();
-    expect(status.templates).toHaveLength(14);
+    expect(status.templates).toHaveLength(Object.keys(TEMPLATES).length * 2);
     expect(
       (await db.pool.query("select credentials_encrypted from clinic_channels")).rows[0]
         .credentials_encrypted,

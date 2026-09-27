@@ -11,6 +11,7 @@ import { FakeMessagingProvider } from "./messaging/fake";
 import { FakePaymentProvider } from "./payments/fake";
 import { FakeSmsProvider } from "./sms/fake";
 import { FakeStorageProvider } from "./storage/fake";
+import { SupabaseStorageProvider, type SupabaseStorageConfig } from "./storage/supabase";
 import { FakeTelephonyProvider } from "./telephony/fake";
 import { FakeSpeechProvider } from "./voice/fake";
 import { SarvamSpeechProvider, type SarvamConfig } from "./voice/sarvam";
@@ -46,7 +47,6 @@ export interface AdapterSelection {
 const PLANNED: Record<string, string> = {
   razorpay: "Phase 5",
   dlt: "Phase 2",
-  supabase: "Phase 1",
 };
 
 function notYet(kind: string, choice: string): never {
@@ -60,6 +60,7 @@ export interface AdapterOptions {
   whatsapp?: WhatsAppCloudConfig;
   anthropic?: AnthropicConfig;
   sarvam?: SarvamConfig;
+  supabaseStorage?: SupabaseStorageConfig;
   exotel?: ExotelConfig;
 }
 
@@ -96,6 +97,11 @@ export function createAdapters(selection: AdapterSelection, options: AdapterOpti
     payments:
       selection.payments === "fake" ? new FakePaymentProvider() : notYet("Payment", selection.payments),
     sms: selection.sms === "fake" ? new FakeSmsProvider() : notYet("SMS", selection.sms),
-    storage: selection.storage === "fake" ? new FakeStorageProvider() : notYet("Storage", selection.storage),
+    storage:
+      selection.storage === "fake"
+        ? new FakeStorageProvider()
+        : new SupabaseStorageProvider(
+            required(options.supabaseStorage, "Storage (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)"),
+          ),
   };
 }

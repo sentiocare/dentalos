@@ -17,6 +17,7 @@ export { FakeLLMProvider } from "./llm/fake";
 export { FakePaymentProvider } from "./payments/fake";
 export { FakeSmsProvider } from "./sms/fake";
 export { FakeStorageProvider } from "./storage/fake";
+export { SupabaseStorageProvider, type SupabaseStorageConfig } from "./storage/supabase";
 export { WhatsAppCloudProvider, toMetaWebhook, type WhatsAppCloudConfig } from "./messaging/whatsapp-cloud";
 export * from "./env";
 export { AnthropicLLMProvider, type AnthropicConfig } from "./llm/anthropic";

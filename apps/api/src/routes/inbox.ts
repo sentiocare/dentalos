@@ -2,7 +2,7 @@ import {
   connectWhatsApp,
   enqueueMessage,
   scheduleSend,
-  TEMPLATES,
+  registerStandardTemplates,
   whatsAppStatus,
   WINDOW_MS,
   type JobQueue,
@@ -179,12 +179,14 @@ export function inboxRoutes(
   // WhatsApp connection and templates (owner).
   app.get("/v1/whatsapp", (request) =>
     deps.staff.inClinic(request, "settings.manage", async (c) => {
+      const status = await whatsAppStatus(c);
+      if (status.connected) await registerStandardTemplates(c);
       const templates = (
         await c.query(
           "select id, purpose, name, language, category, body, meta_status from message_templates order by purpose, language",
         )
       ).rows;
-      return { ...(await whatsAppStatus(c)), templates };
+      return { ...status, templates };
     }),
   );
 
@@ -206,22 +208,7 @@ export function inboxRoutes(
       );
       await connectWhatsApp(c, deps.channelKey, b);
       // Register the standard templates for this clinic (to be submitted to Meta for approval).
-      for (const t of Object.values(TEMPLATES)) {
-        for (const language of ["en", "hi"] as const) {
-          await c.query(
-            `insert into message_templates (clinic_id, purpose, name, language, category, body, buttons)
-             values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6) on conflict (clinic_id, purpose, language) do nothing`,
-            [
-              t.purpose,
-              t.name,
-              language,
-              t.category,
-              t.body[language],
-              JSON.stringify((t.buttons ?? []).map((b) => b[language])),
-            ],
-          );
-        }
-      }
+      await registerStandardTemplates(c);
       return whatsAppStatus(c);
     }),
   );

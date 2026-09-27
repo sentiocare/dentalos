@@ -286,13 +286,14 @@ export interface AppointmentRow {
   source: string;
   notes: string | null;
   idempotencyKey: string | null;
+  treatmentStepId: string | null;
 }
 
 export type AppointmentStatus =
   "booked" | "confirmed" | "checked_in" | "in_chair" | "completed" | "cancelled" | "no_show";
 
 const APPOINTMENT_COLUMNS = `id, branch_id, patient_id, doctor_id, chair_id, procedure_type_id, starts_at, ends_at,
-  buffer_min, status, source, notes, idempotency_key`;
+  buffer_min, status, source, notes, idempotency_key, treatment_step_id`;
 
 function toAppointment(r: Record<string, unknown>): AppointmentRow {
   return {
@@ -309,6 +310,7 @@ function toAppointment(r: Record<string, unknown>): AppointmentRow {
     source: r.source as string,
     notes: r.notes as string | null,
     idempotencyKey: r.idempotency_key as string | null,
+    treatmentStepId: (r.treatment_step_id as string | null) ?? null,
   };
 }
 
@@ -343,13 +345,14 @@ async function insertAppointment(
     notes?: string | null;
     bookedByUserId?: string | null;
     idempotencyKey?: string | null;
+    treatmentStepId?: string | null;
   },
 ): Promise<AppointmentRow> {
   const inserted = await trySavepoint(client, () =>
     client.query(
       `insert into appointments (clinic_id, branch_id, patient_id, doctor_id, chair_id, procedure_type_id, starts_at,
-                                 ends_at, buffer_min, source, notes, booked_by_user_id, idempotency_key)
-       values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                                 ends_at, buffer_min, source, notes, booked_by_user_id, idempotency_key, treatment_step_id)
+       values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        returning ${APPOINTMENT_COLUMNS}`,
       [
         a.branchId,
@@ -364,6 +367,7 @@ async function insertAppointment(
         a.notes ?? null,
         a.bookedByUserId ?? null,
         a.idempotencyKey ?? null,
+        a.treatmentStepId ?? null,
       ],
     ),
   );
@@ -384,6 +388,8 @@ export async function bookFromHold(
     notes?: string;
     idempotencyKey?: string;
     bookedByUserId?: string;
+    /** The treatment sitting this visit is for (the plan updates itself). */
+    treatmentStepId?: string | null;
   },
 ): Promise<AppointmentRow> {
   const existing = await findByIdempotencyKey(client, input.idempotencyKey);
@@ -413,6 +419,7 @@ export async function bookFromHold(
     notes: input.notes,
     idempotencyKey: input.idempotencyKey,
     bookedByUserId: input.bookedByUserId,
+    treatmentStepId: input.treatmentStepId,
   });
   // The caller's other offered options are no longer needed.
   await releaseHolds(client, hold.holder);
@@ -474,6 +481,7 @@ export async function bookDirect(
     notes?: string;
     idempotencyKey?: string;
     bookedByUserId?: string;
+    treatmentStepId?: string | null;
     now?: Date;
   },
 ): Promise<{ appointment: AppointmentRow; warnings: PlacementWarning[] }> {
@@ -494,6 +502,7 @@ export async function bookDirect(
     notes: input.notes,
     idempotencyKey: input.idempotencyKey,
     bookedByUserId: input.bookedByUserId,
+    treatmentStepId: input.treatmentStepId,
   });
   return { appointment, warnings: placed.warnings };
 }

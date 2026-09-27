@@ -19,6 +19,9 @@ export const adapterEnvSchema = z.object({
     .string()
     .regex(/^v\d+\.\d+$/)
     .default("v23.0"),
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  STORAGE_BUCKET: z.string().default("clinic-files"),
   SARVAM_API_KEY: z.string().optional(),
   SARVAM_STT_MODEL: z.string().default("saarika:v2.5"),
   SARVAM_TTS_MODEL: z.string().default("bulbul:v2"),
@@ -56,6 +59,10 @@ export function adapterOptions(env: AdapterEnv): AdapterOptions {
             verifyToken: env.WHATSAPP_VERIFY_TOKEN,
             graphVersion: env.WHATSAPP_GRAPH_VERSION,
           }
+        : undefined,
+    supabaseStorage:
+      env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY
+        ? { url: env.SUPABASE_URL, serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY, bucket: env.STORAGE_BUCKET }
         : undefined,
     sarvam: env.SARVAM_API_KEY
       ? {
@@ -100,6 +107,9 @@ export function checkAdapterEnv(env: AdapterEnv, appEnv: string, ctx: z.Refineme
     if (!env.WHATSAPP_VERIFY_TOKEN)
       ctx.addIssue({ code: "custom", path: ["WHATSAPP_VERIFY_TOKEN"], message: "required for WhatsApp" });
   }
+  if (env.STORAGE_PROVIDER === "supabase")
+    for (const key of ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"] as const)
+      if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: "required for Supabase storage" });
   if (env.VOICE_PROVIDER === "sarvam" && !env.SARVAM_API_KEY)
     ctx.addIssue({ code: "custom", path: ["SARVAM_API_KEY"], message: "required for Sarvam speech" });
   if (env.TELEPHONY_PROVIDER === "exotel") {
