@@ -30,10 +30,14 @@ export function createPool(
 
 export type Actor = "system" | `user:${string}` | `agent:voice` | `agent:whatsapp` | `job:${string}`;
 
+export type StaffRole = "owner" | "doctor" | "receptionist" | "assistant";
+
 export interface ClinicContext {
   clinicId: string;
   userId?: string;
   actor: Actor;
+  /** Staff role, or "emergency"/"agent" for automated flows. Checked by privileged database functions. */
+  role?: StaffRole | "emergency" | "agent" | "system";
 }
 
 /**
@@ -53,8 +57,9 @@ export async function withClinic<T>(
     await client.query(
       `select set_config('app.clinic_id', $1, true),
               set_config('app.user_id', $2, true),
-              set_config('app.actor', $3, true)`,
-      [context.clinicId, context.userId ?? "", context.actor],
+              set_config('app.actor', $3, true),
+              set_config('app.role', $4, true)`,
+      [context.clinicId, context.userId ?? "", context.actor, context.role ?? ""],
     );
     const result = await fn(client);
     await client.query("commit");
@@ -67,12 +72,20 @@ export async function withClinic<T>(
   }
 }
 
-/** For non-tenant work (health checks, heartbeats) that still must not run as a privileged role. */
-export async function withAppRole<T>(pool: pg.Pool, fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {
+/**
+ * For work before a clinic is chosen (login, membership lookup) or non-tenant work (health checks,
+ * heartbeats). Still runs as app_user, so no tenant table is readable.
+ */
+export async function withAppRole<T>(
+  pool: pg.Pool,
+  fn: (client: pg.PoolClient) => Promise<T>,
+  options: { userId?: string } = {},
+): Promise<T> {
   const client = await pool.connect();
   try {
     await client.query("begin");
     await client.query("set local role app_user");
+    if (options.userId) await client.query("select set_config('app.user_id', $1, true)", [options.userId]);
     const result = await fn(client);
     await client.query("commit");
     return result;

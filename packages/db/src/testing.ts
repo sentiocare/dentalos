@@ -49,3 +49,55 @@ export async function createTestDatabase(options: { migrate?: boolean } = {}): P
     },
   };
 }
+
+export interface SeededClinic {
+  clinicId: string;
+  branchId: string;
+  doctorIds: string[];
+  chairIds: string[];
+  procedureId: string;
+  patientIds: string[];
+}
+
+/**
+ * Minimal clinic for database tests: 2 doctors, 2 chairs, one 30-minute procedure, 2 patients.
+ * Inserted with the pool's privileged role (fixtures bypass RLS on purpose).
+ */
+export async function seedMinimalClinic(pool: pg.Pool, name = "Test Dental"): Promise<SeededClinic> {
+  const one = async (sql: string, params: unknown[]) => (await pool.query(sql, params)).rows[0].id as string;
+  const clinicId = await one("insert into clinics (name) values ($1) returning id", [name]);
+  const branchId = await one(
+    "insert into branches (clinic_id, name, is_default) values ($1, 'Main', true) returning id",
+    [clinicId],
+  );
+  const doctorIds = [
+    await one("insert into doctors (clinic_id, name) values ($1, 'Dr. Sharma') returning id", [clinicId]),
+    await one("insert into doctors (clinic_id, name) values ($1, 'Dr. Verma') returning id", [clinicId]),
+  ];
+  const chairIds = [
+    await one("insert into chairs (clinic_id, branch_id, name) values ($1, $2, 'Chair 1') returning id", [
+      clinicId,
+      branchId,
+    ]),
+    await one("insert into chairs (clinic_id, branch_id, name) values ($1, $2, 'Chair 2') returning id", [
+      clinicId,
+      branchId,
+    ]),
+  ];
+  const procedureId = await one(
+    `insert into procedure_types (clinic_id, code, name, default_duration_min, buffer_after_min)
+     values ($1, 'scaling', 'Scaling', 30, 5) returning id`,
+    [clinicId],
+  );
+  const patientIds = [
+    await one(
+      "insert into patients (clinic_id, name, phone) values ($1, 'Ramesh Kumar', '+919876543210') returning id",
+      [clinicId],
+    ),
+    await one(
+      "insert into patients (clinic_id, name, phone) values ($1, 'Sunita Devi', '+919812345678') returning id",
+      [clinicId],
+    ),
+  ];
+  return { clinicId, branchId, doctorIds, chairIds, procedureId, patientIds };
+}
