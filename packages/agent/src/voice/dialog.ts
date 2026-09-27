@@ -100,7 +100,9 @@ export interface VoiceState {
     | "anything_else"
     | "offer_book"
     | "offer_consult"
-    | "offer_staff";
+    | "offer_staff"
+    | "outbound_confirm"
+    | "outbound_change";
   flow?: "book" | "reschedule" | "cancel";
   lastQuestion?: { text: string; expect: Expect };
   patientId?: string;
@@ -153,6 +155,10 @@ export interface VoiceContext {
   phone: string | null;
   now: Date;
   llm?: LLMProvider;
+  /** Why we placed this call (outbound calls only). */
+  purpose?: "confirm_appointment" | null;
+  /** The appointment an outbound call is about. */
+  subjectId?: string | null;
 }
 
 /** Loaded once per call. */
@@ -359,8 +365,11 @@ export class VoiceDialog {
 
     switch (input.kind) {
       case "start":
-        this.say(this.t("greeting"), false);
-        this.ask(this.t("how_help"));
+        if (ctx.purpose === "confirm_appointment" && ctx.subjectId) await this.outboundStart(ctx.subjectId);
+        else {
+          this.say(this.t("greeting"), false);
+          this.ask(this.t("how_help"));
+        }
         break;
       case "no_input":
         await this.silence();
@@ -490,6 +499,14 @@ export class VoiceDialog {
     const emergency = detectEmergency(trimmed, this.facts.emergencyTriggers);
     if (emergency.level !== "none") return this.handleEmergency(trimmed, emergency.level, emergency.triggers);
 
+    // 2. "Don't call me" is honoured at once (§6.9).
+    if (
+      /\b(call mat karo|call mat karna|call mat kijiye|phone mat karo|phone mat karna|don'?t call( me)?|do not call( me)?|stop calling|call band karo)\b/i.test(
+        romanize(trimmed),
+      )
+    )
+      return this.voiceOptOut();
+
     // Speaking after the recording notice counts as agreeing to it (docs/COMPLIANCE.md).
     if (!this.s.consented && this.ctx.phone) {
       await this.q.query(
@@ -580,6 +597,28 @@ export class VoiceDialog {
       this.resetFlow();
       return this.anythingElse();
     }
+    if (step === "outbound_confirm") {
+      const t = ` ${romanize(text).toLowerCase()} `;
+      const negative = /\b(nahi|nahin|nai|no|not|can'?t|cannot|won'?t|mushkil)\b/.test(t);
+      const coming =
+        /\b(aa (jaunga|jaungi|jayenge|jaenge|jaoonga|raha|rahi|rahe|sakta|sakti|sakenge|payenge|paunga|paungi)|aaunga|aaungi|aayenge|will come|i'?ll come|i will be there|coming|pakka|confirm)\b/.test(
+          t,
+        );
+      if (yes || (coming && !negative)) return this.outboundConfirm();
+      if (u.intent === "reschedule") return this.startReschedule();
+      if (u.intent === "cancel") return this.askCancel();
+      if (no) {
+        this.s.step = "outbound_change";
+        return this.ask(this.t("outbound_change_q"));
+      }
+    }
+    if (step === "outbound_change") {
+      const t = romanize(text).toLowerCase();
+      if (u.intent === "reschedule" || /\b(badal|change|move|time|dusra|doosra|another)\b/.test(t))
+        return this.startReschedule();
+      if (u.intent === "cancel" || /\b(cancel|radd)\b/.test(t)) return this.askCancel();
+      if (no || u.intent === "human") return this.outboundStaff();
+    }
     if (step === "offer_staff" && (yes || no)) {
       if (yes) return this.human("Asked for staff after being misunderstood");
       this.s.misses = 0;
@@ -651,6 +690,74 @@ export class VoiceDialog {
 
   private goodbye() {
     this.say(this.t("goodbye"), false);
+    this.s.outcome ??= "information";
+    this.endAction = { kind: "hangup" };
+  }
+
+  // ---------------------------------------------------------------- outbound confirmation calls
+
+  private async outboundStart(appointmentId: string) {
+    const a = await this.ownAppointment(appointmentId);
+    this.say(this.t("outbound_greeting"), false);
+    if (!a || !["booked", "confirmed"].includes(a.status)) {
+      this.say(this.t("goodbye"), false);
+      this.endAction = { kind: "hangup" };
+      return;
+    }
+    const doctor =
+      (
+        await this.q.query(
+          "select d.name from appointments a join doctors d on d.id = a.doctor_id where a.id = $1",
+          [a.id],
+        )
+      ).rows[0]?.name ?? "";
+    this.s.appointmentId = a.id;
+    this.s.patientId = a.patient_id;
+    this.s.step = "outbound_confirm";
+    // Answering the call and hearing the notice is the recording consent (as for incoming calls).
+    this.ask(
+      this.t("outbound_confirm_q", { patient: a.patient, when: this.when(a.starts_at), doctor }),
+      "yes_no",
+    );
+  }
+
+  private async outboundConfirm() {
+    const a = this.s.appointmentId ? await this.ownAppointment(this.s.appointmentId) : undefined;
+    if (a?.status === "booked") await setAppointmentStatus(this.q, a.id, "confirmed");
+    this.note(`Confirmed ${a?.patient ?? "the"} appointment on an outbound call`);
+    this.s.outcome = "confirmed";
+    this.resetFlow();
+    this.say(this.t("outbound_confirmed"), false);
+    this.endAction = { kind: "hangup" };
+  }
+
+  private async outboundStaff() {
+    await this.task(
+      "callback",
+      "normal",
+      "Could not confirm the appointment on the call",
+      "The patient wants to talk about their appointment.",
+      `outbound:${this.ctx.callId}`,
+      {
+        appointmentId: this.s.appointmentId ?? null,
+      },
+    );
+    this.s.outcome = "callback";
+    this.resetFlow();
+    this.say(this.t("outbound_staff_will_call"), false);
+    this.endAction = { kind: "hangup" };
+  }
+
+  private async voiceOptOut() {
+    if (this.ctx.phone)
+      await this.q.query(
+        `insert into opt_outs (clinic_id, phone, channel, category, source) values (app.current_clinic_id(), $1, 'voice', 'all', 'voice_request')
+         on conflict do nothing`,
+        [this.ctx.phone],
+      );
+    this.note("Asked not to be called again (recorded)");
+    this.resetFlow();
+    this.say(this.t("voice_optout"), false);
     this.s.outcome ??= "information";
     this.endAction = { kind: "hangup" };
   }

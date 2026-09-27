@@ -12,6 +12,30 @@ const T = {
     en: "Namaste, thank you for calling {clinic}. I'm the clinic's digital assistant. This call may be recorded for quality, and your details are used only for your treatment.",
     hi: "नमस्ते, {clinic} में फ़ोन करने के लिए धन्यवाद। मैं क्लिनिक की डिजिटल असिस्टेंट हूँ। यह कॉल क्वालिटी के लिए रिकॉर्ड हो सकती है, और आपकी जानकारी सिर्फ़ आपके इलाज के लिए इस्तेमाल होगी।",
   },
+  outbound_greeting: {
+    en: "Namaste, this is the digital assistant of {clinic}. This call may be recorded.",
+    hi: "नमस्ते, मैं {clinic} की डिजिटल असिस्टेंट बोल रही हूँ। यह कॉल रिकॉर्ड हो सकती है।",
+  },
+  outbound_confirm_q: {
+    en: "{patient} has an appointment {when}, with {doctor}. Will you be able to come?",
+    hi: "{patient} का appointment {when} है, {doctor} के साथ। क्या आप आ पाएँगे?",
+  },
+  outbound_confirmed: {
+    en: "Thank you! Your appointment is confirmed. See you then.",
+    hi: "धन्यवाद! आपका appointment पक्का है। मिलते हैं।",
+  },
+  outbound_change_q: {
+    en: "No problem. Shall I move it to another time, or cancel it?",
+    hi: "कोई बात नहीं। क्या मैं समय बदल दूँ, या appointment cancel कर दूँ?",
+  },
+  outbound_staff_will_call: {
+    en: "Alright. The clinic staff will call you to sort it out. Thank you!",
+    hi: "ठीक है। क्लिनिक स्टाफ़ आपको फ़ोन करके बात कर लेंगे। धन्यवाद!",
+  },
+  voice_optout: {
+    en: "Sorry for the trouble. The clinic will not call you with automatic calls again. You can still call the clinic any time.",
+    hi: "परेशानी के लिए माफ़ी। क्लिनिक आपको अब अपने आप वाली कॉल नहीं करेगा। आप कभी भी क्लिनिक को फ़ोन कर सकते हैं।",
+  },
   how_help: {
     en: "How can I help you?",
     hi: "बताइए, मैं आपकी क्या मदद कर सकती हूँ?",

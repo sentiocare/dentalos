@@ -119,4 +119,56 @@ describe.skipIf(!hasTestDatabase)("worker with a database", () => {
     expect(await storage.get(key)).toBeNull();
     await utils.release();
   });
+
+  it("places a confirmation call only when the rules allow, and records it", async () => {
+    const clinic = await seedMinimalClinic(db.pool, "Call Dental");
+    await db.pool.query(
+      'update clinics set settings = \'{"voice": {"outboundFlowId": "987", "outboundHours": ["00:00", "23:59"]}}\' where id = $1',
+      [clinic.clinicId],
+    );
+    await db.pool.query(
+      "insert into clinic_channels (clinic_id, kind, external_id, display_phone) values ($1, 'voice', '+918047118888', '+918047118888')",
+      [clinic.clinicId],
+    );
+    const appt = (
+      await db.pool.query(
+        `insert into appointments (clinic_id, branch_id, patient_id, doctor_id, chair_id, starts_at, ends_at)
+         values ($1, $2, $3, $4, $5, now() + interval '20 hours', now() + interval '20 hours 30 minutes') returning id`,
+        [clinic.clinicId, clinic.branchId, clinic.patientIds[0], clinic.doctorIds[0], clinic.chairIds[0]],
+      )
+    ).rows[0].id;
+    const telephony = adapters.telephony as FakeTelephonyProvider;
+    const utils = await makeWorkerUtils({ pgPool: db.pool, logger: graphileLogger(logger) });
+    await utils.addJob("place_call", { clinicId: clinic.clinicId, appointmentId: appt, runId: "r", step: 0 });
+    await runOnce({
+      pgPool: db.pool,
+      taskList: buildTaskList(deps(db.pool as never)),
+      logger: graphileLogger(logger),
+    });
+    expect(telephony.placedCalls.at(-1)).toMatchObject({
+      to: "+919876543210",
+      callerId: "+918047118888",
+      flowId: "987",
+    });
+    const call = (
+      await db.pool.query("select direction, purpose, subject_id, route from calls where subject_id = $1", [
+        appt,
+      ])
+    ).rows;
+    expect(call).toEqual([
+      { direction: "outbound", purpose: "confirm_appointment", subject_id: appt, route: "assistant" },
+    ]);
+
+    // Confirmed meanwhile: no call.
+    const before = telephony.placedCalls.length;
+    await db.pool.query("update appointments set status = 'confirmed' where id = $1", [appt]);
+    await utils.addJob("place_call", { clinicId: clinic.clinicId, appointmentId: appt, runId: "r", step: 1 });
+    await runOnce({
+      pgPool: db.pool,
+      taskList: buildTaskList(deps(db.pool as never)),
+      logger: graphileLogger(logger),
+    });
+    expect(telephony.placedCalls.length).toBe(before);
+    await utils.release();
+  });
 });

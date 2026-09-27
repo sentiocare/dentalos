@@ -41,8 +41,11 @@ export async function runVoiceTurn(
   deps: { llm?: LLMProvider; now?: () => Date } = {},
 ): Promise<TurnResult> {
   return withClinic(pool, ctxFor(call.clinicId), async (c) => {
-    const row = (await c.query("select state, status from calls where id = $1 for update", [call.callId]))
-      .rows[0];
+    const row = (
+      await c.query("select state, status, purpose, subject_id from calls where id = $1 for update", [
+        call.callId,
+      ])
+    ).rows[0];
     if (!row) throw new Error("call not found");
     const saved = row.state as Partial<VoiceState>;
     const state: VoiceState = saved && saved.lang ? (saved as VoiceState) : initialVoiceState(facts);
@@ -64,7 +67,15 @@ export async function runVoiceTurn(
     else if (input.kind === "dtmf") await addTurn("caller", `(pressed ${input.digit})`, ["dtmf"]);
 
     const turn = await dialog.handle(
-      { client: c, callId: call.callId, phone: call.phone, now: deps.now?.() ?? new Date(), llm: deps.llm },
+      {
+        client: c,
+        callId: call.callId,
+        phone: call.phone,
+        now: deps.now?.() ?? new Date(),
+        llm: deps.llm,
+        purpose: row.purpose,
+        subjectId: row.subject_id,
+      },
       input,
     );
     const flags = [

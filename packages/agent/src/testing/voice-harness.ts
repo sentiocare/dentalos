@@ -3,6 +3,7 @@ import { FakeLLMProvider } from "@dentalos/adapters";
 import { withClinic, type Pool } from "@dentalos/db";
 import { endCall, loadFacts, runVoiceTurn, type CallRef, type TurnResult } from "../voice/call";
 import type { ClinicFacts } from "../voice/dialog";
+import { recordOutboundCall } from "../voice/outbound";
 import { routeInboundCall, type CallRoute } from "../voice/routing";
 import { setupWhatsAppClinic } from "./harness";
 
@@ -50,6 +51,22 @@ export class CallerSimulator {
     this.call = { clinicId: routed.clinicId, callId: routed.callId, phone: this.phone, route: routed.route };
     if (routed.route !== "assistant") return [];
     this.facts = await loadFacts(this.pool, routed.clinicId);
+    return this.turn({ kind: "start" });
+  }
+
+  /** The clinic's assistant calls this patient to confirm an appointment; the patient picks up. */
+  async answerConfirmationCall(appointmentId: string, clinicId: string, patientId: string) {
+    const callId = await recordOutboundCall(this.pool, {
+      clinicId,
+      provider: "fake",
+      providerCallId: randomUUID(),
+      appointmentId,
+      phone: this.phone!,
+      callerId: VOICE_NUMBER,
+      patientId,
+    });
+    this.call = { clinicId, callId, phone: this.phone, route: "assistant" };
+    this.facts = await loadFacts(this.pool, clinicId);
     return this.turn({ kind: "start" });
   }
 

@@ -59,13 +59,16 @@ export async function routeInboundCall(
   call: InboundCall,
   options: { voiceHealthy: boolean; now?: Date },
 ): Promise<RoutedCall | null> {
-  if (!call.to || !call.providerCallId) return null;
-  const clinicId = await withAppRole(
-    pool,
-    async (c) =>
-      (await c.query("select app.clinic_for_channel('voice', $1) as id", [call.to])).rows[0].id as
-        string | null,
-  );
+  if (!call.providerCallId) return null;
+  // Calls we placed ourselves (confirmations) are already recorded; otherwise find the clinic by number.
+  const clinicId = await withAppRole(pool, async (c) => {
+    const known = (
+      await c.query("select app.clinic_for_call($1, $2) as id", [call.provider, call.providerCallId])
+    ).rows[0].id as string | null;
+    if (known || !call.to) return known;
+    return (await c.query("select app.clinic_for_channel('voice', $1) as id", [call.to])).rows[0].id as
+      string | null;
+  });
   if (!clinicId) return null;
   const now = options.now ?? new Date();
 
