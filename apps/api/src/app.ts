@@ -22,6 +22,7 @@ import { billingRoutes } from "./routes/billing";
 import { walletRoutes } from "./routes/wallet";
 import { adminRoutes } from "./routes/admin";
 import { leadRoutes } from "./routes/leads";
+import { reportRoutes } from "./routes/reports";
 import { callRoutes } from "./routes/calls";
 import { telephonyRoutes } from "./routes/telephony";
 import { webhookRoutes } from "./routes/webhooks";
@@ -111,6 +112,7 @@ export function buildApp(deps: AppDeps) {
     walletRoutes(api, { staff, pool: deps.pool, adapters: deps.adapters, seller });
     adminRoutes(api, { staff, pool: deps.pool, adapters: deps.adapters, seller, jobs: deps.jobs });
     leadRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
+    reportRoutes(api, { staff });
   });
   return app;
 }

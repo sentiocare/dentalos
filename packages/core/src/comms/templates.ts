@@ -31,7 +31,8 @@ export type TemplatePurpose =
   | "billing_spend_alert"
   | "billing_link"
   | "lead_welcome"
-  | "lead_nudge";
+  | "lead_nudge"
+  | "owner_daily_report";
 
 export interface TemplateDefinition {
   purpose: TemplatePurpose;
@@ -344,6 +345,17 @@ export const TEMPLATES: Record<TemplatePurpose, TemplateDefinition> = {
       { en: "Ask a question", hi: "सवाल पूछें" },
       { en: "Call me", hi: "मुझे कॉल करें" },
     ],
+  },
+  // The owner's 9 pm summary (Phase 6).
+  owner_daily_report: {
+    purpose: "owner_daily_report",
+    name: "sentio_owner_daily_report",
+    category: "utility",
+    params: ["owner name", "clinic name", "the day in numbers", "report link"],
+    body: {
+      en: "{{1}}, today at {{2}}: {{3}} Full report: {{4}}",
+      hi: "{{1}}, {{2}} में आज: {{3}} पूरी रिपोर्ट: {{4}}",
+    },
   },
 };
 

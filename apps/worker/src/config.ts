@@ -9,6 +9,8 @@ export const configSchema = z
     DATABASE_URL: z.string().url(),
     WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(50).default(5),
     GIT_SHA: z.string().default(process.env.RAILWAY_GIT_COMMIT_SHA ?? "dev"),
+    /** The staff dashboard's address, for links in the owner's nightly report. */
+    DASHBOARD_URL: z.string().url().optional(),
   })
   .extend(adapterEnvSchema.shape)
   .superRefine((env, ctx) => checkAdapterEnv(env, env.APP_ENV, ctx));

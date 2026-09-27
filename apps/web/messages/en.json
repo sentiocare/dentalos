@@ -57,7 +57,8 @@
     "money": "Payments & dues",
     "wallet": "Sentio balance & billing",
     "admin": "Sentio admin",
-    "leads": "Leads"
+    "leads": "Leads",
+    "reports": "Reports"
   },
   "login": {
     "title": "Sign in",
@@ -951,5 +952,40 @@
     "connect": "Connect Page",
     "alertPhone": "Staff phone for hot-lead alerts",
     "alertHint": "Gets a WhatsApp when a hot lead comes in or a lead asks for a call, so someone calls within minutes."
+  },
+  "reports": {
+    "title": "Reports",
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "date": "Date",
+    "recovered": "Rupees recovered after follow-ups",
+    "recoveredHow": "Money patients paid within 30 days after a Sentio follow-up reached them (each payment counted once). Every rupee is listed below.",
+    "seen": "Patients seen",
+    "noShows": "{n} did not come",
+    "newBookings": "New bookings",
+    "byAssistant": "{n} by the assistant",
+    "calls": "Calls",
+    "answeredByAssistant": "{n} answered by the assistant",
+    "chats": "WhatsApp chats",
+    "collected": "Collected",
+    "dues": "Owed now: {amount}",
+    "leads": "New leads",
+    "leadsBooked": "{booked} booked, {won} became patients",
+    "tomorrow": "Tomorrow: {booked} appointments, {unconfirmed} not confirmed yet.",
+    "recoveredDetail": "Where the recovered money came from",
+    "noneRecovered": "Nothing yet in this period.",
+    "paidAfter": "{kind} follow-up on {followup}, paid on {paid}",
+    "kinds": {
+      "treatment_continuity": "Next sitting",
+      "estimate": "Estimate",
+      "no_show": "Missed visit",
+      "recall": "Recall",
+      "dues": "Payment due",
+      "lead": "Lead"
+    },
+    "nightly": "Send me this report on WhatsApp every night at 9 pm"
   }
 }

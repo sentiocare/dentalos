@@ -57,7 +57,8 @@
     "money": "भुगतान और बकाया",
     "wallet": "Sentio बैलेंस और बिलिंग",
     "admin": "Sentio एडमिन",
-    "leads": "लीड्स"
+    "leads": "लीड्स",
+    "reports": "रिपोर्ट"
   },
   "login": {
     "title": "साइन इन",
@@ -951,5 +952,40 @@
     "connect": "Page जोड़ें",
     "alertPhone": "गर्म लीड अलर्ट के लिए स्टाफ़ फ़ोन",
     "alertHint": "गर्म लीड आने पर या लीड के कॉल माँगने पर WhatsApp मिलता है, ताकि कोई कुछ मिनटों में कॉल करे।"
+  },
+  "reports": {
+    "title": "रिपोर्ट",
+    "periods": {
+      "day": "दिन",
+      "week": "हफ़्ता",
+      "month": "महीना"
+    },
+    "date": "तारीख",
+    "recovered": "फ़ॉलो-अप के बाद वापस आए रुपये",
+    "recoveredHow": "Sentio फ़ॉलो-अप पहुँचने के 30 दिनों के अंदर मरीज़ों ने जो भुगतान किया (हर भुगतान एक बार गिना गया)। हर रुपया नीचे लिखा है।",
+    "seen": "मरीज़ आए",
+    "noShows": "{n} नहीं आए",
+    "newBookings": "नई बुकिंग",
+    "byAssistant": "{n} असिस्टेंट ने",
+    "calls": "कॉल",
+    "answeredByAssistant": "{n} का जवाब असिस्टेंट ने दिया",
+    "chats": "WhatsApp चैट",
+    "collected": "जमा",
+    "dues": "अभी बकाया: {amount}",
+    "leads": "नई लीड",
+    "leadsBooked": "{booked} बुक, {won} मरीज़ बने",
+    "tomorrow": "कल: {booked} अपॉइंटमेंट, {unconfirmed} अभी पक्के नहीं।",
+    "recoveredDetail": "वापस आया पैसा कहाँ से आया",
+    "noneRecovered": "इस अवधि में अभी कुछ नहीं।",
+    "paidAfter": "{followup} को {kind} फ़ॉलो-अप, {paid} को भुगतान",
+    "kinds": {
+      "treatment_continuity": "अगली सिटिंग",
+      "estimate": "एस्टिमेट",
+      "no_show": "छूटी विज़िट",
+      "recall": "रिकॉल",
+      "dues": "बकाया",
+      "lead": "लीड"
+    },
+    "nightly": "यह रिपोर्ट हर रात 9 बजे WhatsApp पर भेजें"
   }
 }

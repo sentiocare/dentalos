@@ -24,6 +24,7 @@ const runner = await run({
     adapters: createAdapters(adapterSelection(config), adapterOptions(config)),
     channelKey: config.CHANNEL_SECRET_KEY ? parseSecretKey(config.CHANNEL_SECRET_KEY) : null,
     seller: sellerFromEnv(config),
+    dashboardUrl: config.DASHBOARD_URL ?? null,
   }),
   crontab: CRONTAB,
   logger: graphileLogger(logger),

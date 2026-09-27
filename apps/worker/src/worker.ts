@@ -9,6 +9,7 @@ import { makePlanMessagesTask } from "./tasks/plan-messages";
 import { makeOutboxSweepTask, makeSendOutboxTask } from "./tasks/outbox";
 import { makePlaceCallTask } from "./tasks/calls";
 import { makeFetchLeadTask, makeLeadKickoffTask } from "./tasks/leads";
+import { makeOwnerReportTask } from "./tasks/reports";
 import {
   makeRechargeDebitTask,
   makeRechargeForecastTask,
@@ -31,6 +32,8 @@ export interface WorkerDeps {
   channelKey: Buffer | null;
   /** Sentio's details for its GST invoices (recharges). */
   seller: SentioSeller;
+  /** The dashboard's address, for links in messages to owners. */
+  dashboardUrl?: string | null;
 }
 
 export function buildTaskList(deps: WorkerDeps): TaskList {
@@ -51,6 +54,7 @@ export function buildTaskList(deps: WorkerDeps): TaskList {
     wallet_watch: makeWalletWatchTask(deps),
     fetch_lead: makeFetchLeadTask(deps),
     lead_kickoff: makeLeadKickoffTask(deps),
+    owner_report: makeOwnerReportTask(deps),
     recharge_forecast: makeRechargeForecastTask(deps),
     recharge_debit: makeRechargeDebitTask(deps),
     reconcile: makeReconcileTask(deps),
@@ -66,6 +70,8 @@ export const CRONTAB = [
   "*/5 * * * * followups",
   "*/5 * * * * wallet_watch",
   "13 * * * * recharge_forecast",
+  // Hourly; each clinic's report goes at 21:00 in its own time zone.
+  "2 * * * * owner_report",
   "*/15 * * * * recharge_debit",
   // 03:30 IST (22:00 UTC): yesterday's usage against provider bills, wallets against their ledgers.
   "0 22 * * * reconcile",
