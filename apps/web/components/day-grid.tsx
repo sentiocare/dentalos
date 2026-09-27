@@ -194,6 +194,7 @@ export function DayGrid({
               className="relative bg-slate-100"
               style={{ height }}
               data-column={col.id}
+              data-day-start={dayStartMin}
               onClick={(e) => {
                 if (!editable) return;
                 const rect = e.currentTarget.getBoundingClientRect();

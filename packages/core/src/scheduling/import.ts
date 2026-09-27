@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { normalizePhone } from "@dentalos/shared";
 import type { PoolClient } from "pg";
-import { DomainError } from "../errors";
+import { DomainError, sequential } from "../errors";
 import { isLikelySamePerson, nameSimilarity, normalizeName } from "../patients/names";
 import { createPatient, findPatientsByPhone } from "../patients/service";
 import { parseIndianDate } from "../patients/import";
@@ -128,13 +128,14 @@ export async function previewAppointmentImport(
   mapping: Partial<Record<AppointmentField, string>>,
   today: LocalDate,
 ): Promise<AppointmentPreviewRow[]> {
-  const [doctors, procedures, chairs] = await Promise.all([
-    client.query("select id, name from doctors where active"),
-    client.query(
-      "select id, name, name_hi, code, synonyms, default_duration_min from procedure_types where active",
-    ),
-    client.query("select id, name from chairs where active"),
-  ]);
+  const [doctors, procedures, chairs] = await sequential(
+    () => client.query("select id, name from doctors where active"),
+    () =>
+      client.query(
+        "select id, name, name_hi, code, synonyms, default_duration_min from procedure_types where active",
+      ),
+    () => client.query("select id, name from chairs where active"),
+  );
   const doctorLookup = doctors.rows.map((d) => ({ id: d.id, names: [d.name] }));
   const procedureLookup = procedures.rows.map((p) => ({
     id: p.id,

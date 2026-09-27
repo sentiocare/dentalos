@@ -13,6 +13,7 @@ WORKDIR /app
 COPY --from=build /repo/apps/api/dist/ ./
 COPY --from=build /repo/packages/db/dist/index.js ./migrate.js
 COPY --from=build /repo/packages/db/migrations ./migrations
+# Sentio admin commands (create a clinic, demo data): node admin.js --help
 USER node
 EXPOSE 8080
 # Railway runs `node migrate.js migrate` as the pre-deploy command (see deploy/railway/api.json).

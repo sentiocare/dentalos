@@ -1,5 +1,7 @@
 "use client";
 
+import { displayPhone } from "../../../../lib/format";
+
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -99,7 +101,7 @@ export default function PatientPage() {
             </p>
             {p.phone ? (
               <a href={`tel:${p.phone}`} className="mt-1 inline-block text-brand-700 underline">
-                {p.phone.replace("+91", "")}
+                {displayPhone(p.phone)}
               </a>
             ) : null}
           </div>

@@ -90,8 +90,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-2 backdrop-blur md:hidden">
-          <span className="truncate text-sm font-semibold text-brand-700">{session.clinic?.name}</span>
-          <span className="text-xs text-slate-500">{session.clinic?.displayName}</span>
+          <span className="min-w-0 truncate text-sm font-semibold text-brand-700">
+            {session.clinic?.name}
+          </span>
+          <span className="ml-2 shrink-0 truncate text-xs text-slate-500">{session.clinic?.displayName}</span>
         </header>
         <SyncBanner />
         <main className="flex-1 pb-20 md:pb-6">{children}</main>

@@ -2,11 +2,11 @@
 // which keeps the Docker image small and avoids workspace resolution surprises in production.
 import { build } from "esbuild";
 
-const [entry = "src/server.ts"] = process.argv.slice(2);
+const [entry = "src/server.ts", outfile = "dist/index.js"] = process.argv.slice(2);
 
 await build({
   entryPoints: [entry],
-  outfile: "dist/index.js",
+  outfile,
   bundle: true,
   platform: "node",
   target: "node22",

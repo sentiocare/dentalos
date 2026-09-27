@@ -1,5 +1,5 @@
 import type { PoolClient } from "pg";
-import { DomainError, pgErrorCode } from "../errors";
+import { DomainError, pgErrorCode, sequential } from "../errors";
 import { addDays, localDateOf, zonedInstant, type LocalDate } from "../time";
 import { checkPlacement, findAvailableSlots, pickOptions, type PlacementWarning } from "./availability";
 import type { BusyInterval, PartOfDay, ProcedureSpec, ScheduleConfig, SlotCandidate } from "./types";
@@ -43,17 +43,18 @@ export async function defaultBranchId(client: PoolClient): Promise<string> {
 export async function loadScheduleConfig(client: PoolClient): Promise<ScheduleConfig> {
   const settings = await loadClinicSettings(client);
   const time = (t: string) => t.slice(0, 5);
-  const [doctors, chairs, hours, breaks, visiting, holidays, leaves] = await Promise.all([
-    client.query("select id, name, kind, active from doctors order by created_at, name"),
-    client.query("select id, branch_id, name, equipment, active, sort_order from chairs"),
-    client.query("select branch_id, doctor_id, weekday, start_time, end_time from working_hours"),
-    client.query("select branch_id, doctor_id, weekday, start_time, end_time from breaks"),
-    client.query(
+  const q = (sql: string) => () => client.query(sql);
+  const [doctors, chairs, hours, breaks, visiting, holidays, leaves] = await sequential(
+    q("select id, name, kind, active from doctors order by created_at, name"),
+    q("select id, branch_id, name, equipment, active, sort_order from chairs"),
+    q("select branch_id, doctor_id, weekday, start_time, end_time from working_hours"),
+    q("select branch_id, doctor_id, weekday, start_time, end_time from breaks"),
+    q(
       "select branch_id, doctor_id, weekday, start_time, end_time, valid_from::text, valid_to::text from doctor_visiting_schedules",
     ),
-    client.query("select branch_id, date::text, name from holidays"),
-    client.query("select doctor_id, starts_at, ends_at from leaves where ends_at > now() - interval '1 day'"),
-  ]);
+    q("select branch_id, date::text, name from holidays"),
+    q("select doctor_id, starts_at, ends_at from leaves where ends_at > now() - interval '1 day'"),
+  );
   return {
     timezone: settings.timezone,
     slotStepMin: settings.slotStepMin,
@@ -137,11 +138,11 @@ export interface SlotSearch {
 
 export async function findSlots(client: PoolClient, search: SlotSearch): Promise<SlotCandidate[]> {
   const now = search.now ?? new Date();
-  const [config, procedure, branchId] = await Promise.all([
-    loadScheduleConfig(client),
-    loadProcedure(client, search.procedureId),
-    search.branchId ?? defaultBranchId(client),
-  ]);
+  const [config, procedure, branchId] = await sequential(
+    () => loadScheduleConfig(client),
+    () => loadProcedure(client, search.procedureId),
+    async () => search.branchId ?? defaultBranchId(client),
+  );
   const settings = await loadClinicSettings(client);
   const today = localDateOf(now, config.timezone);
   const fromDate = search.fromDate && search.fromDate > today ? search.fromDate : today;

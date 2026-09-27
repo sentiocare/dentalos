@@ -18,3 +18,15 @@ export function pgErrorCode(error: unknown): string | undefined {
     ? String((error as { code: unknown }).code)
     : undefined;
 }
+
+/**
+ * Runs async steps one after another. A database client can only run one query at a time, so work that
+ * shares a client must not use Promise.all.
+ */
+export async function sequential<T extends readonly unknown[]>(
+  ...steps: { [K in keyof T]: () => Promise<T[K]> }
+): Promise<T> {
+  const results: unknown[] = [];
+  for (const step of steps) results.push(await step());
+  return results as unknown as T;
+}

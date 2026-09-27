@@ -6,6 +6,7 @@ import {
   listFamily,
   listPatientAppointments,
   searchPatients,
+  sequential,
   unlinkFamily,
   updatePatient,
 } from "@dentalos/core";
@@ -51,11 +52,11 @@ export function patientRoutes(app: FastifyInstance, deps: { staff: StaffContextS
   app.get("/v1/patients/:id", (request) =>
     deps.staff.inClinic(request, "patients.read", async (c) => {
       const { id } = parse(idParams, request.params);
-      const [patient, family, appointments] = await Promise.all([
-        getPatient(c, id),
-        listFamily(c, id),
-        listPatientAppointments(c, id),
-      ]);
+      const [patient, family, appointments] = await sequential(
+        () => getPatient(c, id),
+        () => listFamily(c, id),
+        () => listPatientAppointments(c, id),
+      );
       return { patient, family, appointments };
     }),
   );

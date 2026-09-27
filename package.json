@@ -15,7 +15,8 @@
     "test": "turbo run test",
     "db:migrate": "pnpm --filter @dentalos/db migrate",
     "dev:db": "bash scripts/dev-db.sh",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "e2e": "bash scripts/e2e.sh"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

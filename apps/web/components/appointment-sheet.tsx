@@ -1,5 +1,7 @@
 "use client";
 
+import { displayPhone } from "../lib/format";
+
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -94,7 +96,7 @@ export function AppointmentSheet({
             {a.patient.phone ? (
               <p>
                 <a href={`tel:${a.patient.phone}`} className="text-sm text-slate-600 underline">
-                  {a.patient.phone.replace("+91", "")}
+                  {displayPhone(a.patient.phone)}
                 </a>
               </p>
             ) : null}
@@ -126,7 +128,7 @@ export function AppointmentSheet({
               {nextSteps(a.status).map((step) => (
                 <Button
                   key={step.status}
-                  variant={step.status === "no_show" ? "secondary" : "primary"}
+                  variant={step.status === "no_show" || step.status === "confirmed" ? "secondary" : "primary"}
                   onClick={() => void onStatus(a, step.status).then(onClose)}
                 >
                   {t(`actions.${step.key}`)}

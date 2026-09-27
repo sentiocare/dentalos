@@ -1,5 +1,7 @@
 "use client";
 
+import { displayPhone } from "../../../lib/format";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -59,7 +61,7 @@ export default function PatientsPage() {
               <div className="min-w-0">
                 <p className="truncate font-medium">{p.name}</p>
                 <p className="text-xs text-slate-500">
-                  {p.phone?.replace("+91", "") ?? "—"}
+                  {displayPhone(p.phone) || "—"}
                   {p.fileNumber ? ` · ${p.fileNumber}` : ""}
                 </p>
               </div>

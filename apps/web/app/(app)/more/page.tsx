@@ -1,5 +1,7 @@
 "use client";
 
+import { displayPhone } from "../../../lib/format";
+
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { LanguageSwitch } from "../../../components/language-switch";
@@ -18,7 +20,7 @@ export default function MorePage() {
     <div className="mx-auto max-w-md space-y-4 px-4 py-4">
       <Card>
         <p className="font-semibold">{session.clinic?.displayName}</p>
-        <p className="text-sm text-slate-500">{session.me?.user.phone?.replace("+91", "")}</p>
+        <p className="text-sm text-slate-500">{displayPhone(session.me?.user.phone)}</p>
       </Card>
       <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white">
         {links

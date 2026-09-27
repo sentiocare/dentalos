@@ -1,3 +1,4 @@
+import { sequential } from "@dentalos/core";
 import type { PoolClient } from "@dentalos/db";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
@@ -207,7 +208,7 @@ export function settingsRoutes(app: FastifyInstance, deps: { staff: StaffContext
   // One call with everything the schedule screens need; cached on the phone for offline use.
   app.get("/v1/config", (request) =>
     read(request, async (c) => {
-      const q = async (sql: string) => (await c.query(sql)).rows;
+      const q = (sql: string) => async () => (await c.query(sql)).rows;
       const [
         clinic,
         branches,
@@ -220,7 +221,7 @@ export function settingsRoutes(app: FastifyInstance, deps: { staff: StaffContext
         holidays,
         leaves,
         emergencySlots,
-      ] = await Promise.all([
+      ] = await sequential(
         q(
           "select id, name, timezone, slot_step_min, hold_minutes, min_booking_lead_min, default_language, languages from clinics where id = app.current_clinic_id()",
         ),
@@ -248,7 +249,7 @@ export function settingsRoutes(app: FastifyInstance, deps: { staff: StaffContext
         q(
           "select id, branch_id, chair_id, weekday, to_char(start_time, 'HH24:MI') as start, duration_min, active from emergency_slots order by weekday, start_time",
         ),
-      ]);
+      );
       return {
         clinic: clinic[0],
         branches,

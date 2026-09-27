@@ -1,5 +1,7 @@
 "use client";
 
+import { displayPhone } from "../lib/format";
+
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { normalizePhone } from "@dentalos/shared/phone";
@@ -120,7 +122,7 @@ export function PatientPicker({
               onClick={() => onChange(p)}
             >
               <span>{p.name}</span>
-              <span className="text-xs text-slate-500">{p.phone?.replace("+91", "") ?? ""}</span>
+              <span className="text-xs text-slate-500">{displayPhone(p.phone)}</span>
             </button>
           </li>
         ))}

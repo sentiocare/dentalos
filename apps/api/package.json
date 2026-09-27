@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "node ../../scripts/build-node.mjs src/server.ts",
+    "build": "node ../../scripts/build-node.mjs src/server.ts && node ../../scripts/build-node.mjs src/admin/cli.ts dist/admin.js",
     "start": "node --enable-source-maps dist/index.js",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:demo": "tsx src/admin/seed-demo.ts",
+    "clinic:create": "tsx src/admin/create-clinic.ts"
   },
   "dependencies": {
     "@dentalos/adapters": "workspace:*",

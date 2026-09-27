@@ -1,5 +1,7 @@
 "use client";
 
+import { displayPhone } from "../../../lib/format";
+
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button, Field, Input, Select, Sheet, Spinner, useToast } from "../../../components/ui";
@@ -802,7 +804,7 @@ function Staff({ save }: { save: Save }) {
               <div>
                 <p className={s.active ? "font-medium" : "text-slate-400"}>{s.display_name}</p>
                 <p className="text-xs text-slate-500">
-                  {t(`roles.${s.role}`)} · {s.invited_phone?.replace("+91", "")}{" "}
+                  {t(`roles.${s.role}`)} · {displayPhone(s.invited_phone)}{" "}
                   {!s.joined ? `· ${t("notJoined")}` : ""}
                 </p>
               </div>

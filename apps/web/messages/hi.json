@@ -94,8 +94,8 @@
   },
   "calendar": {
     "title": "कैलेंडर",
-    "byDoctor": "डॉक्टर के हिसाब से",
-    "byChair": "चेयर के हिसाब से",
+    "byDoctor": "डॉक्टर",
+    "byChair": "चेयर",
     "holiday": "छुट्टी: {name}",
     "closed": "क्लिनिक बंद",
     "hint": "बुक करने के लिए खाली समय पर टैप करें। अपॉइंटमेंट खिसकाने के लिए उसे दबाकर रखें; समय बढ़ाने-घटाने के लिए नीचे का किनारा खींचें।",
@@ -106,7 +106,9 @@
     "bookAnyway": "हाँ, फिर भी बुक करें",
     "visiting": "आज आने वाले",
     "prevDay": "पिछला दिन",
-    "nextDay": "अगला दिन"
+    "nextDay": "अगला दिन",
+    "hideHint": "समझ गए",
+    "pickDate": "तारीख चुनें"
   },
   "warnings": {
     "in_past": "यह समय बीत चुका है",
@@ -149,7 +151,12 @@
     "age": "उम्र",
     "dob": "जन्म तिथि",
     "gender": "लिंग",
-    "genders": { "female": "महिला", "male": "पुरुष", "other": "अन्य", "unknown": "नहीं बताया" },
+    "genders": {
+      "female": "महिला",
+      "male": "पुरुष",
+      "other": "अन्य",
+      "unknown": "नहीं बताया"
+    },
     "city": "शहर / इलाका",
     "address": "पता",
     "notes": "नोट",
@@ -189,7 +196,11 @@
     "commit": "क्लिनिक में सेव करें",
     "result": "{created} जोड़े, {merged} अपडेट, {skipped} छोड़े।",
     "apptResult": "{booked} बुक, {conflict} टकराव, {already} पहले से इंपोर्ट, {error} गलतियाँ।",
-    "actions": { "create": "जोड़ें", "merge": "अपडेट", "skip": "छोड़ें" },
+    "actions": {
+      "create": "जोड़ें",
+      "merge": "अपडेट",
+      "skip": "छोड़ें"
+    },
     "duplicateOf": "{name} जैसा ही",
     "duplicateRow": "लाइन {row} दोबारा",
     "issues": {
@@ -241,7 +252,11 @@
     "doctorName": "डॉक्टर का नाम",
     "speciality": "विशेषज्ञता",
     "kind": "प्रकार",
-    "kinds": { "permanent": "नियमित", "visiting": "विज़िटिंग कंसल्टेंट", "on_call": "ऑन कॉल" },
+    "kinds": {
+      "permanent": "नियमित",
+      "visiting": "विज़िटिंग कंसल्टेंट",
+      "on_call": "ऑन कॉल"
+    },
     "visitingDays": "आने के दिन और समय",
     "inactive": "निष्क्रिय",
     "chairs": "चेयर",

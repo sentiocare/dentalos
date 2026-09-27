@@ -1,12 +1,12 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppointmentSheet } from "../../../components/appointment-sheet";
 import { BookingSheet, type BookingDraft } from "../../../components/booking-sheet";
 import { ConfirmWarnings } from "../../../components/confirm-warnings";
 import { DayGrid, type GridColumn } from "../../../components/day-grid";
-import { Button, Spinner } from "../../../components/ui";
+import { Spinner } from "../../../components/ui";
 import { useAppointmentActions } from "../../../lib/appointment-actions";
 import { useAppointments, useClinicConfig } from "../../../lib/data";
 import { doctorWindows, isHoliday, toScheduleConfig } from "../../../lib/schedule";
@@ -37,6 +37,22 @@ export default function CalendarPage() {
   const [selected, setSelected] = useState<Appointment | null>(null);
   const [draft, setDraft] = useState<BookingDraft | null>(null);
   const editable = can("appointments.write");
+  const [showHint, setShowHint] = useState(false);
+  useEffect(() => {
+    try {
+      setShowHint(localStorage.getItem("sentio.calendarHint") !== "hidden");
+    } catch {
+      setShowHint(true);
+    }
+  }, []);
+  const hideHint = () => {
+    setShowHint(false);
+    try {
+      localStorage.setItem("sentio.calendarHint", "hidden");
+    } catch {
+      // ignore
+    }
+  };
 
   const layout = useMemo(() => {
     if (!config.data) return null;
@@ -87,8 +103,9 @@ export default function CalendarPage() {
       localMinutesOf(new Date(a.startsAt), tz),
       localMinutesOf(new Date(a.endsAt), tz),
     ]);
-    const earliest = Math.min(9 * 60, ...allOpen.map((o) => o[0]), ...apptMins);
-    const latest = Math.max(20 * 60, ...allOpen.map((o) => o[1]), ...apptMins);
+    const bounds = [...allOpen.flat(), ...apptMins];
+    const earliest = bounds.length ? Math.min(...bounds) : 9 * 60;
+    const latest = bounds.length ? Math.max(...bounds) : 20 * 60;
     return {
       columns,
       holiday,
@@ -101,52 +118,54 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-3 px-4 py-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center">
+          <button
+            className="rounded-full p-2 text-xl text-slate-600 hover:bg-slate-100"
             aria-label={t("calendar.prevDay")}
             onClick={() => setDate(addDays(date, -1))}
           >
             ‹
-          </Button>
-          <div className="text-center">
-            <p className="font-semibold">{formatDay(date, locale)}</p>
-            {date !== todayIn(tz) ? (
-              <button className="text-xs text-brand-700 underline" onClick={() => setDate(todayIn(tz))}>
-                {t("common.today")}
-              </button>
-            ) : null}
-          </div>
-          <Button
-            variant="ghost"
+          </button>
+          <label className="relative min-w-0 cursor-pointer text-center">
+            <span className="block truncate font-semibold">{formatDay(date, locale, "short")}</span>
+            <span className="block text-xs text-brand-700">
+              {date === todayIn(tz) ? t("common.today") : t("calendar.pickDate")}
+            </span>
+            <input
+              type="date"
+              aria-label={t("calendar.pickDate")}
+              value={date}
+              onChange={(e) => e.target.value && setDate(e.target.value)}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </label>
+          <button
+            className="rounded-full p-2 text-xl text-slate-600 hover:bg-slate-100"
             aria-label={t("calendar.nextDay")}
             onClick={() => setDate(addDays(date, 1))}
           >
             ›
-          </Button>
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => e.target.value && setDate(e.target.value)}
-            className="min-h-11 rounded-xl border border-slate-300 px-2 text-sm"
-          />
-          <div className="flex rounded-xl border border-slate-300 p-0.5 text-sm">
-            {(["doctor", "chair"] as const).map((v) => (
-              <button
-                key={v}
-                aria-pressed={view === v}
-                className="rounded-lg px-3 py-1.5 aria-pressed:bg-brand-600 aria-pressed:text-white"
-                onClick={() => setView(v)}
-              >
-                {t(v === "doctor" ? "calendar.byDoctor" : "calendar.byChair")}
-              </button>
-            ))}
-          </div>
+        <div className="flex shrink-0 rounded-xl border border-slate-300 p-0.5 text-sm">
+          {(["doctor", "chair"] as const).map((v) => (
+            <button
+              key={v}
+              aria-pressed={view === v}
+              className="rounded-lg px-2.5 py-1.5 aria-pressed:bg-brand-600 aria-pressed:text-white"
+              onClick={() => setView(v)}
+            >
+              {t(v === "doctor" ? "calendar.byDoctor" : "calendar.byChair")}
+            </button>
+          ))}
         </div>
       </div>
+      {date !== todayIn(tz) ? (
+        <button className="text-xs text-brand-700 underline" onClick={() => setDate(todayIn(tz))}>
+          ← {t("common.today")}
+        </button>
+      ) : null}
 
       {appts.cachedAt ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -158,7 +177,14 @@ export default function CalendarPage() {
           {t("calendar.holiday", { name: layout.holiday.name })}
         </p>
       ) : null}
-      {editable ? <p className="text-xs text-slate-500">{t("calendar.hint")}</p> : null}
+      {editable && showHint ? (
+        <p className="flex items-start justify-between gap-2 rounded-xl bg-brand-50 px-3 py-2 text-xs text-slate-700">
+          {t("calendar.hint")}
+          <button className="shrink-0 font-medium text-brand-700" onClick={hideHint}>
+            {t("calendar.hideHint")}
+          </button>
+        </p>
+      ) : null}
 
       {!config.data || !layout ? (
         <div className="flex justify-center py-8 text-slate-400">

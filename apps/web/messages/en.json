@@ -94,8 +94,8 @@
   },
   "calendar": {
     "title": "Calendar",
-    "byDoctor": "By doctor",
-    "byChair": "By chair",
+    "byDoctor": "Doctors",
+    "byChair": "Chairs",
     "holiday": "Holiday: {name}",
     "closed": "Clinic closed",
     "hint": "Tap an empty time to book. Press and hold an appointment to move it; drag its bottom edge to change length.",
@@ -106,7 +106,9 @@
     "bookAnyway": "Yes, book anyway",
     "visiting": "Visiting today",
     "prevDay": "Previous day",
-    "nextDay": "Next day"
+    "nextDay": "Next day",
+    "hideHint": "Got it",
+    "pickDate": "Choose date"
   },
   "warnings": {
     "in_past": "This time is in the past",
@@ -149,7 +151,12 @@
     "age": "Age",
     "dob": "Date of birth",
     "gender": "Gender",
-    "genders": { "female": "Female", "male": "Male", "other": "Other", "unknown": "Not given" },
+    "genders": {
+      "female": "Female",
+      "male": "Male",
+      "other": "Other",
+      "unknown": "Not given"
+    },
     "city": "City / area",
     "address": "Address",
     "notes": "Notes",
@@ -189,7 +196,11 @@
     "commit": "Save to clinic",
     "result": "{created} added, {merged} updated, {skipped} skipped.",
     "apptResult": "{booked} booked, {conflict} clashes, {already} already imported, {error} errors.",
-    "actions": { "create": "Add", "merge": "Update", "skip": "Skip" },
+    "actions": {
+      "create": "Add",
+      "merge": "Update",
+      "skip": "Skip"
+    },
     "duplicateOf": "Same as {name}",
     "duplicateRow": "Repeat of row {row}",
     "issues": {
@@ -241,7 +252,11 @@
     "doctorName": "Doctor's name",
     "speciality": "Speciality",
     "kind": "Type",
-    "kinds": { "permanent": "Regular", "visiting": "Visiting consultant", "on_call": "On call" },
+    "kinds": {
+      "permanent": "Regular",
+      "visiting": "Visiting consultant",
+      "on_call": "On call"
+    },
     "visitingDays": "Visiting days and hours",
     "inactive": "Inactive",
     "chairs": "Chairs",

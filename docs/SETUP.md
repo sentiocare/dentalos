@@ -43,6 +43,29 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
 
 8. Replace `[YOUR-PASSWORD]` with the password from step 3. This complete line is your **DATABASE_URL**. Save it in your password manager as "DATABASE_URL staging" (or "production").
 9. Check that the address contains **`ap-south-1`**. That means Mumbai. If it doesn't, delete the project and start again from step 1.
+10. Open **Project Settings**, then **API** (or **Data API**), and save these three values in your password manager:
+    - **Project URL**, for example `https://abcdefghijkl.supabase.co`. This is your **SUPABASE_URL**.
+    - **anon public** key (a long text). This is your **SUPABASE_ANON_KEY**. It is safe to use in the dashboard; it cannot read any data by itself.
+    - Your **AUTH_JWKS_URL**: the Project URL followed by `/auth/v1/.well-known/jwks.json`, for example:
+
+      ```
+      https://abcdefghijkl.supabase.co/auth/v1/.well-known/jwks.json
+      ```
+
+### B2. Turn on sign-in with phone OTP
+
+Staff sign in with their mobile number and an SMS code.
+
+1. In Supabase, open **Authentication**, then **Sign In / Providers** (or **Providers**), then **Phone**, and switch it **on**.
+2. **SMS provider:** choose **Twilio Verify**. It handles India's DLT rules for OTP messages. Create a Twilio account at https://www.twilio.com, create a **Verify service**, and paste the three values Supabase asks for (Account SID, Auth Token, Verify Service SID).
+3. **Staging only: skip real SMS while testing.** On the same Phone page, find **Test phone numbers / Test OTPs** and add:
+
+   ```
+   919000000001=123456
+   919000000002=123456
+   ```
+
+   These two numbers can then sign in with code `123456` without any SMS being sent. Never add test numbers in production.
 
 ---
 
@@ -60,7 +83,7 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
    - If an **India / Mumbai** region is offered, choose it.
    - If not, choose **Singapore** (closest to India).
 
-   No patient data is stored on Railway, only in Supabase Mumbai. This choice is listed for the lawyer's review in `docs/COMPLIANCE.md` (decision D1).
+   No patient data is stored on Railway, only in Supabase Mumbai (see decision 1 in `docs/COMPLIANCE.md`).
 
 ### C2. Configure the `api` service
 
@@ -77,10 +100,14 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
    APP_ENV=staging
    LOG_LEVEL=info
    DATABASE_URL=postgresql://postgres.xxxx:PASSWORD@aws-0-ap-south-1.pooler.supabase.com:5432/postgres
-      SENTRY_DSN=
+   AUTH_JWKS_URL=https://abcdefghijkl.supabase.co/auth/v1/.well-known/jwks.json
+   WEB_ORIGINS=https://YOUR-WEB-DOMAIN
+   SENTRY_DSN=
    ```
 
-   If you set up Sentry, paste its DSN after `SENTRY_DSN=`.
+   - Use your own values from Part B steps 8 and 10.
+   - You will know `YOUR-WEB-DOMAIN` after step C4. Come back then and fill it in, for example `WEB_ORIGINS=https://web-staging-xxxx.up.railway.app`.
+   - If you set up Sentry, paste its DSN after `SENTRY_DSN=`.
 
 4. Go to **Settings**, then **Networking**, then **Generate Domain**. Railway gives you an address like `api-staging-xxxx.up.railway.app`. Save it.
 
@@ -94,7 +121,14 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
    deploy/railway/worker.json
    ```
 
-4. Paste the same variables as the api (the Raw editor box in C2 step 3).
+4. Paste only these variables:
+
+   ```
+   APP_ENV=staging
+   LOG_LEVEL=info
+   DATABASE_URL=(the same value as the api)
+   ```
+
 5. Do **not** generate a domain. The worker does not receive visitors.
 
 ### C4. Add the `web` service
@@ -107,10 +141,13 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
    deploy/railway/web.json
    ```
 
-4. Paste these variables:
+4. Paste these variables, using your values from C2 step 4 and Part B step 10:
 
    ```
    NEXT_TELEMETRY_DISABLED=1
+   API_URL=https://YOUR-API-DOMAIN
+   SUPABASE_URL=https://abcdefghijkl.supabase.co
+   SUPABASE_ANON_KEY=eyJ...the long anon key...
    ```
 
 5. Go to **Settings**, then **Networking**, then **Generate Domain**. This is the dashboard address staff will open.
@@ -135,7 +172,7 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
    - `"database":{"ok":true}` means the database is connected.
    - `"worker":{"ok":true}` means the background worker is running. Right after the first deploy, this can take up to a minute to turn true.
    - The `provider.…` entries show the test stand-ins for WhatsApp, calls, payments and so on. They are replaced by the real providers as each phase is built.
-3. Open your web domain (from C4 step 5). You should see the Sentio Dental OS screen with an **English / हिन्दी** switch.
+3. Open your web domain (from C4 step 5). You should see the **Sign in** screen with an **English / हिन्दी** switch.
 4. On an Android phone, open the web domain in Chrome. Tap **⋮**, then **Add to Home screen**. The app icon appears like a normal app.
 
 **If something is red:**
@@ -146,6 +183,47 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
 | `"worker":{"ok":false, ...}` for more than 3 minutes | Open the `worker` service, then **Deployments**, then the latest one, then **View logs**. Send a screenshot of the last 20 lines to the engineering team. |
 | The api deploy failed at "pre-deploy"                | A database update (migration) failed. Nothing was changed, because each update is all-or-nothing. Send the deploy logs to the engineering team.           |
 | Page does not load at all                            | Check that the service has a generated domain (C2 step 4 / C4 step 5) and that the latest deployment says **Active**.                                     |
+
+---
+
+## Part D2: Create a clinic (and the demo clinic)
+
+New clinics are created by Sentio, not by the clinics themselves. You need the Railway command-line tool once.
+
+1. Install **Node.js** (the "LTS" version) from https://nodejs.org.
+2. Open **Terminal** (Mac) or **PowerShell** (Windows) and run:
+
+   ```
+   npm install -g @railway/cli
+   railway login
+   railway link
+   ```
+
+   When `railway link` asks, choose the Sentio Dental OS project, the **staging** environment and the **api** service.
+
+3. Open a command line inside the running api service:
+
+   ```
+   railway ssh
+   ```
+
+4. **To create a real clinic**, run this with the clinic's details. The owner's phone is the number they will sign in with.
+
+   ```
+   node admin.js create-clinic --name "Sharma Dental Clinic" --city "Ranchi" --owner-name "Dr. Rakesh Sharma" --owner-phone 9835012345
+   ```
+
+   The clinic starts with opening hours Monday–Saturday, 10:00–14:00 and 17:00–21:00, one chair, and a starter list of 21 treatments with Hindi names. Prices start empty; the owner fills them in under **More → Clinic settings → Treatments and prices**.
+
+   **For a sales demo instead**, run:
+
+   ```
+   node admin.js seed-demo
+   ```
+
+   This creates "Sharma Dental Clinic (Demo)" with about 80 patients and this week's appointments. The owner logs in with `90000 00001` and the receptionist with `90000 00002`. Use code `123456` if you added the test numbers in Part B2 step 3.
+
+5. Type `exit` to leave. The owner can now open the dashboard, sign in with their number, and add staff under **More → Clinic settings → Staff**.
 
 ---
 
@@ -174,7 +252,11 @@ pnpm check                        # format, lint, typecheck, all tests
 pnpm --filter @dentalos/api dev    # API on http://localhost:8080
 pnpm --filter @dentalos/worker dev # background worker
 pnpm --filter @dentalos/web dev    # dashboard on http://localhost:3000
+pnpm --filter @dentalos/api seed:demo  # demo clinic: sign in as 90000 00001 (owner) or 90000 00002 (reception), any code
+pnpm e2e                          # browser tests at phone size (resets the demo clinic in DATABASE_URL)
 ```
+
+For local sign-in without SMS, set `AUTH_JWT_SECRET` (any 32+ characters) and `DEV_LOGIN=on` for the API, and `DEV_LOGIN=on` and `API_URL=http://localhost:8080` for the dashboard. Dev login is refused on staging and production.
 
 **Rules that CI enforces:**
 

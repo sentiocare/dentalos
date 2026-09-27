@@ -53,7 +53,11 @@ export default function TodayPage() {
           <h1 className="text-xl font-semibold">{t("today.title")}</h1>
           <p className="text-sm text-slate-600">{formatDay(today, locale)}</p>
         </div>
-        {editable && config.data ? <Button onClick={newWalkIn}>+ {t("today.new")}</Button> : null}
+        {editable && config.data ? (
+          <Button onClick={newWalkIn} className="shrink-0 whitespace-nowrap">
+            + {t("today.new")}
+          </Button>
+        ) : null}
       </div>
 
       {appts.cachedAt ? (

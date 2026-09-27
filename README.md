@@ -4,7 +4,7 @@ An AI front desk and practice automation system for Indian dental clinics, built
 
 Clinics buy it **once** (a perpetual license, no subscription). They save a payment method at onboarding, and only actual usage (call minutes, WhatsApp, AI processing) is billed against a prepaid wallet that recharges itself.
 
-**Status:** Phase 0 (scaffolding) code is done and tested. The first staging deploy (docs/SETUP.md) needs the founder's Supabase and Railway accounts. Phase 1 (scheduling, patients, dashboard) is next.
+**Status:** Phase 1 (foundation) is built and tested: clinic setup, scheduling that cannot double-book, patients and imports, the staff dashboard with offline support, and the activity log. Phase 2 (WhatsApp) is next.
 
 ## Documents
 
@@ -24,5 +24,7 @@ corepack enable && pnpm install
 cp .env.example .env
 pnpm dev:db && export $(grep -v '^#' .env | xargs)
 pnpm db:migrate
-pnpm check
+pnpm check                            # format, lint, typecheck, all tests
+pnpm --filter @dentalos/api seed:demo  # demo clinic
+pnpm e2e                              # browser tests at phone size
 ```

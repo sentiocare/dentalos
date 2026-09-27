@@ -10,3 +10,5 @@ coverage/
 evals/reports/
 .dev-db/
 next-env.d.ts
+apps/web/test-results/
+apps/web/playwright-report/
