@@ -13,15 +13,12 @@ export interface ReminderSettings {
   /** Clinic-local time the day-before reminder goes out. */
   dayBeforeAt: string;
   sameDayHoursBefore: number;
-  /** Hours before the appointment an unconfirmed booking becomes a staff task. */
-  unconfirmedTaskHoursBefore: number;
 }
 
 export const DEFAULT_REMINDERS: ReminderSettings = {
   enabled: true,
   dayBeforeAt: "17:00",
   sameDayHoursBefore: 2,
-  unconfirmedTaskHoursBefore: 3,
 };
 
 interface Row {
@@ -68,7 +65,7 @@ export async function planAppointmentMessages(
   );
 
   let queued = 0;
-  let tasks = 0;
+  const tasks = 0;
   const q = async (
     row: Row,
     purpose: string,
@@ -158,24 +155,6 @@ export async function planAppointmentMessages(
           notBefore: sameDay,
         },
       );
-    }
-
-    const unconfirmedAt = row.starts_at.getTime() - settings.unconfirmedTaskHoursBefore * 3600_000;
-    if (row.status === "booked" && now.getTime() >= unconfirmedAt && row.created_at < dayBefore) {
-      const { rowCount } = await client.query(
-        `insert into tasks (clinic_id, kind, priority, title, detail, patient_id, appointment_id, due_at, created_by, dedupe_key)
-         values (app.current_clinic_id(), 'unconfirmed', 'normal', $1, $2, $3, $4, $5, 'system', $6)
-         on conflict (clinic_id, dedupe_key) do nothing`,
-        [
-          `Not confirmed: ${row.patient_name}`,
-          `Appointment ${when} with ${row.doctor}. Please call to confirm.`,
-          row.patient_id,
-          row.id,
-          row.starts_at,
-          `unconfirmed:${key}`,
-        ],
-      );
-      tasks += rowCount ?? 0;
     }
   }
   return { queued, tasks };

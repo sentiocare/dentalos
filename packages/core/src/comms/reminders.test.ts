@@ -154,19 +154,6 @@ describe.skipIf(!hasTestDatabase)("appointment messages", () => {
     expect((await outbox(a.id)).map((r) => r.purpose)).toEqual(["booking_confirmation", "reminder_same_day"]);
   });
 
-  it("an unconfirmed appointment becomes a staff task a few hours before", async () => {
-    const a = await book("2030-01-09T11:00:00");
-    await db.pool.query("update appointments set created_at = $2 where id = $1", [
-      a.id,
-      at("2030-01-01T10:00:00"),
-    ]);
-    await run((c) => planAppointmentMessages(c, at("2030-01-09T08:30:00")));
-    await run((c) => planAppointmentMessages(c, at("2030-01-09T08:45:00")));
-    const tasks = (await db.pool.query("select kind, title from tasks where appointment_id = $1", [a.id]))
-      .rows;
-    expect(tasks).toEqual([{ kind: "unconfirmed", title: "Not confirmed: Patient 6" }]);
-  });
-
   it("sends the reminder as the approved template, and not to a patient who sent STOP", async () => {
     const a = await book("2030-01-16T11:00:00");
     await run((c) => planAppointmentMessages(c, NOW));

@@ -191,6 +191,22 @@ const T = {
     hi: "हमारे डॉक्टर:\n{list}",
     hinglish: "Hamare doctors:\n{list}",
   },
+  estimate_thanks: {
+    en: "Thank you! Let's book your first sitting.",
+    hi: "धन्यवाद! चलिए आपकी पहली सिटिंग बुक करते हैं।",
+    hinglish: "Dhanyavaad! Chaliye aapki pehli sitting book karte hain.",
+  },
+  checkin_ok: {
+    en: "Glad to hear that! Take care, and reply here if anything changes.",
+    hi: "यह सुनकर अच्छा लगा! अपना ध्यान रखें, और कुछ भी बदले तो यहीं बताएँ।",
+    hinglish: "Yeh sunkar achha laga! Apna dhyan rakhein, aur kuch bhi badle to yahin batayein.",
+  },
+  checkin_pain: {
+    en: "Sorry to hear that. I've let the doctor know, and the clinic will contact you. If the pain is severe, or there is swelling or bleeding that does not stop, please call the clinic now.",
+    hi: "यह सुनकर दुख हुआ। मैंने डॉक्टर को बता दिया है, क्लिनिक आपसे संपर्क करेगा। अगर दर्द बहुत ज़्यादा है, या सूजन है या खून नहीं रुक रहा, तो अभी क्लिनिक को फ़ोन करें।",
+    hinglish:
+      "Yeh sunkar dukh hua. Maine doctor ko bata diya hai, clinic aapse sampark karega. Agar dard bahut zyada hai, ya sujan hai ya khoon nahi ruk raha, to abhi clinic ko call karein.",
+  },
   human_ack: {
     en: "I've asked the clinic team to get back to you. They will reply here or call you soon.",
     hi: "मैंने क्लिनिक टीम से कहा है। वे जल्द यहीं जवाब देंगे या आपको कॉल करेंगे।",

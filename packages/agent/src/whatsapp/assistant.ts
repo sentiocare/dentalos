@@ -25,6 +25,7 @@ import type { PoolClient } from "pg";
 import { detectEmergency } from "../safety/emergency";
 import { checkOutput } from "../safety/output-filter";
 import { detectLanguage } from "../nlu/language";
+import { romanize } from "../nlu/romanize";
 import { matchProcedure, understand, type ProcedureOption, type Understanding } from "../nlu/intents";
 import { relationWord, say, type CopyKey } from "./copy";
 
@@ -65,6 +66,8 @@ export interface AssistantState {
   partsOfDay?: string[] | null;
   options?: HeldOption[];
   chosenHoldId?: string;
+  /** Booking the next sitting of a treatment plan. */
+  treatmentStepId?: string;
   appointmentId?: string;
   appointmentChoices?: string[];
   familyChoices?: string[];
@@ -91,7 +94,28 @@ interface ClinicInfo {
   mapsUrl: string | null;
   defaultLanguage: string;
   emergencyTriggers: string[];
+  /** Words in a reply to the next-day check-in that the doctor wants to hear about. */
+  checkinTriggers: string[];
 }
+
+const DEFAULT_CHECKIN_TRIGGERS = [
+  "dard",
+  "pain",
+  "sujan",
+  "swelling",
+  "swollen",
+  "khoon",
+  "bleeding",
+  "blood",
+  "bukhar",
+  "fever",
+  "pus",
+  "pas",
+  "numb",
+  "sunn",
+  "badbu",
+  "smell",
+];
 
 const upcomingStatuses = ["booked", "confirmed"];
 
@@ -148,6 +172,7 @@ class Assistant {
         mapsUrl: c.maps_url,
         defaultLanguage: c.default_language,
         emergencyTriggers: c.settings?.emergency?.extraTriggers ?? [],
+        checkinTriggers: c.settings?.aftercare?.triggers ?? DEFAULT_CHECKIN_TRIGGERS,
       },
       procs.map((p) => ({
         id: p.id,
@@ -239,6 +264,11 @@ class Assistant {
 
   async handle(input: AssistantInput) {
     const text = input.kind === "text" ? input.text.trim() : "";
+    // A known patient's saved language is the starting point; their own words can change it below.
+    if (!this.state.lang) {
+      const pref = (await this.phonePatients())[0]?.languagePref;
+      if (pref === "en" || pref === "hi" || pref === "hinglish") this.state.lang = pref;
+    }
     // Switch language only on real sentences: a bare name or "ok" should not flip Hinglish to English.
     const sentence = /[\u0900-\u097F]/.test(text) || text.split(/\s+/).length >= 3;
     if (text && this.state.step !== "name" && (sentence || !this.state.lang))
@@ -264,10 +294,22 @@ class Assistant {
     if (text && /^\s*(start|resume|shuru|शुरू)\s*[.!]*\s*$/i.test(text)) return this.start();
 
     // 3. Buttons on our own reminders act on the patient's appointment directly.
-    if (input.kind === "button" && /^(confirm|reschedule|cancel):/.test(input.payload))
+    if (input.kind === "button" && /^(confirm|reschedule|cancel):/.test(input.payload)) {
+      await this.existingPatientConsent();
       return this.reminderButton(input.payload);
+    }
+    if (
+      input.kind === "button" &&
+      /^(book_step|estimate_ok|estimate_call|callme|rebook|recall_book|checkin):/.test(input.payload)
+    ) {
+      await this.existingPatientConsent();
+      return this.followupButton(input.payload);
+    }
 
-    // 4. Consent notice at first contact (Build Prompt §7.1).
+    // 4. Consent notice at first contact (Build Prompt §7.1). An existing patient replying to a message the
+    // clinic sent them in the last week is treated like a button reply (notice for information).
+    if (!(await this.hasConsent()) && (await this.repliesToClinicMessage()))
+      await this.existingPatientConsent();
     if (!(await this.hasConsent())) {
       const proceed = await this.consentGate(input);
       if (!proceed) return;
@@ -449,7 +491,39 @@ class Assistant {
 
   // ---------------------------------------------------------------- text and buttons
 
+  /** A reply to a recent check-in that mentions a doctor-defined trigger word becomes a task. */
+  private async checkinReply(text: string): Promise<boolean> {
+    const { rows } = await this.q.query(
+      `select o.appointment_id from outbox o
+       where o.to_phone = $1 and o.payload->>'purpose' = 'checkin' and o.status = 'sent' and o.sent_at > $2::timestamptz - interval '48 hours'
+       order by o.sent_at desc limit 1`,
+      [this.ctx.conversation.phone, this.ctx.now],
+    );
+    if (!rows[0]?.appointment_id) return false;
+    const words = ` ${romanize(text)
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")} `;
+    const hit = this.clinic.checkinTriggers.find((w) => words.includes(` ${w.toLowerCase()} `));
+    if (!hit) return false;
+    const a = await this.ownAppointment(rows[0].appointment_id);
+    if (!a) return false;
+    await this.task(
+      "followup",
+      "high",
+      `Problem after treatment: ${a.patient}`,
+      `"${text}"`,
+      `checkin_text:${a.id}`,
+      {
+        patientId: a.patient_id,
+        appointmentId: a.id,
+      },
+    );
+    this.reply(this.t("checkin_pain"));
+    return true;
+  }
+
   private async handleText(text: string) {
+    if (!this.state.step && (await this.checkinReply(text))) return;
     const step = this.state.step;
     // Steps that expect a free-text answer, unless the patient clearly changed the subject.
     const u = await understand(text, { today: this.today(), procedures: this.procedures, llm: this.ctx.llm });
@@ -579,6 +653,128 @@ class Assistant {
       default:
         return this.welcome();
     }
+  }
+
+  /**
+   * A patient answering a button on our own message (reminder, follow-up) is an existing patient of the
+   * clinic: they get the privacy notice for information, and their reply counts as agreement (COMPLIANCE 8).
+   */
+  private async existingPatientConsent() {
+    if (await this.hasConsent()) return;
+    await this.recordConsent(true, "replied_to_clinic_message");
+    this.reply(this.t("consent_notice").split("\n\n")[0]!);
+  }
+
+  private async repliesToClinicMessage(): Promise<boolean> {
+    if ((await this.phonePatients()).length === 0) return false;
+    const { rowCount } = await this.q.query(
+      "select 1 from outbox where to_phone = $1 and status = 'sent' and sent_at > $2::timestamptz - interval '7 days' limit 1",
+      [this.ctx.conversation.phone, this.ctx.now],
+    );
+    return (rowCount ?? 0) > 0;
+  }
+
+  /** Buttons on follow-up messages (PLAN §5.3). Every id is checked against this phone's own records. */
+  private async followupButton(payload: string) {
+    const [kind, id, answer] = payload.split(":") as [string, string, string | undefined];
+    const phone = this.ctx.conversation.phone;
+    switch (kind) {
+      case "book_step": {
+        const { rows } = await this.q.query(
+          `select s.id, s.procedure_type_id, s.expected_from::text, s.expected_to::text, p.patient_id
+           from treatment_steps s join treatment_plans p on p.id = s.plan_id join patients pa on pa.id = p.patient_id
+           where s.id = $1 and (pa.phone = $2 or pa.alt_phone = $2) and s.status in ('pending', 'missed')`,
+          [id, phone],
+        );
+        const s = rows[0];
+        if (!s) return this.listAppointments();
+        return this.bookSitting(s);
+      }
+      case "estimate_ok": {
+        const e = (
+          await this.q.query(
+            `select e.id, e.status, e.plan_id from estimates e join patients p on p.id = e.patient_id
+             where e.id = $1 and (p.phone = $2 or p.alt_phone = $2)`,
+            [id, phone],
+          )
+        ).rows[0];
+        if (!e) return this.welcome();
+        if (e.status === "sent")
+          await this.q.query("update estimates set status = 'accepted', decided_at = now() where id = $1", [
+            e.id,
+          ]);
+        if (e.plan_id)
+          await this.q.query(
+            "update treatment_plans set status = 'accepted', accepted_at = now() where id = $1 and status = 'proposed'",
+            [e.plan_id],
+          );
+        this.reply(this.t("estimate_thanks"));
+        const next = e.plan_id
+          ? (
+              await this.q.query(
+                `select s.id, s.procedure_type_id, s.expected_from::text, s.expected_to::text, p.patient_id
+                 from treatment_steps s join treatment_plans p on p.id = s.plan_id
+                 where s.plan_id = $1 and s.status in ('pending', 'missed') order by s.seq limit 1`,
+                [e.plan_id],
+              )
+            ).rows[0]
+          : null;
+        return next ? this.bookSitting(next) : this.startBooking(null, this.consultationId());
+      }
+      case "estimate_call":
+      case "callme":
+        return this.human(
+          kind === "estimate_call"
+            ? "Has a question about their estimate"
+            : "Asked for a call after a follow-up message",
+        );
+      case "rebook": {
+        const a = await this.ownAppointment(id);
+        return this.startBooking(null, a?.procedure_type_id ?? this.consultationId());
+      }
+      case "recall_book":
+        return this.startBooking(null, this.consultationId());
+      case "checkin": {
+        const a = await this.ownAppointment(id);
+        if (!a) return this.welcome();
+        if (answer === "ok") return this.reply(this.t("checkin_ok"));
+        await this.task(
+          answer === "help" ? "callback" : "followup",
+          answer === "help" ? "high" : "normal",
+          `${answer === "help" ? "Needs help" : "Some pain"} after treatment: ${a.patient}`,
+          "Reply to the next-day check-in.",
+          `checkin:${a.id}:${answer}`,
+          { patientId: a.patient_id, appointmentId: a.id },
+        );
+        return this.reply(this.t(answer === "help" ? "human_ack" : "checkin_pain"));
+      }
+      default:
+        return this.welcome();
+    }
+  }
+
+  /** Offers times for a treatment sitting within (or after) its expected window. */
+  private async bookSitting(s: {
+    id: string;
+    procedure_type_id: string;
+    expected_from: string | null;
+    expected_to: string | null;
+    patient_id: string;
+  }) {
+    const lang = this.state.lang;
+    this.state = {
+      lang,
+      flow: "book",
+      patientId: s.patient_id,
+      procedureId: s.procedure_type_id,
+      treatmentStepId: s.id,
+    };
+    const today = this.today();
+    if (s.expected_from && s.expected_from > today) {
+      this.state.fromDate = s.expected_from;
+      this.state.toDate = s.expected_to && s.expected_to > s.expected_from ? s.expected_to : undefined;
+    }
+    return this.offer({});
   }
 
   private welcome() {
@@ -823,6 +1019,7 @@ class Assistant {
         patientId,
         source: "whatsapp",
         idempotencyKey: `wa:${this.ctx.inboundMessageId}`,
+        treatmentStepId: this.state.treatmentStepId ?? null,
       });
       const doctor =
         (await this.q.query("select name from doctors where id = $1", [appointment.doctorId])).rows[0]

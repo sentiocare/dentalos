@@ -21,3 +21,4 @@ export * from "./comms/channels";
 export * from "./comms/reminders";
 export * from "./revenue/treatments";
 export * from "./revenue/estimates";
+export * from "./revenue/followups";
