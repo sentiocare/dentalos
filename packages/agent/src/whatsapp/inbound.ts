@@ -74,6 +74,7 @@ export async function processInboundMessage(
         quantity: Math.round(audioMs / 100) / 10,
         refType: "message",
         ref: messageId,
+        at: deps.now?.(),
       });
     });
   }
@@ -119,12 +120,14 @@ export async function processInboundMessage(
         quantity: counted.usage.input,
         refType: "message",
         ref: messageId,
+        at: deps.now?.(),
       });
       await meter(c, {
         kind: "llm_output_token",
         quantity: counted.usage.output,
         refType: "message",
         ref: messageId,
+        at: deps.now?.(),
       });
     }
     return result;

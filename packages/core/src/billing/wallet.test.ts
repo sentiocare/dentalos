@@ -166,7 +166,7 @@ describe.skipIf(!hasTestDatabase)("wallet and metering", () => {
     expect((await run((c) => walletStatus(c, NOW))).balancePaise).toBe(100000 - total);
   });
 
-  it("templates are metered when sent; chat replies and Sentio's own notices are not", async () => {
+  it("templates are metered when sent; Sentio's own notices are recorded at cost but not charged", async () => {
     await setBalance(100000);
     const p = await run((c) => createPatient(c, { name: "Mohan Lal", phone: "+919000500001" }));
     const send = (purpose: string, category: "transactional" | "critical", key: string) =>
@@ -191,9 +191,18 @@ describe.skipIf(!hasTestDatabase)("wallet and metering", () => {
     const notice = await send("billing_wallet_low", "critical", "m-2");
     expect(notice.outcome.status).toBe("sent");
     const metered = await run(
-      async (c) => (await c.query("select ref, kind from usage_ledger where ref_type = 'outbox'")).rows,
+      async (c) =>
+        (
+          await c.query(
+            "select ref, kind, total_paise from usage_ledger where ref_type = 'outbox' order by at, total_paise desc",
+          )
+        ).rows,
     );
-    expect(metered).toEqual([{ ref: receipt.id, kind: "wa_utility" }]);
+    // Both cost Sentio a Meta template; only the clinic's own message is charged to the clinic.
+    expect(metered).toEqual([
+      { ref: receipt.id, kind: "wa_utility", total_paise: 17 },
+      { ref: notice.id, kind: "wa_utility", total_paise: 0 },
+    ]);
   });
 
   it("suspended: reminders wait (and go once the wallet is paid up); safety messages still go", async () => {

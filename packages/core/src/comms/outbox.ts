@@ -228,8 +228,8 @@ export async function processOutbox(
     });
     await settle("sent", { messageId });
     // Meta charges for business-initiated templates, not for replies inside the chat window. Notices
-    // about Sentio's own billing are on Sentio.
-    if (templateName && payload.kind === "template" && !row.purpose.startsWith("billing_")) {
+    // about Sentio's own billing are Sentio's cost: recorded (so provider bills reconcile) but not charged.
+    if (templateName && payload.kind === "template") {
       const category = TEMPLATES[payload.purpose]?.category ?? "utility";
       await meter(client, {
         kind: category === "marketing" ? "wa_marketing" : "wa_utility",
@@ -237,6 +237,7 @@ export async function processOutbox(
         refType: "outbox",
         ref: outboxId,
         at: now,
+        absorbed: row.purpose.startsWith("billing_"),
       });
     }
     return { status: "sent", providerMessageId: result.providerMessageId };

@@ -59,15 +59,19 @@ export interface UsageEvent {
   refType: "call" | "message" | "outbox" | "sms";
   ref: string;
   at?: Date;
+  /** Sentio pays this itself (its own notices to owners): recorded at cost for reconciliation, charged ₹0. */
+  absorbed?: boolean;
 }
 
-/** Writes one usage row (once). Returns the wallet charge in paise, or null if already metered or zero. */
+/** Writes one usage row (once). Returns the wallet charge in paise, or null if already metered or nothing used. */
 export async function meter(client: PoolClient, e: UsageEvent): Promise<number | null> {
   if (!(e.quantity > 0)) return null;
   const at = e.at ?? new Date();
   const rate = await rateFor(client, e.kind, at);
   if (!rate) return null;
-  const p = price(rate, e.quantity);
+  const p = e.absorbed
+    ? { ...price({ ...rate, marginPct: 0, marginPaise: 0 }, e.quantity), marginPaise: 0, totalPaise: 0 }
+    : price(rate, e.quantity);
   const { rows } = await client.query(
     `insert into usage_ledger (clinic_id, kind, quantity, provider_cost_paise, margin_paise, total_paise, ref_type, ref, at)
      values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6, $7, $8)

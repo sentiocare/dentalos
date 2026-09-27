@@ -116,6 +116,7 @@ export async function endCall(
   pool: Pool,
   call: CallRef,
   usage: { sttMs: number; ttsChars: number; llmInputTokens?: number; llmOutputTokens?: number },
+  now: Date = new Date(),
 ) {
   await withClinic(pool, ctxFor(call.clinicId), async (c) => {
     await releaseHolds(c, `call:${call.callId}`);
@@ -132,7 +133,7 @@ export async function endCall(
       `update calls set
          status = case when status = 'transferring' then 'transferring' else 'ended' end,
          outcome = coalesce(outcome, case when status = 'transferring' then 'transferred' else 'caller_hung_up' end),
-         ended_at = case when status = 'transferring' then ended_at else coalesce(ended_at, now()) end,
+         ended_at = case when status = 'transferring' then ended_at else coalesce(ended_at, $4) end,
          usage = usage || $2::jsonb,
          latency = $3::jsonb
        where id = $1`,
@@ -145,9 +146,10 @@ export async function endCall(
           llm_output_tokens: usage.llmOutputTokens ?? 0,
         }),
         JSON.stringify(lat.turns ? { p50: lat.p50, p95: lat.p95, max: lat.max, turns: lat.turns } : {}),
+        now,
       ],
     );
     // Speech and model usage now; telephone minutes when the provider reports the duration.
-    await meterCall(c, call.callId);
+    await meterCall(c, call.callId, now);
   });
 }
