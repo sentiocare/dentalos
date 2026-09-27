@@ -257,6 +257,36 @@ const T = {
     hi: "मैं यह क्लिनिक टीम तक पहुँचा देती हूँ; वे जल्द यहीं जवाब देंगे।",
     hinglish: "Main ye clinic team tak pahuncha deti hoon; woh jaldi yahin reply karenge.",
   },
+  // Leads from ads (Phase 6): two quick questions, then a consultation.
+  lead_ask_need: {
+    en: "Happy to help! What would you like help with?",
+    hi: "ज़रूर! आपको किस चीज़ में मदद चाहिए?",
+    hinglish: "Zaroor! Aapko kis cheez mein madad chahiye?",
+  },
+  btn_need_pain: { en: "Pain or a problem", hi: "दर्द या तकलीफ़", hinglish: "Dard ya problem" },
+  btn_need_major: { en: "Braces/implants", hi: "ब्रेसेस/इम्प्लांट", hinglish: "Braces/implant" },
+  btn_need_checkup: { en: "Check-up/cleaning", hi: "जाँच/सफ़ाई", hinglish: "Checkup/safai" },
+  lead_ask_when: {
+    en: "When would you like to visit the clinic?",
+    hi: "आप क्लिनिक कब आना चाहेंगे?",
+    hinglish: "Aap clinic kab aana chahenge?",
+  },
+  btn_when_week: { en: "This week", hi: "इसी हफ़्ते", hinglish: "Isi hafte" },
+  btn_when_month: { en: "This month", hi: "इसी महीने", hinglish: "Isi mahine" },
+  btn_when_exploring: { en: "Just exploring", hi: "अभी सिर्फ़ जानकारी", hinglish: "Abhi sirf jaankari" },
+  lead_exploring: {
+    en: "No problem. Whenever you are ready, tap *Book a visit*. You can also ask me here about timings, treatments or prices.",
+    hi: "कोई बात नहीं। जब भी आप तैयार हों, *विज़िट बुक करें* दबाएँ। आप यहाँ समय, इलाज या कीमत के बारे में भी पूछ सकते हैं।",
+    hinglish:
+      "Koi baat nahi. Jab bhi aap ready hon, *Book a visit* dabayein. Aap yahan timing, treatment ya price ke baare mein bhi pooch sakte hain.",
+  },
+  lead_ask_question: {
+    en: "Sure, please ask. I can tell you about timings, the address, our treatments and their usual prices. For anything medical, the doctor will guide you at your visit.",
+    hi: "ज़रूर, पूछिए। मैं समय, पता, हमारे इलाज और उनकी सामान्य कीमतों के बारे में बता सकती हूँ। इलाज से जुड़ी सलाह डॉक्टर आपकी विज़िट पर देंगे।",
+    hinglish:
+      "Zaroor, poochiye. Main timing, address, hamare treatment aur unki usual price bata sakti hoon. Ilaaj se judi salah doctor aapki visit par denge.",
+  },
+  btn_book_visit: { en: "Book a visit", hi: "विज़िट बुक करें", hinglish: "Visit book karein" },
 } satisfies Record<string, Entry>;
 
 export type CopyKey = keyof typeof T;

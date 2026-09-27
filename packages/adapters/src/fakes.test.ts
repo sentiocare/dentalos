@@ -113,7 +113,7 @@ describe("createAdapters", () => {
       sms: "fake",
       storage: "fake",
     });
-    expect(Object.keys(adapters)).toHaveLength(7);
+    expect(Object.keys(adapters)).toHaveLength(8);
   });
 
   it("fails fast when a real adapter is chosen without its settings", () => {

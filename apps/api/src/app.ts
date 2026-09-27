@@ -21,6 +21,7 @@ import { revenueRoutes } from "./routes/revenue";
 import { billingRoutes } from "./routes/billing";
 import { walletRoutes } from "./routes/wallet";
 import { adminRoutes } from "./routes/admin";
+import { leadRoutes } from "./routes/leads";
 import { callRoutes } from "./routes/calls";
 import { telephonyRoutes } from "./routes/telephony";
 import { webhookRoutes } from "./routes/webhooks";
@@ -109,6 +110,7 @@ export function buildApp(deps: AppDeps) {
     const seller = deps.seller ?? DEFAULT_SELLER;
     walletRoutes(api, { staff, pool: deps.pool, adapters: deps.adapters, seller });
     adminRoutes(api, { staff, pool: deps.pool, adapters: deps.adapters, seller, jobs: deps.jobs });
+    leadRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
   });
   return app;
 }

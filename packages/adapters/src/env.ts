@@ -13,6 +13,7 @@ export const adapterEnvSchema = z.object({
   PAYMENT_PROVIDER: z.enum(["fake", "razorpay"]).default("fake"),
   SMS_PROVIDER: z.enum(["fake", "dlt"]).default("fake"),
   STORAGE_PROVIDER: z.enum(["fake", "supabase"]).default("fake"),
+  LEADS_PROVIDER: z.enum(["fake", "meta"]).default("fake"),
   WHATSAPP_APP_SECRET: z.string().min(16).optional(),
   WHATSAPP_VERIFY_TOKEN: z.string().min(16).optional(),
   WHATSAPP_GRAPH_VERSION: z
@@ -56,6 +57,7 @@ export function adapterSelection(env: AdapterEnv): AdapterSelection {
     payments: env.PAYMENT_PROVIDER,
     sms: env.SMS_PROVIDER,
     storage: env.STORAGE_PROVIDER,
+    leads: env.LEADS_PROVIDER,
   };
 }
 
@@ -99,6 +101,14 @@ export function adapterOptions(env: AdapterEnv): AdapterOptions {
             webhookSecret: env.RAZORPAY_WEBHOOK_SECRET,
           }
         : undefined,
+    metaLeads:
+      env.WHATSAPP_APP_SECRET && env.WHATSAPP_VERIFY_TOKEN
+        ? {
+            appSecret: env.WHATSAPP_APP_SECRET,
+            verifyToken: env.WHATSAPP_VERIFY_TOKEN,
+            graphVersion: env.WHATSAPP_GRAPH_VERSION,
+          }
+        : undefined,
     anthropic: env.ANTHROPIC_API_KEY
       ? { apiKey: env.ANTHROPIC_API_KEY, model: env.LLM_MODEL, effort: env.LLM_EFFORT }
       : undefined,
@@ -138,6 +148,9 @@ export function checkAdapterEnv(env: AdapterEnv, appEnv: string, ctx: z.Refineme
     ] as const)
       if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: "required for Exotel" });
   }
+  if (env.LEADS_PROVIDER === "meta")
+    for (const key of ["WHATSAPP_APP_SECRET", "WHATSAPP_VERIFY_TOKEN"] as const)
+      if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: "required for Meta lead ads" });
   if (env.PAYMENT_PROVIDER === "razorpay")
     for (const key of ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"] as const)
       if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: "required for Razorpay" });

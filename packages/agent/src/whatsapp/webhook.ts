@@ -1,5 +1,5 @@
 import type { MessagingEvent } from "@dentalos/adapters";
-import { ensureConversation, logMessage, type JobQueue } from "@dentalos/core";
+import { createLead, ensureConversation, logMessage, needFromText, type JobQueue } from "@dentalos/core";
 import { withAppRole, withClinic, type Pool } from "@dentalos/db";
 
 /**
@@ -80,6 +80,27 @@ export async function ingestMessagingEvents(
            where id = $1 and patient_id is null`,
           [conversation.id, event.from],
         );
+      }
+      // Tapped a Click-to-WhatsApp ad: a lead, already talking to the assistant (Phase 6).
+      if (event.referral?.sourceType === "ad") {
+        const text = content.kind === "text" ? content.text : "";
+        await createLead(c, {
+          source: "ctwa",
+          externalId: event.referral.ctwaClid ?? event.providerMessageId,
+          phone: event.from,
+          name: event.profileName ?? null,
+          campaign: event.referral.headline ?? null,
+          ad: event.referral.sourceId ?? null,
+          need:
+            needFromText([event.referral.headline, event.referral.body, text].filter(Boolean).join(" ")) ??
+            null,
+          answers: {
+            ...(event.referral.headline ? { ad_headline: event.referral.headline } : {}),
+            ...(text ? { first_message: text.slice(0, 500) } : {}),
+          },
+          alreadyTalking: true,
+          now: event.at,
+        });
       }
       return { messageId: id, conversationId: conversation.id };
     });

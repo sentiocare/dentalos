@@ -1,6 +1,7 @@
 import { formatINR, type Paise } from "@dentalos/shared";
 import type { PoolClient } from "pg";
 import { walletAllows, walletStatus } from "../billing/wallet";
+import { leadCallTask, leadContacted } from "../leads/leads";
 import { enqueueMessage } from "../comms/outbox";
 import type { TemplatePurpose } from "../comms/templates";
 import { dayInWords } from "../i18n/when";
@@ -14,7 +15,14 @@ import { addDays, localDateOf, localMinutesOf, zonedInstant, type LocalDate } fr
  * planner or the stepper twice never sends twice.
  */
 export type FollowupKind =
-  "treatment_continuity" | "estimate" | "no_show" | "unconfirmed" | "recall" | "aftercare_checkin" | "dues";
+  | "treatment_continuity"
+  | "estimate"
+  | "no_show"
+  | "unconfirmed"
+  | "recall"
+  | "aftercare_checkin"
+  | "dues"
+  | "lead";
 
 export interface LadderStep {
   /** Hours after the previous step (for the first step: after the run's start). */
@@ -52,6 +60,15 @@ export const DEFAULT_LADDERS: Record<FollowupKind, LadderStep[]> = {
   aftercare_checkin: [
     { afterHours: 0, action: "whatsapp", template: "aftercare" },
     { afterHours: 12, atLocalTime: "10:00", action: "whatsapp", template: "checkin" },
+  ],
+  // New leads (ASSUMPTIONS A-54): the first WhatsApp at once, a person calls if nothing is booked within 3
+  // hours, two nudges over the next days, a last call, then the lead is closed as unresponsive.
+  lead: [
+    { afterHours: 0, action: "whatsapp", template: "lead_welcome" },
+    { afterHours: 3, action: "staff_task" },
+    { afterHours: 21, atLocalTime: "11:00", action: "whatsapp", template: "lead_nudge" },
+    { afterHours: 48, atLocalTime: "11:00", action: "whatsapp", template: "lead_nudge" },
+    { afterHours: 48, atLocalTime: "10:30", action: "staff_task" },
   ],
   dues: [
     { afterHours: 0, action: "whatsapp", template: "dues_reminder" },
@@ -150,6 +167,7 @@ export async function planFollowups(
     recall: 0,
     aftercare_checkin: 0,
     dues: 0,
+    lead: 0,
     deposits: 0,
   };
   const add = async (r: NewRun) => {
@@ -372,6 +390,11 @@ async function goal(client: PoolClient, run: RunRow, now: Date): Promise<Outcome
     }
     case "aftercare_checkin":
       return null;
+    case "lead": {
+      const r = await q(`select stage from leads where id = $1`);
+      if (!r || ["lost", "unresponsive"].includes(r.stage)) return "stopped_obsolete";
+      return ["booked", "visited", "won"].includes(r.stage) ? "stopped_success" : null;
+    }
     case "dues": {
       const r = await q(
         `select coalesce(sum(balance_paise), 0)::bigint as owed from patient_balances
@@ -386,7 +409,7 @@ interface RunRow {
   id: string;
   kind: FollowupKind;
   subject_id: string;
-  patient_id: string;
+  patient_id: string | null;
   phone: string | null;
   step: number;
   next_at: Date;
@@ -445,8 +468,10 @@ export async function advanceFollowups(
   const wallet = await walletStatus(client, now);
 
   const { rows } = await client.query<RunRow>(
-    `select r.id, r.kind, r.subject_id, r.patient_id, r.phone, r.step, r.next_at, p.name as patient_name, p.language_pref
-     from followup_runs r join patients p on p.id = r.patient_id
+    `select r.id, r.kind, r.subject_id, r.patient_id, r.phone, r.step, r.next_at,
+            coalesce(p.name, l.name, '') as patient_name, p.language_pref
+     from followup_runs r left join patients p on p.id = r.patient_id
+     left join leads l on r.subject_type = 'lead' and l.id = r.subject_id
      where r.status = 'active' and r.next_at <= $1 order by r.next_at, r.id limit $2 for update of r skip locked`,
     [now, limit],
   );
@@ -544,7 +569,7 @@ export async function advanceFollowups(
         [run.patient_id, owed],
       );
       if (!link.rowCount) {
-        result.links.push({ runId: run.id, patientId: run.patient_id, amountPaise: owed });
+        result.links.push({ runId: run.id, patientId: run.patient_id!, amountPaise: owed });
         continue;
       }
     }
@@ -572,6 +597,7 @@ export async function advanceFollowups(
         });
         await record("whatsapp", "queued", { outboxId });
         if (outboxId) result.messages++;
+        if (outboxId && run.kind === "lead") await leadContacted(client, run.subject_id, now);
       }
     } else if (action === "ai_call") {
       const call: CallRequest = {
@@ -583,7 +609,11 @@ export async function advanceFollowups(
       await record("ai_call", "requested", { call });
       result.calls.push(call);
     } else {
-      const taskId = await staffTask(client, run, now);
+      // A lead's task is a call with everything the lead told us; the last one is the final try.
+      const taskId =
+        run.kind === "lead"
+          ? await leadCallTask(client, run.subject_id, ladder[run.step + 1] ? "no_booking" : "final", now)
+          : await staffTask(client, run, now);
       await record("staff_task", "created", { taskId });
       if (taskId) result.tasks++;
     }
@@ -600,7 +630,7 @@ export async function advanceFollowups(
         [run.id, now],
       );
       // A ladder that ran out without reaching its goal leaves the patient with a person (PLAN §5.3).
-      if (action !== "staff_task" && run.kind !== "aftercare_checkin") {
+      if (action !== "staff_task" && run.kind !== "aftercare_checkin" && run.kind !== "lead") {
         await staffTask(client, { ...run, step: run.step + 1 }, now);
         result.tasks++;
       }
@@ -674,7 +704,7 @@ async function buildMessage(
   template: TemplatePurpose,
   clinic: ClinicInfo,
 ): Promise<{ language: "en" | "hi"; params: string[]; buttons?: string[]; appointmentId?: string } | null> {
-  const language = lang(run.language_pref, clinic.defaultLanguage);
+  let language = lang(run.language_pref, clinic.defaultLanguage);
   const name = run.patient_name;
   switch (template) {
     case "treatment_next_sitting": {
@@ -770,6 +800,48 @@ async function buildMessage(
         appointmentId: run.subject_id,
       };
     }
+    case "lead_welcome":
+    case "lead_nudge": {
+      const l = (await client.query("select name, need, answers from leads where id = $1", [run.subject_id]))
+        .rows[0];
+      if (!l) return null;
+      // Write in the language the lead used on the form; otherwise the clinic's usual language.
+      const said = Object.entries((l.answers ?? {}) as Record<string, string>)
+        .filter(([k]) => !["full_name", "first_name", "last_name", "phone_number", "email"].includes(k))
+        .map(([, v]) => v)
+        .join(" ");
+      if (/[\u0900-\u097F]/.test(said)) language = "hi";
+      else if (/[a-z]{3,}/i.test(said)) language = "en";
+      const words = {
+        en: {
+          pain: "treatment for your tooth problem",
+          implant: "dental implants",
+          braces: "braces and aligners",
+          rct: "root canal treatment",
+          cleaning: "a check-up and cleaning",
+          cosmetic: "a brighter smile",
+          major: "braces, implants or smile work",
+        },
+        hi: {
+          pain: "दाँत की तकलीफ़ के इलाज",
+          implant: "डेंटल इम्प्लांट",
+          braces: "ब्रेसेस और एलाइनर",
+          rct: "रूट कैनाल इलाज",
+          cleaning: "जाँच और सफ़ाई",
+          cosmetic: "सुंदर मुस्कान",
+          major: "ब्रेसेस, इम्प्लांट या मुस्कान के इलाज",
+        },
+      }[language] as Record<string, string>;
+      return {
+        language,
+        params: [
+          l.name?.split(" ")[0] || (language === "hi" ? "जी" : "there"),
+          clinic.name,
+          words[l.need] ?? (language === "hi" ? "दाँतों के इलाज" : "dental care"),
+        ],
+        buttons: [`lead:${run.subject_id}:book`, `lead:${run.subject_id}:ask`, `lead:${run.subject_id}:call`],
+      };
+    }
     case "dues_reminder": {
       const l = (
         await client.query(
@@ -801,6 +873,7 @@ const TASK_TITLES: Record<FollowupKind, [kind: string, title: string]> = {
   recall: ["followup", "Recall due, no response"],
   aftercare_checkin: ["followup", "After-care check"],
   dues: ["followup", "Payment due, not received"],
+  lead: ["lead", "Lead to call"],
 };
 
 async function staffTask(client: PoolClient, run: RunRow, now: Date): Promise<string | null> {
@@ -832,9 +905,10 @@ export async function listFollowups(
 ) {
   const { rows } = await client.query(
     `select r.id, r.kind, r.subject_type, r.subject_id, r.step, r.next_at, r.status, r.stop_reason, r.started_at, r.finished_at,
-            p.id as patient_id, p.name as patient_name, p.phone,
+            r.patient_id, coalesce(p.name, l.name) as patient_name, coalesce(p.phone, r.phone) as phone,
             (select count(*)::int from followup_actions a where a.run_id = r.id) as actions
-     from followup_runs r join patients p on p.id = r.patient_id
+     from followup_runs r left join patients p on p.id = r.patient_id
+     left join leads l on r.subject_type = 'lead' and l.id = r.subject_id
      where ($1::text is null or ($1 = 'active' and r.status = 'active') or ($1 = 'finished' and r.status <> 'active'))
        and ($2::text is null or r.kind = $2)
      order by case when r.status = 'active' then 0 else 1 end, r.next_at limit $3`,

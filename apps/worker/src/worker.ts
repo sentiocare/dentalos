@@ -8,6 +8,7 @@ import { makeProcessInboundTask } from "./tasks/inbound";
 import { makePlanMessagesTask } from "./tasks/plan-messages";
 import { makeOutboxSweepTask, makeSendOutboxTask } from "./tasks/outbox";
 import { makePlaceCallTask } from "./tasks/calls";
+import { makeFetchLeadTask, makeLeadKickoffTask } from "./tasks/leads";
 import {
   makeRechargeDebitTask,
   makeRechargeForecastTask,
@@ -48,6 +49,8 @@ export function buildTaskList(deps: WorkerDeps): TaskList {
     send_receipt: makeSendReceiptTask(deps),
     place_call: makePlaceCallTask(deps),
     wallet_watch: makeWalletWatchTask(deps),
+    fetch_lead: makeFetchLeadTask(deps),
+    lead_kickoff: makeLeadKickoffTask(deps),
     recharge_forecast: makeRechargeForecastTask(deps),
     recharge_debit: makeRechargeDebitTask(deps),
     reconcile: makeReconcileTask(deps),

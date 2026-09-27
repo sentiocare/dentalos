@@ -9,7 +9,9 @@
 import {
   addCharge,
   addDays,
+  createLead,
   createTreatmentPlan,
+  recordCallOutcome,
   meter,
   recordPayment,
   estimateFromPlan,
@@ -386,6 +388,7 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
   await withClinic(pool, ctx, (c) => seedDemoCalls(c, now));
   await withClinic(pool, ctx, (c) => seedDemoPlans(c, now));
   await withClinic(pool, ctx, (c) => seedDemoMoney(c, now));
+  await withClinic(pool, ctx, (c) => seedDemoLeads(c, now));
   await seedDemoWallet(pool, clinicId, now);
   console.log(`Demo clinic ready: ${patients.length} patients, ${booked} appointments.`);
   return clinicId;
@@ -666,4 +669,70 @@ async function seedDemoWallet(pool: Pool, clinicId: string, now: Date) {
     }
   });
   await pool.query("update wallets set enforced = true where clinic_id = $1", [clinicId]);
+}
+
+/** A few leads from ads and other sources, in different stages, for the Leads page. */
+async function seedDemoLeads(c: PoolClient, now: Date) {
+  const hours = (h: number) => new Date(now.getTime() - h * 3600_000);
+  const leads: Parameters<typeof createLead>[1][] = [
+    {
+      source: "meta_form",
+      externalId: "demo-1",
+      name: "Anjali Mishra",
+      phone: "+919811100001",
+      campaign: "Braces - Sept",
+      need: "braces",
+      timing: "week",
+      answers: { "which_treatment?": "Braces for my son" },
+      now: hours(0.2),
+    },
+    {
+      source: "ctwa",
+      externalId: "demo-2",
+      name: "Rakesh Yadav",
+      phone: "+919811100002",
+      campaign: "Implants in Ranchi",
+      need: "implant",
+      alreadyTalking: true,
+      now: hours(1),
+    },
+    {
+      source: "meta_form",
+      externalId: "demo-3",
+      name: "Pooja Sinha",
+      phone: "+919811100003",
+      campaign: "Free check-up",
+      need: "cleaning",
+      timing: "month",
+      answers: { "which_treatment?": "Cleaning" },
+      now: hours(5),
+    },
+    {
+      source: "justdial",
+      name: "Vikash Oraon",
+      phone: "+919811100004",
+      need: "pain",
+      notes: "Called about wisdom tooth pain",
+      now: hours(26),
+    },
+    {
+      source: "meta_form",
+      externalId: "demo-5",
+      name: "Neelam Kumari",
+      phone: "+919811100005",
+      campaign: "Free check-up",
+      need: "cleaning",
+      timing: "exploring",
+      answers: { "which_treatment?": "Just want to know prices" },
+      now: hours(50),
+    },
+  ];
+  const ids: string[] = [];
+  for (const l of leads) ids.push((await createLead(c, l)).id);
+  // One the front desk already called: not interested.
+  await recordCallOutcome(c, ids[4]!, {
+    outcome: "not_interested",
+    note: "Went to a clinic nearer home",
+    now: hours(30),
+  });
 }

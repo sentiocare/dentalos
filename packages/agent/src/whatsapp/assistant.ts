@@ -8,6 +8,10 @@ import {
   DomainError,
   enqueueMessage,
   findPatientsByPhone,
+  leadBookedInChat,
+  leadCallTask,
+  leadReplied,
+  qualifyLead,
   linkFamily,
   localDateOf,
   moveAppointment,
@@ -19,6 +23,8 @@ import {
   type Conversation,
   type Hold,
   type Lang,
+  type LeadNeed,
+  type LeadTiming,
   type Patient,
 } from "@dentalos/core";
 import type { PoolClient } from "pg";
@@ -59,6 +65,8 @@ export interface AssistantState {
   pendingText?: string;
   patientId?: string;
   newPatientName?: string;
+  /** Qualifying a lead from an ad (Phase 6). */
+  leadId?: string;
   relationship?: string | null;
   procedureId?: string;
   fromDate?: string;
@@ -307,6 +315,13 @@ class Assistant {
       await this.existingPatientConsent();
       return this.followupButton(input.payload);
     }
+    // Buttons on our message to a new lead: they asked the clinic to contact them (lead form or ad).
+    if (input.kind === "button" && /^lead(_need|_when)?:/.test(input.payload)) {
+      await this.existingPatientConsent("lead_reply");
+      return this.leadButton(input.payload);
+    }
+    // Any message from a lead's number: they are talking to us.
+    await leadReplied(this.q, this.ctx.conversation.phone, this.ctx.now);
 
     // 4. Consent notice at first contact (Build Prompt §7.1). An existing patient replying to a message the
     // clinic sent them in the last week is treated like a button reply (notice for information).
@@ -484,6 +499,16 @@ class Assistant {
     await this.q.query(
       "update followup_runs set status = 'stopped_optout', stop_reason = 'STOP on WhatsApp', finished_at = $2 where phone = $1 and status = 'active'",
       [this.ctx.conversation.phone, this.ctx.now],
+    );
+    // A lead who says STOP is closed, and nobody is asked to call them.
+    await this.q.query(
+      `update leads set stage = 'lost', lost_reason = 'Sent STOP'
+       where phone = $1 and stage in ('new', 'contacted', 'engaged', 'qualified')`,
+      [this.ctx.conversation.phone],
+    );
+    await this.q.query(
+      "update tasks set status = 'cancelled', resolved_at = now() where status = 'open' and lead_id in (select id from leads where phone = $1)",
+      [this.ctx.conversation.phone],
     );
     this.resetFlow();
     this.reply(this.t("stopped"));
@@ -667,9 +692,9 @@ class Assistant {
    * A patient answering a button on our own message (reminder, follow-up) is an existing patient of the
    * clinic: they get the privacy notice for information, and their reply counts as agreement (COMPLIANCE 8).
    */
-  private async existingPatientConsent() {
+  private async existingPatientConsent(via = "replied_to_clinic_message") {
     if (await this.hasConsent()) return;
-    await this.recordConsent(true, "replied_to_clinic_message");
+    await this.recordConsent(true, via);
     this.reply(this.t("consent_notice").split("\n\n")[0]!);
   }
 
@@ -759,6 +784,76 @@ class Assistant {
       default:
         return this.welcome();
     }
+  }
+
+  // ---------------------------------------------------------------- leads
+
+  /**
+   * A lead tapped a button on our message (Phase 6): book, ask, or be called. Booking first asks what they
+   * need and when (two taps), unless the form already told us, then offers consultation times. The lead id
+   * is checked against this phone, so a forwarded message can't act on someone else's lead.
+   */
+  private async leadButton(payload: string) {
+    const [kind, id, answer] = payload.split(":") as [string, string, string | undefined];
+    const lead = (
+      await this.q.query("select id, name, need, timing, stage from leads where id = $1 and phone = $2", [
+        id,
+        this.ctx.conversation.phone,
+      ])
+    ).rows[0];
+    if (!lead) return this.welcome();
+    await leadReplied(this.q, this.ctx.conversation.phone, this.ctx.now);
+    if (kind === "lead_need") {
+      const needs: Record<string, LeadNeed> = { pain: "pain", major: "major", checkup: "cleaning" };
+      const need = needs[answer ?? ""] ?? "other";
+      await qualifyLead(this.q, lead.id, { need }, this.ctx.now);
+      return this.askLeadTiming(lead.id);
+    }
+    if (kind === "lead_when") {
+      const timings: Record<string, LeadTiming> = { week: "week", month: "month", exploring: "exploring" };
+      const timing = timings[answer ?? ""] ?? "month";
+      await qualifyLead(this.q, lead.id, { timing }, this.ctx.now);
+      if (timing === "exploring")
+        return this.reply(this.t("lead_exploring"), [
+          { id: `lead:${lead.id}:book`, title: this.t("btn_book_visit") },
+        ]);
+      return this.startLeadBooking(lead);
+    }
+    switch (answer) {
+      case "book":
+        if (!lead.need)
+          return this.reply(this.t("lead_ask_need"), [
+            { id: `lead_need:${lead.id}:pain`, title: this.t("btn_need_pain") },
+            { id: `lead_need:${lead.id}:major`, title: this.t("btn_need_major") },
+            { id: `lead_need:${lead.id}:checkup`, title: this.t("btn_need_checkup") },
+          ]);
+        if (!lead.timing) return this.askLeadTiming(lead.id);
+        return this.startLeadBooking(lead);
+      case "call":
+        await leadCallTask(this.q, lead.id, "asked_call", this.ctx.now);
+        return this.reply(this.t("human_ack"));
+      default:
+        return this.reply(this.t("lead_ask_question"));
+    }
+  }
+
+  private askLeadTiming(leadId: string) {
+    return this.reply(this.t("lead_ask_when"), [
+      { id: `lead_when:${leadId}:week`, title: this.t("btn_when_week") },
+      { id: `lead_when:${leadId}:month`, title: this.t("btn_when_month") },
+      { id: `lead_when:${leadId}:exploring`, title: this.t("btn_when_exploring") },
+    ]);
+  }
+
+  /** A consultation for the lead, using the name from their form when there is no patient record yet. */
+  private async startLeadBooking(lead: { id: string; name: string | null }) {
+    const patients = await this.phonePatients();
+    if (patients.length > 1 || (patients.length === 0 && !lead.name))
+      return this.startBooking(null, this.consultationId());
+    this.state = { lang: this.state.lang, flow: "book", procedureId: this.consultationId(), leadId: lead.id };
+    if (patients[0]) this.state.patientId = patients[0].id;
+    else this.state.newPatientName = lead.name!.replace(/\b\p{Ll}/gu, (c) => c.toUpperCase());
+    return this.offer({});
   }
 
   /** Offers times for a treatment sitting within (or after) its expected window. */
@@ -1038,6 +1133,13 @@ class Assistant {
         this.ctx.conversation.id,
         patientId,
       ]);
+      // A lead who booked here is marked booked straight away (and their call tasks are closed).
+      await leadBookedInChat(this.q, {
+        phone: this.ctx.conversation.phone,
+        appointmentId: appointment.id,
+        patientId,
+        now: this.ctx.now,
+      });
       this.resetFlow();
       this.reply(this.t("booked", { patient, when: this.when(appointment.startsAt), doctor }));
     } catch (error) {

@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const tw = useTranslations("whatsapp");
   const tv = useTranslations("voice");
   const tpay = useTranslations("payments");
+  const tla = useTranslations("leadAds");
   const tf = useTranslations("followups");
   const tc = useTranslations("common");
   const { api, can } = useSession();
@@ -100,6 +101,11 @@ export default function SettingsPage() {
       {manage ? (
         <Section title={tv("title")}>
           <VoiceSettings />
+        </Section>
+      ) : null}
+      {manage ? (
+        <Section title={tla("title")}>
+          <LeadAds />
         </Section>
       ) : null}
       {manage ? (
@@ -1402,6 +1408,89 @@ function PaymentsAccount() {
         }}
       >
         {t("connect")}
+      </Button>
+    </div>
+  );
+}
+
+/** Facebook/Instagram lead forms: the clinic's Page, and a staff phone that gets hot-lead alerts. */
+function LeadAds() {
+  const t = useTranslations("leadAds");
+  const tc = useTranslations("common");
+  const { api } = useSession();
+  const config = useRuntimeConfig();
+  const toast = useToast();
+  const [s, setS] = useState<{
+    page: { pageId: string; name: string } | null;
+    alertPhone: string | null;
+  } | null>(null);
+  const [page, setPage] = useState({ pageId: "", pageName: "", pageAccessToken: "" });
+  const [alert, setAlert] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void api<{ page: { pageId: string; name: string } | null; alertPhone: string | null }>(
+      "/v1/lead-settings",
+    )
+      .then((r) => {
+        setS(r);
+        setAlert(r.alertPhone ? displayPhone(r.alertPhone) : "");
+      })
+      .catch(() => {});
+  }, [api]);
+  if (!s) return <Spinner />;
+  const save = async (body: Record<string, unknown>) => {
+    setBusy(true);
+    try {
+      setS(await api("/v1/lead-settings", { method: "PUT", body }));
+      setPage({ pageId: "", pageName: "", pageAccessToken: "" });
+      toast(tc("saved"));
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : tc("error"), "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="space-y-3">
+      <p className="text-sm">{s.page ? t("connected", { name: s.page.name }) : t("notConnected")}</p>
+      <Field label={t("pageId")}>
+        {(id) => (
+          <Input
+            id={id}
+            inputMode="numeric"
+            value={page.pageId}
+            onChange={(e) => setPage({ ...page, pageId: e.target.value })}
+          />
+        )}
+      </Field>
+      <Field label={t("pageName")}>
+        {(id) => (
+          <Input
+            id={id}
+            value={page.pageName}
+            onChange={(e) => setPage({ ...page, pageName: e.target.value })}
+          />
+        )}
+      </Field>
+      <Field label={t("token")} hint={t("tokenHint", { url: `${config.apiUrl}/webhooks/meta-leads` })}>
+        {(id) => (
+          <Input
+            id={id}
+            type="password"
+            autoComplete="off"
+            value={page.pageAccessToken}
+            onChange={(e) => setPage({ ...page, pageAccessToken: e.target.value })}
+          />
+        )}
+      </Field>
+      <Button busy={busy} onClick={() => void save({ page })}>
+        {t("connect")}
+      </Button>
+      <Field label={t("alertPhone")} hint={t("alertHint")}>
+        {(id) => <Input id={id} type="tel" value={alert} onChange={(e) => setAlert(e.target.value)} />}
+      </Field>
+      <Button variant="secondary" busy={busy} onClick={() => void save({ alertPhone: alert.trim() || null })}>
+        {tc("save")}
       </Button>
     </div>
   );

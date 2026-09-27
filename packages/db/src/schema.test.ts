@@ -325,6 +325,8 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       "mandates",
       "recharges",
       "sentio_invoices",
+      "leads",
+      "lead_activities",
     ];
 
     beforeAll(async () => {
@@ -496,6 +498,14 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
         "insert into sentio_invoices (clinic_id, number, fy, kind, lines, taxable_paise, total_paise, buyer) values ($1, 'S-1', '2026-27', 'recharge', '[]', 100, 118, '{}')",
         [b.clinicId],
       );
+      const lead = await q(
+        "insert into leads (clinic_id, source, phone, name) values ($1, 'meta_form', '+919876500001', 'Lead B') returning id",
+        [b.clinicId],
+      );
+      await q("insert into lead_activities (clinic_id, lead_id, kind) values ($1, $2, 'created')", [
+        b.clinicId,
+        lead.rows[0].id,
+      ]);
     });
 
     it.each(tables)("clinic A cannot read clinic B's %s", async (table) => {

@@ -4,6 +4,7 @@ import {
   enqueueMessage,
   getPaymentAccount,
   sendReceipt,
+  syncLeads,
   expireEstimates,
   planFollowups,
   scheduleSend,
@@ -28,6 +29,8 @@ export function makeFollowupsTask(deps: Pick<WorkerDeps, "pool" | "logger" | "ad
         { clinicId, actor: "job:followups", role: "system" },
         async (c) => {
           await expireEstimates(c);
+          // Leads move on from what happened in the clinic (booked, visited, paid).
+          await syncLeads(c, new Date());
           const started = await planFollowups(c, new Date(), { jobs: queue });
           const stepped = await advanceFollowups(c, new Date());
           const due = (

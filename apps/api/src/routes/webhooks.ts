@@ -6,7 +6,7 @@ import {
   type JobQueue,
   type SentioSeller,
 } from "@dentalos/core";
-import { withClinic, type Pool } from "@dentalos/db";
+import { withAppRole, withClinic, type Pool } from "@dentalos/db";
 import { sentioPaymentWebhook } from "./wallet";
 import type { FastifyInstance } from "fastify";
 
@@ -82,6 +82,50 @@ export async function webhookRoutes(
             { clinicId, receiptId: result.receiptId },
             { jobKey: `receipt:${result.receiptId}` },
           );
+      }
+      return reply.send({ ok: true });
+    },
+  );
+
+  // Facebook and Instagram lead forms: Meta's Page webhook says a lead exists; the worker fetches the
+  // answers with the clinic's Page token and sends the first WhatsApp within seconds.
+  app.get("/webhooks/meta-leads", async (request, reply) => {
+    const challenge = deps.adapters.leads.verifySubscription(
+      request.query as Record<string, string | undefined>,
+    );
+    if (!challenge) return reply.code(403).send({ error: "forbidden" });
+    return reply.type("text/plain").send(challenge);
+  });
+
+  app.post(
+    "/webhooks/meta-leads",
+    { config: { rateLimit: { max: 3000, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      const webhook = {
+        headers: request.headers as Record<string, string | undefined>,
+        rawBody: String(request.body ?? ""),
+      };
+      if (!deps.adapters.leads.verifyWebhook(webhook)) {
+        request.log.warn("lead ads webhook with a bad signature");
+        return reply.code(401).send({ error: "bad_signature" });
+      }
+      for (const event of deps.adapters.leads.parseWebhook(webhook)) {
+        const clinicId = await withAppRole(
+          deps.pool,
+          async (c) =>
+            (await c.query("select app.clinic_for_page($1) as id", [event.pageId])).rows[0].id as
+              string | null,
+        );
+        if (!clinicId) {
+          request.log.warn("lead for a Page not connected to any clinic");
+          continue;
+        }
+        // The job key makes Meta's retries harmless.
+        await deps.jobs.add(
+          "fetch_lead",
+          { clinicId, leadgenId: event.leadgenId, receivedAt: new Date().toISOString() },
+          { jobKey: `lead:${event.leadgenId}` },
+        );
       }
       return reply.send({ ok: true });
     },

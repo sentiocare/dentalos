@@ -69,6 +69,8 @@ export type MessagingEvent =
         | { kind: "audio"; mediaId: string; mimeType: string }
         | { kind: "image" | "document"; mediaId: string; mimeType: string; caption?: string }
         | { kind: "unsupported" };
+      /** Set on the first message from a "Click to WhatsApp" ad (Meta's referral object). */
+      referral?: AdReferral;
     }
   | {
       type: "status";
@@ -80,3 +82,13 @@ export type MessagingEvent =
       errorCode?: string;
       usage?: UsageReport & { category?: "utility" | "marketing" | "authentication" | "service" };
     };
+
+/** Which ad brought the patient to WhatsApp (needs "Ads attribution" switched on in WhatsApp Manager). */
+export interface AdReferral {
+  sourceType: string;
+  sourceId?: string;
+  sourceUrl?: string;
+  headline?: string;
+  body?: string;
+  ctwaClid?: string;
+}

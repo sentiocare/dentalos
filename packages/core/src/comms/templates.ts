@@ -29,7 +29,9 @@ export type TemplatePurpose =
   | "billing_predebit"
   | "billing_recharge_failed"
   | "billing_spend_alert"
-  | "billing_link";
+  | "billing_link"
+  | "lead_welcome"
+  | "lead_nudge";
 
 export interface TemplateDefinition {
   purpose: TemplatePurpose;
@@ -311,6 +313,37 @@ export const TEMPLATES: Record<TemplatePurpose, TemplateDefinition> = {
       en: "{{1}}, here is the link for {{2}}: {{3}}",
       hi: "{{1}}, {{2}} के लिए लिंक: {{3}}",
     },
+  },
+  // New leads from ads (Phase 6). Meta counts these as marketing; the person asked the clinic to contact them.
+  lead_welcome: {
+    purpose: "lead_welcome",
+    name: "sentio_lead_welcome",
+    category: "marketing",
+    params: ["first name", "clinic name", "what they asked about"],
+    body: {
+      en: "Namaste {{1}}, thank you for your interest in {{3}} at {{2}}. We would be glad to help. Tap below to book a visit, ask a question, or get a call from our team. Reply STOP to stop messages.",
+      hi: "नमस्ते {{1}}, {{2}} में {{3}} के लिए आपकी रुचि का धन्यवाद। हम आपकी मदद करना चाहेंगे। विज़िट बुक करने, सवाल पूछने या हमारी टीम से कॉल पाने के लिए नीचे दबाएँ। मैसेज बंद करने के लिए STOP लिखें।",
+    },
+    buttons: [
+      { en: "Book a visit", hi: "विज़िट बुक करें" },
+      { en: "Ask a question", hi: "सवाल पूछें" },
+      { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
+  },
+  lead_nudge: {
+    purpose: "lead_nudge",
+    name: "sentio_lead_nudge",
+    category: "marketing",
+    params: ["first name", "clinic name", "what they asked about"],
+    body: {
+      en: "{{1}}, this is {{2}} again about {{3}}. A short consultation lets the doctor tell you exactly what you need and what it will cost. Would you like to book one? Reply STOP to stop messages.",
+      hi: "{{1}}, {{2}} से फिर से {{3}} के बारे में। एक छोटे परामर्श में डॉक्टर बता सकते हैं कि आपको ठीक-ठीक क्या चाहिए और खर्च कितना होगा। क्या आप परामर्श बुक करना चाहेंगे? मैसेज बंद करने के लिए STOP लिखें।",
+    },
+    buttons: [
+      { en: "Book a visit", hi: "विज़िट बुक करें" },
+      { en: "Ask a question", hi: "सवाल पूछें" },
+      { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
   },
 };
 

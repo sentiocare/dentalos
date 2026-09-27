@@ -56,7 +56,8 @@
     "campaigns": "Campaigns",
     "money": "Payments & dues",
     "wallet": "Sentio balance & billing",
-    "admin": "Sentio admin"
+    "admin": "Sentio admin",
+    "leads": "Leads"
   },
   "login": {
     "title": "Sign in",
@@ -545,7 +546,8 @@
       "unconfirmed": "Unconfirmed",
       "recall": "Recall",
       "aftercare_checkin": "After-care",
-      "dues": "Payment due"
+      "dues": "Payment due",
+      "lead": "New lead"
     },
     "status": {
       "active": "Running",
@@ -827,5 +829,127 @@
     "recharges": "Recharges",
     "invoices": "Invoices",
     "costShort": "cost"
+  },
+  "leads": {
+    "title": "Leads",
+    "add": "Add lead",
+    "added": "Lead added. The first WhatsApp goes now.",
+    "addHint": "The assistant sends a WhatsApp at once and follows up; you'll see the lead here.",
+    "thisMonth": "This month",
+    "fast": "Answered in 5 min",
+    "booked": "Booked",
+    "won": "Became patients",
+    "tabs": {
+      "call": "Call now",
+      "open": "Open",
+      "booked": "Booked",
+      "visited": "Visited",
+      "won": "Won",
+      "lost": "Closed"
+    },
+    "empty": {
+      "call": "Nobody to call right now.",
+      "open": "No open leads.",
+      "booked": "No booked leads yet.",
+      "visited": "None yet.",
+      "won": "None yet.",
+      "lost": "None."
+    },
+    "scores": {
+      "hot": "Hot",
+      "warm": "Warm",
+      "cold": "Cold"
+    },
+    "stages": {
+      "new": "New",
+      "contacted": "Messaged",
+      "engaged": "Replied",
+      "qualified": "Qualified",
+      "booked": "Booked",
+      "visited": "Visited",
+      "won": "Became a patient",
+      "lost": "Closed",
+      "unresponsive": "No response"
+    },
+    "sources": {
+      "meta_form": "Facebook/Instagram form",
+      "ctwa": "WhatsApp ad",
+      "website": "Website",
+      "practo": "Practo",
+      "justdial": "JustDial",
+      "walk_in": "Walk-in",
+      "phone": "Phone call",
+      "referral": "Referral",
+      "other": "Other"
+    },
+    "needs": {
+      "pain": "Pain or a problem",
+      "implant": "Implants",
+      "braces": "Braces/aligners",
+      "rct": "Root canal",
+      "cleaning": "Check-up/cleaning",
+      "cosmetic": "Smile/whitening",
+      "major": "Braces/implants/smile",
+      "other": "Other"
+    },
+    "timings": {
+      "now": "Today",
+      "week": "This week",
+      "month": "This month",
+      "exploring": "Just exploring"
+    },
+    "minAgo": "{n} min ago",
+    "hoursAgo": "{n} h ago",
+    "daysAgo": "{n} d ago",
+    "callDue": "Call due",
+    "callOverdue": "Call overdue",
+    "call": "Call",
+    "chat": "WhatsApp chat",
+    "source": "Source",
+    "wants": "Wants",
+    "when": "When",
+    "notes": "Notes",
+    "name": "Name",
+    "phone": "Phone",
+    "afterCall": "After the call",
+    "bookedHint": "Booked on the phone? Book it in the calendar too; the lead updates by itself.",
+    "outcomes": {
+      "booked": "Booked",
+      "callback": "Call back later",
+      "no_answer": "No answer",
+      "not_interested": "Not interested",
+      "wrong_number": "Wrong number"
+    },
+    "callbackAt": "Call back at",
+    "reason": "Reason",
+    "note": "Note (optional)",
+    "reopen": "Reopen lead",
+    "timeline": "What happened",
+    "activity": {
+      "created": "Lead came in",
+      "message": "First WhatsApp sent",
+      "replied": "Replied",
+      "qualified": "Answered questions",
+      "call_task": "Call task for staff",
+      "called": "Staff called",
+      "booked": "Booked a visit",
+      "visited": "Visited",
+      "won": "Paid: became a patient",
+      "lost": "Closed",
+      "note": "Note",
+      "reopened": "Reopened"
+    }
+  },
+  "leadAds": {
+    "title": "Lead ads (Facebook & Instagram)",
+    "connected": "Connected to the Page “{name}”. New form leads get a WhatsApp within seconds.",
+    "notConnected": "Not connected. Connect the clinic's Facebook Page to receive lead-form leads.",
+    "pageId": "Page ID",
+    "pageName": "Page name",
+    "token": "Page access token (long-lived, with leads_retrieval)",
+    "tokenHint": "Sentio subscribes the Page to lead webhooks at {url}. See SETUP Part D7.",
+    "connect": "Connect Page",
+    "alertPhone": "Staff phone for hot-lead alerts",
+    "alertHint": "Gets a WhatsApp when a hot lead comes in or a lead asks for a call, so someone calls within minutes."
   }
 }

@@ -41,7 +41,7 @@ describe("worker config and schedule", () => {
 describe.skipIf(!hasTestDatabase)("worker with a database", () => {
   let db: TestDatabase;
   beforeAll(async () => {
-    db = await createTestDatabase();
+    db = await createTestDatabase({ max: 12 });
   });
   afterAll(async () => {
     await db?.drop();
@@ -71,10 +71,11 @@ describe.skipIf(!hasTestDatabase)("worker with a database", () => {
       taskList: buildTaskList(deps(db.pool as never)),
       logger: graphileLogger(logger),
     });
+    // Anything left over failed: show why (the error Graphile recorded), not just a count.
     const { rows } = await db.pool.query(
-      "select count(*)::int as n from graphile_worker.jobs where task_identifier in ('sweep_holds','emergency_reserves','outbox_sweep')",
+      "select task_identifier, last_error from graphile_worker.jobs where task_identifier in ('sweep_holds','emergency_reserves','outbox_sweep')",
     );
-    expect(rows[0].n).toBe(0);
+    expect(rows).toEqual([]);
     await utils.release();
   });
 

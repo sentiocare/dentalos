@@ -56,7 +56,8 @@
     "campaigns": "अभियान",
     "money": "भुगतान और बकाया",
     "wallet": "Sentio बैलेंस और बिलिंग",
-    "admin": "Sentio एडमिन"
+    "admin": "Sentio एडमिन",
+    "leads": "लीड्स"
   },
   "login": {
     "title": "साइन इन",
@@ -545,7 +546,8 @@
       "unconfirmed": "पक्का नहीं",
       "recall": "रिकॉल",
       "aftercare_checkin": "देखभाल",
-      "dues": "बकाया भुगतान"
+      "dues": "बकाया भुगतान",
+      "lead": "नई लीड"
     },
     "status": {
       "active": "चल रहा",
@@ -827,5 +829,127 @@
     "recharges": "Recharges",
     "invoices": "Invoices",
     "costShort": "cost"
+  },
+  "leads": {
+    "title": "लीड्स",
+    "add": "लीड जोड़ें",
+    "added": "लीड जुड़ गई। पहला WhatsApp अभी जा रहा है।",
+    "addHint": "असिस्टेंट तुरंत WhatsApp भेजती है और फ़ॉलो-अप करती है; लीड यहाँ दिखेगी।",
+    "thisMonth": "इस महीने",
+    "fast": "5 मिनट में जवाब",
+    "booked": "बुक हुए",
+    "won": "मरीज़ बने",
+    "tabs": {
+      "call": "अभी कॉल करें",
+      "open": "खुली",
+      "booked": "बुक",
+      "visited": "आए",
+      "won": "मरीज़ बने",
+      "lost": "बंद"
+    },
+    "empty": {
+      "call": "अभी किसी को कॉल नहीं करना।",
+      "open": "कोई खुली लीड नहीं।",
+      "booked": "अभी कोई बुक नहीं।",
+      "visited": "अभी कोई नहीं।",
+      "won": "अभी कोई नहीं।",
+      "lost": "कोई नहीं।"
+    },
+    "scores": {
+      "hot": "गर्म",
+      "warm": "सामान्य",
+      "cold": "ठंडी"
+    },
+    "stages": {
+      "new": "नई",
+      "contacted": "मैसेज गया",
+      "engaged": "जवाब दिया",
+      "qualified": "जानकारी मिली",
+      "booked": "बुक",
+      "visited": "आए",
+      "won": "मरीज़ बने",
+      "lost": "बंद",
+      "unresponsive": "जवाब नहीं"
+    },
+    "sources": {
+      "meta_form": "Facebook/Instagram फ़ॉर्म",
+      "ctwa": "WhatsApp विज्ञापन",
+      "website": "वेबसाइट",
+      "practo": "Practo",
+      "justdial": "JustDial",
+      "walk_in": "सीधे क्लिनिक आए",
+      "phone": "फ़ोन कॉल",
+      "referral": "रेफ़रल",
+      "other": "अन्य"
+    },
+    "needs": {
+      "pain": "दर्द या तकलीफ़",
+      "implant": "इम्प्लांट",
+      "braces": "ब्रेसेस/एलाइनर",
+      "rct": "रूट कैनाल",
+      "cleaning": "जाँच/सफ़ाई",
+      "cosmetic": "मुस्कान/सफ़ेदी",
+      "major": "ब्रेसेस/इम्प्लांट/मुस्कान",
+      "other": "अन्य"
+    },
+    "timings": {
+      "now": "आज",
+      "week": "इसी हफ़्ते",
+      "month": "इसी महीने",
+      "exploring": "सिर्फ़ जानकारी"
+    },
+    "minAgo": "{n} मिनट पहले",
+    "hoursAgo": "{n} घंटे पहले",
+    "daysAgo": "{n} दिन पहले",
+    "callDue": "कॉल करना है",
+    "callOverdue": "कॉल में देर",
+    "call": "कॉल करें",
+    "chat": "WhatsApp चैट",
+    "source": "स्रोत",
+    "wants": "चाहिए",
+    "when": "कब",
+    "notes": "नोट",
+    "name": "नाम",
+    "phone": "फ़ोन",
+    "afterCall": "कॉल के बाद",
+    "bookedHint": "फ़ोन पर बुक किया? कैलेंडर में भी बुक करें; लीड अपने आप अपडेट होगी।",
+    "outcomes": {
+      "booked": "बुक हुआ",
+      "callback": "बाद में कॉल",
+      "no_answer": "फ़ोन नहीं उठा",
+      "not_interested": "रुचि नहीं",
+      "wrong_number": "गलत नंबर"
+    },
+    "callbackAt": "कब कॉल करें",
+    "reason": "कारण",
+    "note": "नोट (वैकल्पिक)",
+    "reopen": "लीड फिर खोलें",
+    "timeline": "क्या-क्या हुआ",
+    "activity": {
+      "created": "लीड आई",
+      "message": "पहला WhatsApp गया",
+      "replied": "जवाब दिया",
+      "qualified": "सवालों के जवाब दिए",
+      "call_task": "स्टाफ़ के लिए कॉल",
+      "called": "स्टाफ़ ने कॉल किया",
+      "booked": "विज़िट बुक की",
+      "visited": "क्लिनिक आए",
+      "won": "भुगतान: मरीज़ बने",
+      "lost": "बंद",
+      "note": "नोट",
+      "reopened": "फिर खोली"
+    }
+  },
+  "leadAds": {
+    "title": "लीड विज्ञापन (Facebook और Instagram)",
+    "connected": "Page “{name}” से जुड़ा है। नई फ़ॉर्म लीड को कुछ ही सेकंड में WhatsApp जाता है।",
+    "notConnected": "जुड़ा नहीं है। फ़ॉर्म लीड पाने के लिए क्लिनिक का Facebook Page जोड़ें।",
+    "pageId": "Page ID",
+    "pageName": "Page का नाम",
+    "token": "Page access token (लंबे समय का, leads_retrieval के साथ)",
+    "tokenHint": "Sentio इस Page को {url} पर लीड वेबहुक से जोड़ता है। SETUP भाग D7 देखें।",
+    "connect": "Page जोड़ें",
+    "alertPhone": "गर्म लीड अलर्ट के लिए स्टाफ़ फ़ोन",
+    "alertHint": "गर्म लीड आने पर या लीड के कॉल माँगने पर WhatsApp मिलता है, ताकि कोई कुछ मिनटों में कॉल करे।"
   }
 }

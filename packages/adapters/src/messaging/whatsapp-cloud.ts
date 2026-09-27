@@ -212,6 +212,18 @@ export class WhatsAppCloudProvider implements MessagingProvider {
             channelId,
             at: new Date(Number(m.timestamp) * 1000),
             content: inboundContent(m),
+            ...(m.referral
+              ? {
+                  referral: {
+                    sourceType: m.referral.source_type ?? "unknown",
+                    sourceId: m.referral.source_id,
+                    sourceUrl: m.referral.source_url,
+                    headline: m.referral.headline,
+                    body: m.referral.body,
+                    ctwaClid: m.referral.ctwa_clid,
+                  },
+                }
+              : {}),
           });
         }
         for (const s of value.statuses ?? []) {
@@ -292,6 +304,14 @@ interface MetaMessage {
   audio?: { id: string; mime_type: string };
   image?: { id: string; mime_type: string; caption?: string };
   document?: { id: string; mime_type: string; caption?: string };
+  referral?: {
+    source_url?: string;
+    source_id?: string;
+    source_type?: string;
+    headline?: string;
+    body?: string;
+    ctwa_clid?: string;
+  };
 }
 
 interface MetaWebhook {
@@ -357,7 +377,23 @@ export function toMetaWebhook(events: MessagingEvent[]): string {
 }
 
 function toMetaMessage(e: Extract<MessagingEvent, { type: "inbound_message" }>): MetaMessage {
-  const base = { from: waNumber(e.from), id: e.providerMessageId, timestamp: String(e.at.getTime() / 1000) };
+  const base = {
+    from: waNumber(e.from),
+    id: e.providerMessageId,
+    timestamp: String(e.at.getTime() / 1000),
+    ...(e.referral
+      ? {
+          referral: {
+            source_type: e.referral.sourceType,
+            source_id: e.referral.sourceId,
+            source_url: e.referral.sourceUrl,
+            headline: e.referral.headline,
+            body: e.referral.body,
+            ctwa_clid: e.referral.ctwaClid,
+          },
+        }
+      : {}),
+  };
   const c = e.content;
   switch (c.kind) {
     case "text":

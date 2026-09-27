@@ -172,6 +172,16 @@ describe("WhatsApp Cloud webhooks", () => {
                     timestamp: "1790000000",
                     type: "text",
                     text: { body: "Sunday ko khula hai kya?" },
+                    // The first message after tapping a Click-to-WhatsApp ad.
+                    referral: {
+                      source_url: "https://fb.me/abc",
+                      source_id: "120210000000000",
+                      source_type: "ad",
+                      headline: "Braces from ₹2,500/month",
+                      body: "Book a free check-up",
+                      media_type: "image",
+                      ctwa_clid: "ARAkLkA8rmlFeiCktEJQ",
+                    },
                   },
                   {
                     from: "919876543210",
@@ -232,6 +242,15 @@ describe("WhatsApp Cloud webhooks", () => {
       eventId: "msg:wamid.A",
     });
     expect(events[2]).toMatchObject({ content: { payload: "confirm:a1" } });
+    expect(events[0]).toMatchObject({
+      referral: {
+        sourceType: "ad",
+        sourceId: "120210000000000",
+        headline: "Braces from ₹2,500/month",
+        ctwaClid: "ARAkLkA8rmlFeiCktEJQ",
+      },
+    });
+    expect(events[1]).not.toHaveProperty("referral");
   });
 
   it("answers Meta's subscription check only with the right verify token", () => {

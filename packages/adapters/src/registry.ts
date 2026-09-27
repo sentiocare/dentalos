@@ -1,6 +1,9 @@
 import type { LLMProvider } from "./llm/types";
 import type { MessagingProvider } from "./messaging/types";
 import type { PaymentProvider } from "./payments/types";
+import type { LeadAdsProvider } from "./leads/types";
+import { FakeLeadAdsProvider } from "./leads/fake";
+import { MetaLeadAdsProvider, type MetaLeadAdsConfig } from "./leads/meta";
 import type { SmsProvider } from "./sms/types";
 import type { StorageProvider } from "./storage/types";
 import type { TelephonyProvider } from "./telephony/types";
@@ -28,6 +31,8 @@ export interface Adapters {
   payments: PaymentProvider;
   sms: SmsProvider;
   storage: StorageProvider;
+  /** Facebook and Instagram lead forms. */
+  leads: LeadAdsProvider;
 }
 
 /**
@@ -42,6 +47,8 @@ export interface AdapterSelection {
   payments: "fake" | "razorpay";
   sms: "fake" | "dlt";
   storage: "fake" | "supabase";
+  /** Defaults to "fake" so existing configurations keep working. */
+  leads?: "fake" | "meta";
 }
 
 /** When each real adapter is built (PLAN §7). Until then, selecting it fails at startup, not mid-call. */
@@ -63,6 +70,7 @@ export interface AdapterOptions {
   supabaseStorage?: SupabaseStorageConfig;
   exotel?: ExotelConfig;
   razorpay?: RazorpayConfig;
+  metaLeads?: MetaLeadAdsConfig;
 }
 
 function required<T>(value: T | undefined, what: string): T {
@@ -110,6 +118,15 @@ export function createAdapters(selection: AdapterSelection, options: AdapterOpti
         ? new FakeStorageProvider()
         : new SupabaseStorageProvider(
             required(options.supabaseStorage, "Storage (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)"),
+          ),
+    leads:
+      (selection.leads ?? "fake") === "fake"
+        ? new FakeLeadAdsProvider()
+        : new MetaLeadAdsProvider(
+            required(
+              options.metaLeads,
+              "Lead ads (WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN: the same Meta app)",
+            ),
           ),
   };
 }
