@@ -1,8 +1,8 @@
 import type { PoolClient } from "pg";
-import { DomainError, pgErrorCode } from "../errors.js";
-import { addDays, localDateOf, zonedInstant, type LocalDate } from "../time.js";
-import { checkPlacement, findAvailableSlots, pickOptions, type PlacementWarning } from "./availability.js";
-import type { BusyInterval, PartOfDay, ProcedureSpec, ScheduleConfig, SlotCandidate } from "./types.js";
+import { DomainError, pgErrorCode } from "../errors";
+import { addDays, localDateOf, zonedInstant, type LocalDate } from "../time";
+import { checkPlacement, findAvailableSlots, pickOptions, type PlacementWarning } from "./availability";
+import type { BusyInterval, PartOfDay, ProcedureSpec, ScheduleConfig, SlotCandidate } from "./types";
 
 /**
  * Database-backed scheduling. Every function takes a client inside `withClinic`, so row-level security

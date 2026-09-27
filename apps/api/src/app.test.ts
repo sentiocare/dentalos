@@ -3,8 +3,8 @@ import { createPool } from "@dentalos/db";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import { createLogger } from "@dentalos/shared/logger";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { buildApp } from "./app.js";
-import { loadConfig } from "./config.js";
+import { buildApp } from "./app";
+import { loadConfig } from "./config";
 
 const fakes = (): Adapters =>
   createAdapters({

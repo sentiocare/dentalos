@@ -1,6 +1,6 @@
-import type { RawWebhook } from "../common.js";
-import { FakeSupport, fakeId } from "../fake-support.js";
-import type { TelephonyEvent, TelephonyProvider } from "./types.js";
+import type { RawWebhook } from "../common";
+import { FakeSupport, fakeId } from "../fake-support";
+import type { TelephonyEvent, TelephonyProvider } from "./types";
 
 export class FakeTelephonyProvider implements TelephonyProvider {
   readonly name = "fake-telephony";

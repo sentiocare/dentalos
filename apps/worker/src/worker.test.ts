@@ -2,8 +2,8 @@ import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalo
 import { createLogger } from "@dentalos/shared/logger";
 import { makeWorkerUtils, parseCrontab, runOnce } from "graphile-worker";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { loadConfig } from "./config.js";
-import { buildTaskList, CRONTAB, graphileLogger } from "./worker.js";
+import { loadConfig } from "./config";
+import { buildTaskList, CRONTAB, graphileLogger } from "./worker";
 
 const logger = createLogger({ service: "worker-test", level: "silent" });
 

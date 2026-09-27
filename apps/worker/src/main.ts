@@ -1,8 +1,8 @@
 import { createPool } from "@dentalos/db";
 import { createLogger } from "@dentalos/shared/logger";
 import { run } from "graphile-worker";
-import { loadConfig } from "./config.js";
-import { buildTaskList, CRONTAB, graphileLogger } from "./worker.js";
+import { loadConfig } from "./config";
+import { buildTaskList, CRONTAB, graphileLogger } from "./worker";
 
 const config = loadConfig();
 const logger = createLogger({ service: "worker", level: config.LOG_LEVEL });

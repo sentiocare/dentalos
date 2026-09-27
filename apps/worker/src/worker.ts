@@ -1,8 +1,8 @@
 import type { Pool } from "@dentalos/db";
 import type { Logger } from "@dentalos/shared/logger";
 import { Logger as GraphileLogger, type TaskList } from "graphile-worker";
-import { makeHeartbeatTask } from "./tasks/heartbeat.js";
-import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling.js";
+import { makeHeartbeatTask } from "./tasks/heartbeat";
+import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling";
 
 /**
  * Every job is idempotent: handlers must be safe to run twice (a crash after doing the work but before

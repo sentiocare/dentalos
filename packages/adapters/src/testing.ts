@@ -4,11 +4,11 @@
  * against the provider sandbox in the live smoke suite.
  */
 import { describe, expect, it } from "vitest";
-import type { RawWebhook } from "./common.js";
-import type { MessagingEvent, MessagingProvider } from "./messaging/types.js";
-import type { PaymentEvent, PaymentProvider } from "./payments/types.js";
-import type { StorageProvider } from "./storage/types.js";
-import type { TelephonyEvent, TelephonyProvider } from "./telephony/types.js";
+import type { RawWebhook } from "./common";
+import type { MessagingEvent, MessagingProvider } from "./messaging/types";
+import type { PaymentEvent, PaymentProvider } from "./payments/types";
+import type { StorageProvider } from "./storage/types";
+import type { TelephonyEvent, TelephonyProvider } from "./telephony/types";
 
 function tamper(webhook: RawWebhook): RawWebhook {
   return { ...webhook, rawBody: webhook.rawBody.replace(/.$/, " }") };

@@ -2,8 +2,8 @@ import { OVERRIDABLE } from "@dentalos/core";
 import { normalizePhone } from "@dentalos/shared";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { HttpError, idParams, parse } from "../http.js";
-import type { StaffContextService } from "../staff-context.js";
+import { HttpError, idParams, parse } from "../http";
+import type { StaffContextService } from "../staff-context";
 
 const role = z.enum(["owner", "doctor", "receptionist", "assistant"]);
 const permissionOverrides = z.partialRecord(z.enum(OVERRIDABLE as [string, ...string[]]), z.boolean());

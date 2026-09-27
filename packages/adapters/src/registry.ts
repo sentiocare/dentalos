@@ -1,17 +1,17 @@
-import type { LLMProvider } from "./llm/types.js";
-import type { MessagingProvider } from "./messaging/types.js";
-import type { PaymentProvider } from "./payments/types.js";
-import type { SmsProvider } from "./sms/types.js";
-import type { StorageProvider } from "./storage/types.js";
-import type { TelephonyProvider } from "./telephony/types.js";
-import type { VoiceProvider } from "./voice/types.js";
-import { FakeLLMProvider } from "./llm/fake.js";
-import { FakeMessagingProvider } from "./messaging/fake.js";
-import { FakePaymentProvider } from "./payments/fake.js";
-import { FakeSmsProvider } from "./sms/fake.js";
-import { FakeStorageProvider } from "./storage/fake.js";
-import { FakeTelephonyProvider } from "./telephony/fake.js";
-import { FakeVoiceProvider } from "./voice/fake.js";
+import type { LLMProvider } from "./llm/types";
+import type { MessagingProvider } from "./messaging/types";
+import type { PaymentProvider } from "./payments/types";
+import type { SmsProvider } from "./sms/types";
+import type { StorageProvider } from "./storage/types";
+import type { TelephonyProvider } from "./telephony/types";
+import type { VoiceProvider } from "./voice/types";
+import { FakeLLMProvider } from "./llm/fake";
+import { FakeMessagingProvider } from "./messaging/fake";
+import { FakePaymentProvider } from "./payments/fake";
+import { FakeSmsProvider } from "./sms/fake";
+import { FakeStorageProvider } from "./storage/fake";
+import { FakeTelephonyProvider } from "./telephony/fake";
+import { FakeVoiceProvider } from "./voice/fake";
 
 export interface Adapters {
   messaging: MessagingProvider;

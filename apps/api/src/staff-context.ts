@@ -1,8 +1,8 @@
 import { effectivePermissions, isRole, type Permission, type Role } from "@dentalos/core";
 import { withAppRole, withClinic, type Pool, type PoolClient } from "@dentalos/db";
 import type { FastifyRequest } from "fastify";
-import type { AuthUser } from "./auth.js";
-import { HttpError } from "./http.js";
+import type { AuthUser } from "./auth";
+import { HttpError } from "./http";
 
 export interface Membership {
   clinicId: string;

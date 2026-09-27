@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./time": "./src/time.ts",
+    "./permissions": "./src/access/permissions.ts",
+    "./availability": "./src/scheduling/availability.ts",
+    "./scheduling-types": "./src/scheduling/types.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

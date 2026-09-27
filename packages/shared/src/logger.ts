@@ -1,5 +1,5 @@
 import { pino, type DestinationStream, type Logger, type LoggerOptions } from "pino";
-import { scrubText, scrubValue } from "./redact.js";
+import { scrubText, scrubValue } from "./redact";
 
 export type { Logger };
 

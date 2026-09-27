@@ -1,4 +1,4 @@
-import type { ProviderBase, WebhookReceiver } from "../common.js";
+import type { ProviderBase, WebhookReceiver } from "../common";
 
 /**
  * Payment gateway (Razorpay in production). Card and bank details are only ever entered on the gateway's

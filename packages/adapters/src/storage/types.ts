@@ -1,4 +1,4 @@
-import type { ProviderBase } from "../common.js";
+import type { ProviderBase } from "../common";
 
 /** Object storage in an Indian region (Supabase Storage, Mumbai). All buckets are private. */
 export interface StorageProvider extends ProviderBase {

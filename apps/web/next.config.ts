@@ -7,6 +7,8 @@ const config: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
+  // Workspace packages are TypeScript source; only browser-safe entry points are imported here.
+  transpilePackages: ["@dentalos/core", "@dentalos/shared"],
   async headers() {
     return [
       {

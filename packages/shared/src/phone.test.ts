@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPhoneForDisplay, isIndianMobile, normalizePhone, type E164 } from "./phone.js";
+import { formatPhoneForDisplay, isIndianMobile, normalizePhone, type E164 } from "./phone";
 
 describe("normalizePhone", () => {
   it.each(["9876543210", "98765 43210", "098765-43210", "+91 98765 43210", "+919876543210", "91 9876543210"])(

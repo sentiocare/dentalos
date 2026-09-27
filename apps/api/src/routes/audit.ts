@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { parse, uuid } from "../http.js";
-import type { StaffContextService } from "../staff-context.js";
+import { parse, uuid } from "../http";
+import type { StaffContextService } from "../staff-context";
 
 export function auditRoutes(app: FastifyInstance, deps: { staff: StaffContextService }) {
   // Who changed what, when (Build Prompt §5.15). Newest first, paged by id.

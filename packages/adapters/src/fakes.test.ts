@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ProviderError } from "./common.js";
+import { ProviderError } from "./common";
 import {
   createAdapters,
   FakeLLMProvider,
@@ -9,8 +9,8 @@ import {
   FakeStorageProvider,
   FakeTelephonyProvider,
   FakeVoiceProvider,
-} from "./index.js";
-import { messagingContract, paymentContract, storageContract, telephonyContract } from "./testing.js";
+} from "./index";
+import { messagingContract, paymentContract, storageContract, telephonyContract } from "./testing";
 
 messagingContract("fake", () => {
   const provider = new FakeMessagingProvider();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { loadEnv } from "./env.js";
+import { loadEnv } from "./env";
 
 const schema = z.object({ DATABASE_URL: z.string().url(), SENTRY_DSN: z.string().url().optional() });
 

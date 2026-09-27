@@ -9,8 +9,8 @@ import {
 } from "@dentalos/core";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { localDate, parse, uuid } from "../http.js";
-import type { StaffContextService } from "../staff-context.js";
+import { localDate, parse, uuid } from "../http";
+import type { StaffContextService } from "../staff-context";
 
 const MAX_ROWS = 20_000;
 // Imports carry whole registers; allow bigger bodies on these routes only.

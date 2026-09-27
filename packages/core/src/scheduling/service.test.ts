@@ -8,8 +8,8 @@ import {
 } from "@dentalos/db/testing";
 import type { PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { DomainError } from "../errors.js";
-import { localMinutesOf } from "../time.js";
+import { DomainError } from "../errors";
+import { localMinutesOf } from "../time";
 import {
   bookDirect,
   bookFromHold,
@@ -19,7 +19,7 @@ import {
   moveAppointment,
   offerSlots,
   setAppointmentStatus,
-} from "./service.js";
+} from "./service";
 
 const IST = "Asia/Kolkata";
 const at = (date: string, hhmm: string) => new Date(`${date}T${hhmm}:00+05:30`);

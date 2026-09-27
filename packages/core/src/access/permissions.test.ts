@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { effectivePermissions } from "./permissions.js";
+import { effectivePermissions } from "./permissions";
 
 describe("effectivePermissions", () => {
   it("owners have everything and cannot be restricted", () => {

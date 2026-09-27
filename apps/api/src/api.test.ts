@@ -3,7 +3,7 @@ import { createClinic } from "@dentalos/core";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import { createLogger } from "@dentalos/shared/logger";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { buildApp } from "./app.js";
+import { buildApp } from "./app";
 
 const logger = createLogger({ service: "api-test", level: "silent" });
 const auth = {

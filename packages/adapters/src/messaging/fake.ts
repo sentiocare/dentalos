@@ -1,6 +1,6 @@
-import type { RawWebhook } from "../common.js";
-import { FakeSupport, fakeId } from "../fake-support.js";
-import type { MessagingEvent, MessagingProvider, SendResult } from "./types.js";
+import type { RawWebhook } from "../common";
+import { FakeSupport, fakeId } from "../fake-support";
+import type { MessagingEvent, MessagingProvider, SendResult } from "./types";
 
 type SentContent =
   | { kind: "text"; to: string; text: string }

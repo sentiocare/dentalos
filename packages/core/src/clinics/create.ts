@@ -1,7 +1,7 @@
 import { normalizePhone } from "@dentalos/shared";
 import type { PoolClient } from "pg";
-import { DomainError } from "../errors.js";
-import { DEFAULT_PROCEDURES } from "./defaults.js";
+import { DomainError } from "../errors";
+import { DEFAULT_PROCEDURES } from "./defaults";
 
 export interface NewClinic {
   name: string;

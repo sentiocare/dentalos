@@ -4,17 +4,17 @@ import type { Pool } from "@dentalos/db";
 import { uuidv7 } from "@dentalos/shared";
 import type { Logger } from "@dentalos/shared/logger";
 import Fastify from "fastify";
-import { createTokenVerifier, type AuthConfig } from "./auth.js";
-import { errorResponse } from "./http.js";
-import { appointmentRoutes } from "./routes/appointments.js";
-import { auditRoutes } from "./routes/audit.js";
-import { healthRoutes } from "./routes/health.js";
-import { importRoutes } from "./routes/imports.js";
-import { meRoutes } from "./routes/me.js";
-import { patientRoutes } from "./routes/patients.js";
-import { settingsRoutes } from "./routes/settings.js";
-import { staffRoutes } from "./routes/staff.js";
-import { createStaffContext } from "./staff-context.js";
+import { createTokenVerifier, type AuthConfig } from "./auth";
+import { errorResponse } from "./http";
+import { appointmentRoutes } from "./routes/appointments";
+import { auditRoutes } from "./routes/audit";
+import { healthRoutes } from "./routes/health";
+import { importRoutes } from "./routes/imports";
+import { meRoutes } from "./routes/me";
+import { patientRoutes } from "./routes/patients";
+import { settingsRoutes } from "./routes/settings";
+import { staffRoutes } from "./routes/staff";
+import { createStaffContext } from "./staff-context";
 
 export interface AppDeps {
   pool: Pool;

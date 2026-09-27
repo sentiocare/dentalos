@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { PoolClient } from "pg";
-import { withAppRole, withClinic, type ClinicContext } from "./client.js";
+import { withAppRole, withClinic, type ClinicContext } from "./client";
 import {
   createTestDatabase,
   hasTestDatabase,
   seedMinimalClinic,
   type SeededClinic,
   type TestDatabase,
-} from "./testing.js";
+} from "./testing";
 
 const T = (hhmm: string, day = "2026-10-06") => `${day}T${hhmm}:00+05:30`;
 

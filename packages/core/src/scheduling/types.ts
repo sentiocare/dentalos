@@ -1,4 +1,4 @@
-import type { LocalDate } from "../time.js";
+import type { LocalDate } from "../time";
 
 export interface TimeWindow {
   weekday: number;

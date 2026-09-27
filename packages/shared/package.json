@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./logger": "./src/logger.ts"
+    "./logger": "./src/logger.ts",
+    "./phone": "./src/phone.ts",
+    "./money": "./src/money.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",

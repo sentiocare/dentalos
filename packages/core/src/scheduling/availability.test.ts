@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { localMinutesOf } from "../time.js";
-import { checkPlacement, findAvailableSlots, pickOptions } from "./availability.js";
-import type { BusyInterval, ProcedureSpec, ScheduleConfig } from "./types.js";
+import { localMinutesOf } from "../time";
+import { checkPlacement, findAvailableSlots, pickOptions } from "./availability";
+import type { BusyInterval, ProcedureSpec, ScheduleConfig } from "./types";
 
 const IST = "Asia/Kolkata";
 const B = "branch-1";

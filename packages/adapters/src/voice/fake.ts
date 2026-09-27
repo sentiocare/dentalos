@@ -1,6 +1,6 @@
-import type { RawWebhook } from "../common.js";
-import { FakeSupport, fakeId } from "../fake-support.js";
-import type { VoiceCapabilities, VoiceEvent, VoiceProvider } from "./types.js";
+import type { RawWebhook } from "../common";
+import { FakeSupport, fakeId } from "../fake-support";
+import type { VoiceCapabilities, VoiceEvent, VoiceProvider } from "./types";
 
 export class FakeVoiceProvider implements VoiceProvider {
   readonly name = "fake-voice";

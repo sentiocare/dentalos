@@ -1,6 +1,6 @@
 /* eslint-disable no-console -- command-line tool output */
-import { createPool } from "./client.js";
-import { loadMigrations, migrate } from "./migrate.js";
+import { createPool } from "./client";
+import { loadMigrations, migrate } from "./migrate";
 
 async function main() {
   const command = process.argv[2];

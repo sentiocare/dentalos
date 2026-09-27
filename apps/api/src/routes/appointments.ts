@@ -8,8 +8,8 @@ import {
 } from "@dentalos/core";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { idParams, instant, localDate, parse, uuid } from "../http.js";
-import type { StaffContextService } from "../staff-context.js";
+import { idParams, instant, localDate, parse, uuid } from "../http";
+import type { StaffContextService } from "../staff-context";
 
 const bookBody = z.object({
   patientId: uuid,

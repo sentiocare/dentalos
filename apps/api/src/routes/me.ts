@@ -2,9 +2,9 @@ import { normalizePhone } from "@dentalos/shared";
 import { withAppRole, type Pool } from "@dentalos/db";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { devUserId, signDevToken } from "../auth.js";
-import { HttpError, parse } from "../http.js";
-import type { StaffContextService } from "../staff-context.js";
+import { devUserId, signDevToken } from "../auth";
+import { HttpError, parse } from "../http";
+import type { StaffContextService } from "../staff-context";
 
 export function meRoutes(
   app: FastifyInstance,

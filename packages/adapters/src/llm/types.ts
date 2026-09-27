@@ -1,4 +1,4 @@
-import type { ProviderBase } from "../common.js";
+import type { ProviderBase } from "../common";
 
 /** Text LLM for WhatsApp replies, summaries and intent classification. Model choice is configuration. */
 export interface LLMProvider extends ProviderBase {

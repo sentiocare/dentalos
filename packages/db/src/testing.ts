@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import pg from "pg";
-import { createPool } from "./client.js";
-import { migrate } from "./migrate.js";
+import { createPool } from "./client";
+import { migrate } from "./migrate";
 
 /**
  * Database tests run against a real Postgres (real constraints, real RLS), never a mock.

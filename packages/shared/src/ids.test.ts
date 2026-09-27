@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { uuidv7 } from "./ids.js";
+import { uuidv7 } from "./ids";
 
 describe("uuidv7", () => {
   it("is a valid v7 UUID", () => {

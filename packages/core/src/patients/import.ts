@@ -1,6 +1,6 @@
 import { normalizePhone } from "@dentalos/shared";
-import { isLocalDate, type LocalDate } from "../time.js";
-import { isLikelySamePerson, normalizeName } from "./names.js";
+import { isLocalDate, type LocalDate } from "../time";
+import { isLikelySamePerson, normalizeName } from "./names";
 
 /**
  * Importing a clinic's existing patient list from Excel/CSV (Build Prompt §5.5). Files come from registers

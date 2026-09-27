@@ -8,16 +8,25 @@
     "build": "next build",
     "start": "next start --port ${PORT:-3000}",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test"
   },
   "dependencies": {
+    "@dentalos/core": "workspace:*",
+    "@dentalos/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.117.2",
+    "dexie": "^4.4.6",
     "next": "^16.3.6",
     "next-intl": "^4.14.7",
+    "papaparse": "^5.7.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "read-excel-file": "^9.3.10"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3"

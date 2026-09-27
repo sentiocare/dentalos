@@ -1,5 +1,5 @@
-import { FakeSupport, fakeId } from "../fake-support.js";
-import type { SmsProvider } from "./types.js";
+import { FakeSupport, fakeId } from "../fake-support";
+import type { SmsProvider } from "./types";
 
 export class FakeSmsProvider implements SmsProvider {
   readonly name = "fake-sms";

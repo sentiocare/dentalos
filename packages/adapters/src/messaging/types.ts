@@ -1,4 +1,4 @@
-import type { ProviderBase, UsageReport, WebhookReceiver } from "../common.js";
+import type { ProviderBase, UsageReport, WebhookReceiver } from "../common";
 
 /**
  * WhatsApp-style messaging (WhatsApp Cloud API in production).

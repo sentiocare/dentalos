@@ -11,8 +11,8 @@ import {
 } from "@dentalos/core";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { idParams, localDate, parse, uuid } from "../http.js";
-import type { StaffContextService } from "../staff-context.js";
+import { idParams, localDate, parse, uuid } from "../http";
+import type { StaffContextService } from "../staff-context";
 
 const patientBody = z.object({
   name: z.string().trim().min(1).max(120),

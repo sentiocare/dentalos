@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildPatientImportPreview, guessMapping, normalizePatientRow, parseIndianDate } from "./import.js";
-import { isLikelySamePerson } from "./names.js";
+import { buildPatientImportPreview, guessMapping, normalizePatientRow, parseIndianDate } from "./import";
+import { isLikelySamePerson } from "./names";
 
 const TODAY = "2026-09-27";
 

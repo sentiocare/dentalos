@@ -7,7 +7,7 @@ import {
   weekdayOf,
   zonedInstant,
   type LocalDate,
-} from "../time.js";
+} from "../time";
 import type {
   BusyInterval,
   ChairConfig,
@@ -17,7 +17,7 @@ import type {
   ScheduleConfig,
   SlotCandidate,
   SlotQuery,
-} from "./types.js";
+} from "./types";
 
 type Range = [start: number, end: number]; // minutes since local midnight
 

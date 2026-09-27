@@ -1,4 +1,4 @@
-import type { ProviderBase, UsageReport, WebhookReceiver } from "../common.js";
+import type { ProviderBase, UsageReport, WebhookReceiver } from "../common";
 
 /**
  * The conversational voice layer (Sarvam in production). See PLAN decision D4: the adapter declares which

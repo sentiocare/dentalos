@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
 import { normalizePhone } from "@dentalos/shared";
 import type { PoolClient } from "pg";
-import { DomainError } from "../errors.js";
-import { isLikelySamePerson, nameSimilarity, normalizeName } from "../patients/names.js";
-import { createPatient, findPatientsByPhone } from "../patients/service.js";
-import { parseIndianDate } from "../patients/import.js";
-import { addDays, isLocalDate, zonedInstant, type LocalDate } from "../time.js";
-import { bookDirect, defaultBranchId, loadClinicSettings, setAppointmentStatus } from "./service.js";
+import { DomainError } from "../errors";
+import { isLikelySamePerson, nameSimilarity, normalizeName } from "../patients/names";
+import { createPatient, findPatientsByPhone } from "../patients/service";
+import { parseIndianDate } from "../patients/import";
+import { addDays, isLocalDate, zonedInstant, type LocalDate } from "../time";
+import { bookDirect, defaultBranchId, loadClinicSettings, setAppointmentStatus } from "./service";
 
 /** Importing existing appointments from a register or another system's export (Build Prompt §5.3). */
 

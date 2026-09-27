@@ -1,13 +1,13 @@
 import { normalizePhone } from "@dentalos/shared";
 import type { PoolClient } from "pg";
-import { DomainError, pgErrorCode } from "../errors.js";
-import type { LocalDate } from "../time.js";
+import { DomainError, pgErrorCode } from "../errors";
+import type { LocalDate } from "../time";
 import {
   buildPatientImportPreview,
   type ImportedPatient,
   type PatientField,
   type PreviewRow,
-} from "./import.js";
+} from "./import";
 
 export interface PatientInput {
   name: string;

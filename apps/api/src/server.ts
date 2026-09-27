@@ -1,9 +1,9 @@
 import { createAdapters } from "@dentalos/adapters";
 import { createPool } from "@dentalos/db";
 import { createLogger } from "@dentalos/shared/logger";
-import { buildApp } from "./app.js";
-import { adapterSelection, loadConfig } from "./config.js";
-import { initErrorTracking } from "./observability.js";
+import { buildApp } from "./app";
+import { adapterSelection, loadConfig } from "./config";
+import { initErrorTracking } from "./observability";
 
 const config = loadConfig();
 const logger = createLogger({ service: "api", level: config.LOG_LEVEL });

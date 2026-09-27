@@ -1,7 +1,7 @@
-import type { RawWebhook } from "../common.js";
-import { ProviderError } from "../common.js";
-import { FakeSupport, fakeId } from "../fake-support.js";
-import type { PaymentEvent, PaymentProvider } from "./types.js";
+import type { RawWebhook } from "../common";
+import { ProviderError } from "../common";
+import { FakeSupport, fakeId } from "../fake-support";
+import type { PaymentEvent, PaymentProvider } from "./types";
 
 export class FakePaymentProvider implements PaymentProvider {
   readonly name = "fake-payments";

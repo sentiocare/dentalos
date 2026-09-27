@@ -1,4 +1,4 @@
-import type { ProviderBase, UsageReport, WebhookReceiver } from "../common.js";
+import type { ProviderBase, UsageReport, WebhookReceiver } from "../common";
 
 /** Indian telephony (Exotel / Plivo): virtual numbers, forwarding, recording, warm transfer, outbound calls. */
 export interface TelephonyProvider extends ProviderBase, WebhookReceiver<TelephonyEvent> {

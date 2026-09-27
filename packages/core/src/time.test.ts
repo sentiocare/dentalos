@@ -7,7 +7,7 @@ import {
   parseTime,
   weekdayOf,
   zonedInstant,
-} from "./time.js";
+} from "./time";
 
 const IST = "Asia/Kolkata";
 

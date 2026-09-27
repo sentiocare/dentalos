@@ -2,9 +2,9 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { withAppRole, withClinic } from "./client.js";
-import { findDestructiveStatements, loadMigrations, migrate, MIGRATIONS_DIR } from "./migrate.js";
-import { createTestDatabase, hasTestDatabase, type TestDatabase } from "./testing.js";
+import { withAppRole, withClinic } from "./client";
+import { findDestructiveStatements, loadMigrations, migrate, MIGRATIONS_DIR } from "./migrate";
+import { createTestDatabase, hasTestDatabase, type TestDatabase } from "./testing";
 
 describe("destructive migration guard (no database needed)", () => {
   it.each([

@@ -1,7 +1,7 @@
 import { Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { createLogger } from "./logger.js";
-import { scrubText, scrubValue } from "./redact.js";
+import { createLogger } from "./logger";
+import { scrubText, scrubValue } from "./redact";
 
 describe("scrubText", () => {
   it.each([

@@ -13,8 +13,8 @@ import {
   guessAppointmentMapping,
   parseClockTime,
   previewAppointmentImport,
-} from "../scheduling/import.js";
-import { listAppointments } from "../scheduling/queries.js";
+} from "../scheduling/import";
+import { listAppointments } from "../scheduling/queries";
 import {
   commitPatientImport,
   createPatient,
@@ -24,7 +24,7 @@ import {
   previewPatientImport,
   searchPatients,
   updatePatient,
-} from "./service.js";
+} from "./service";
 
 describe("parseClockTime", () => {
   it.each([

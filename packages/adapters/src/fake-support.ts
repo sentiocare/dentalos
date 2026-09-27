@@ -1,4 +1,4 @@
-import { hmacSha256Hex, ProviderError, safeEqualHex, type HealthStatus, type RawWebhook } from "./common.js";
+import { hmacSha256Hex, ProviderError, safeEqualHex, type HealthStatus, type RawWebhook } from "./common";
 
 export const FAKE_SIGNATURE_HEADER = "x-fake-signature";
 

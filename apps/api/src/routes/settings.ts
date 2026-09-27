@@ -1,8 +1,8 @@
 import type { PoolClient } from "@dentalos/db";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { clockTime, HttpError, idParams, instant, localDate, parse, uuid } from "../http.js";
-import type { StaffContextService } from "../staff-context.js";
+import { clockTime, HttpError, idParams, instant, localDate, parse, uuid } from "../http";
+import type { StaffContextService } from "../staff-context";
 
 /** Builds "col = $n" pairs for a PATCH from an allow-list of camelCase → column names. */
 function updateSql(body: Record<string, unknown>, columns: Record<string, string>, firstIndex = 2) {

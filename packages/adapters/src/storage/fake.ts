@@ -1,5 +1,5 @@
-import { FakeSupport } from "../fake-support.js";
-import type { StorageProvider } from "./types.js";
+import { FakeSupport } from "../fake-support";
+import type { StorageProvider } from "./types";
 
 export class FakeStorageProvider implements StorageProvider {
   readonly name = "fake-storage";

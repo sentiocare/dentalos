@@ -1,5 +1,5 @@
-import { FakeSupport } from "../fake-support.js";
-import type { LLMProvider, LLMRequest, LLMResponse } from "./types.js";
+import { FakeSupport } from "../fake-support";
+import type { LLMProvider, LLMRequest, LLMResponse } from "./types";
 
 export type ScriptedResponder = (request: LLMRequest) => Partial<LLMResponse> & { text?: string };
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyBasisPoints, divRound, formatINR, rupeesToPaise } from "./money.js";
+import { applyBasisPoints, divRound, formatINR, rupeesToPaise } from "./money";
 
 describe("rupeesToPaise", () => {
   it.each([
