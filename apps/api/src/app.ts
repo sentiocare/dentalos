@@ -24,6 +24,7 @@ import { adminRoutes } from "./routes/admin";
 import { leadRoutes } from "./routes/leads";
 import { reportRoutes } from "./routes/reports";
 import { setupRoutes } from "./routes/setup";
+import { clinicalRoutes } from "./routes/clinical";
 import { deskRoutes } from "./routes/desk";
 import { callRoutes } from "./routes/calls";
 import { telephonyRoutes } from "./routes/telephony";
@@ -117,6 +118,7 @@ export function buildApp(deps: AppDeps) {
     reportRoutes(api, { staff });
     setupRoutes(api, { staff });
     deskRoutes(api, { staff });
+    clinicalRoutes(api, { staff, storage: deps.adapters.storage, jobs: deps.jobs });
   });
   return app;
 }

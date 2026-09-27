@@ -285,6 +285,27 @@ function Doctors({ config, save, manage }: { config: ClinicConfig; save: Save; m
                 />
               )}
             </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label={t("qualification")}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    placeholder="BDS, MDS"
+                    value={editing.qualification ?? ""}
+                    onChange={(e) => setEditing({ ...editing, qualification: e.target.value })}
+                  />
+                )}
+              </Field>
+              <Field label={t("registrationNo")}>
+                {(id) => (
+                  <Input
+                    id={id}
+                    value={editing.registration_no ?? ""}
+                    onChange={(e) => setEditing({ ...editing, registration_no: e.target.value })}
+                  />
+                )}
+              </Field>
+            </div>
             <Field label={t("kind")}>
               {(id) => (
                 <Select
@@ -379,6 +400,8 @@ function Doctors({ config, save, manage }: { config: ClinicConfig; save: Save; m
                   kind: editing.kind,
                   speciality: editing.speciality || null,
                   phone: editing.phone || null,
+                  qualification: editing.qualification || null,
+                  registrationNo: editing.registration_no || null,
                   ...(editing.id ? { active: editing.active } : {}),
                 };
                 let id = editing.id;

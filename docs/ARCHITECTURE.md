@@ -2,7 +2,7 @@
 
 The full design and its reasoning are in [PLAN.md](PLAN.md). This page describes **what exists in the code today** and how the pieces fit. It is updated at the end of every phase.
 
-## Current state: Phase 6 (leads, owner report, onboarding)
+## Current state: Phase 6, plus the reception desk and the doctor's record
 
 ```
 apps/
@@ -37,6 +37,10 @@ apps/
               /webhooks/meta-leads                Meta lead-form webhook (signed; routed to the clinic by Page)
               /v1/reports                         owner report (day, week, month) and "rupees recovered"
               /v1/setup, /v1/test-mode            setup checklist and test mode
+              /v1/desk, /v1/queue/…               the day's queue with tokens, walk-ins, send in, counts
+              /v1/appointments/:id/checkout       a visit's bill: charges, payments, suggested price
+              /v1/patients/:id/clinical, /notes,  case notes, tooth chart, prescriptions (and their
+                /teeth, /prescriptions, /v1/rx-…  PDF and WhatsApp), prescription templates
               /webhooks/payments/clinic/:id       patients' payments (the clinic's own gateway account)
               /webhooks/payments/sentio           licenses, recharges and mandates (Sentio's gateway account)
               src/admin/                          Sentio admin commands (create a clinic, demo data)
@@ -131,6 +135,18 @@ A sitting's status follows its appointment through a database trigger. Booked, c
   3. It debits only after 24 hours. The database also refuses a debit dated sooner.
   4. The gateway's webhook credits the wallet and issues the GST invoice, once.
 - **Webhooks are claimed and applied in one transaction.** A retry after success changes nothing, and a crash part-way leaves the event for the gateway's retry.
+
+## The reception desk
+
+- **One queue, with tokens.** When a booked patient is marked arrived, a database trigger gives them the day's next token. A walk-in gets a token when the desk adds them. Tokens restart at 1 each day; an advisory lock stops two desks giving out the same number.
+- **Walk-ins never push booked patients back.** A walk-in has no appointment while waiting. When the desk sends them in, the appointment starts now and runs for the treatment's duration, but is cut short to end before the doctor's or chair's next booking. If less than 5 minutes are free, the desk is told to choose another doctor or chair.
+- **A visit finished early ends when it ended.** Marking it done before the booked end moves the end time back, so the doctor and chair are free at once.
+- **Checkout** reads the visit's charges and payments, the patient's earlier dues, and suggests the price (the treatment plan's sitting value, else the treatment's price). It uses the normal ledger calls, each with its own idempotency key, so a double tap never charges twice.
+- **Desk layout.** Screens 1024px and wider get the side menu with counts, the top bar (patient search, + Walk-in, + Appointment) and the four-column Today board; phones keep the single column and bottom menu.
+
+## The doctor's record
+
+Case notes (one per visit; edits kept in the audit log), a tooth chart (FDI numbers; each tooth shows its latest finding, older ones are its history) and prescriptions. Prescriptions are numbered `RX/2026-27/0001`, can't be changed or deleted (the database refuses), and a wrong one is cancelled with a reason and stays on file. The PDF prints the doctor's qualification and registration number. Only doctors and the owner can write clinical records (`clinical.write` can't be granted to anyone else); chair-side assistants can read them, and the owner can let reception read them. The assistant (WhatsApp and phone) never reads or writes any of this.
 
 ## How a lead becomes a patient
 

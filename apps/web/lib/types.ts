@@ -7,6 +7,8 @@ export interface Doctor {
   emergency_order: number | null;
   color: string | null;
   active: boolean;
+  qualification?: string | null;
+  registration_no?: string | null;
 }
 
 export interface Chair {

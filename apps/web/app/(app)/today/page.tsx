@@ -348,11 +348,21 @@ function Today() {
                       </p>
                     </div>
                   </button>
-                  {editable ? (
-                    <Button className="mt-2 min-h-9 w-full py-1" onClick={() => void finish(x)}>
-                      {billing ? t("desk.doneCheckout") : t("actions.complete")}
-                    </Button>
-                  ) : null}
+                  <div className="mt-2 flex gap-2">
+                    {can("clinical.read") ? (
+                      <Link
+                        href={`/patients/${x.patient.id}?tab=clinical&visit=${x.id}`}
+                        className="inline-flex min-h-9 items-center justify-center rounded-xl border border-slate-300 px-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                      >
+                        {t("desk.notesRx")}
+                      </Link>
+                    ) : null}
+                    {editable ? (
+                      <Button className="min-h-9 flex-1 py-1" onClick={() => void finish(x)}>
+                        {billing ? t("desk.doneCheckout") : t("actions.complete")}
+                      </Button>
+                    ) : null}
+                  </div>
                 </CardShell>
               ))}
             </Column>

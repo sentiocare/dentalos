@@ -10,6 +10,7 @@ import { BookingSheet, type BookingDraft } from "../../../../components/booking-
 import { ConfirmWarnings } from "../../../../components/confirm-warnings";
 import { PatientForm } from "../../../../components/patient-form";
 import { PatientPicker } from "../../../../components/patient-picker";
+import { ClinicalRecord } from "../../../../components/clinical-record";
 import { PatientAccount } from "../../../../components/patient-account";
 import { TreatmentPlans } from "../../../../components/treatment-plans";
 import { Button, Card, Field, Input, Sheet, Spinner, StatusBadge, useToast } from "../../../../components/ui";
@@ -34,10 +35,13 @@ interface Detail {
     id: string;
     startsAt: string;
     status: string;
+    doctorId: string;
     doctorName: string;
     procedureName: string | null;
   }[];
 }
+
+type Tab = "clinical" | "plans" | "bill" | "visits";
 
 export default function PatientPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,6 +57,16 @@ export default function PatientPage() {
   const [relationship, setRelationship] = useState("");
   const [draft, setDraft] = useState<BookingDraft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<Tab | null>(null);
+  const [visitParam, setVisitParam] = useState<string | null>(null);
+  // Links from the desk open a tab and a visit: /patients/:id?tab=clinical&visit=:appointmentId
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const wanted = q.get("tab");
+    if (wanted === "clinical" || wanted === "plans" || wanted === "bill" || wanted === "visits")
+      setTab(wanted);
+    setVisitParam(q.get("visit"));
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -83,144 +97,192 @@ export default function PatientPage() {
       ? new Date().getFullYear() - p.approxBirthYear
       : null;
 
+  const tabs: Tab[] = [
+    ...(can("clinical.read") ? (["clinical"] as const) : []),
+    "plans",
+    ...(can("billing.read") ? (["bill"] as const) : []),
+    "visits",
+  ];
+  const current: Tab =
+    tab && tabs.includes(tab)
+      ? tab
+      : tabs.includes("clinical")
+        ? "clinical"
+        : tabs.includes("bill")
+          ? "bill"
+          : "plans";
+  const history = (
+    <Card>
+      <h2 className="mb-2 font-semibold">{t("patients.history")}</h2>
+      {detail.appointments.length === 0 ? (
+        <p className="text-sm text-slate-500">{t("patients.noHistory")}</p>
+      ) : (
+        <ul className="divide-y divide-slate-100 text-sm">
+          {detail.appointments.map((a) => (
+            <li key={a.id} className="flex items-center justify-between gap-2 py-2">
+              <div>
+                <p>
+                  {localDateOf(new Date(a.startsAt), tz)} · {formatClock(a.startsAt, tz, locale)}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {a.procedureName ?? t("appointment.noProcedure")} · {a.doctorName}
+                </p>
+              </div>
+              <StatusBadge status={a.status} label={t(`status.${a.status}`)} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-4">
+    <div className="mx-auto max-w-2xl px-4 py-4 lg:max-w-6xl">
       <Link href="/patients" className="text-sm text-brand-700">
         ‹ {t("patients.title")}
       </Link>
-      <Card>
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h1 className="text-xl font-semibold">{p.name}</h1>
-            <p className="text-sm text-slate-600">
-              {[
-                age !== null ? t("patients.years", { age }) : null,
-                p.gender !== "unknown" ? t(`patients.genders.${p.gender}`) : null,
-                p.city,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
+      <div className="mt-3 space-y-4 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-4 lg:space-y-0">
+        <div className="space-y-4">
+          <Card>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h1 className="text-xl font-semibold">{p.name}</h1>
+                <p className="text-sm text-slate-600">
+                  {[
+                    age !== null ? t("patients.years", { age }) : null,
+                    p.gender !== "unknown" ? t(`patients.genders.${p.gender}`) : null,
+                    p.city,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                {p.phone ? (
+                  <a href={`tel:${p.phone}`} className="mt-1 inline-block text-brand-700 underline">
+                    {displayPhone(p.phone)}
+                  </a>
+                ) : null}
+              </div>
+              <div className="flex flex-col gap-2">
+                {can("appointments.write") && config.data ? (
+                  <Button
+                    onClick={() =>
+                      setDraft({
+                        date: todayIn(tz),
+                        startMin: Math.ceil(localMinutesOf(new Date(), tz) / 15) * 15,
+                        patient: p,
+                      })
+                    }
+                  >
+                    {t("patients.book")}
+                  </Button>
+                ) : null}
+                {can("patients.write") ? (
+                  <Button variant="secondary" onClick={() => setEditing(true)}>
+                    {t("common.edit")}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            {p.notes ? (
+              <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm whitespace-pre-line">{p.notes}</p>
+            ) : null}
+            {p.phone && can("patients.write") ? (
+              <div className="mt-3 flex gap-2 text-xs">
+                {([true, false] as const).map((granted) => (
+                  <button
+                    key={String(granted)}
+                    className="rounded-full border border-slate-300 px-3 py-1"
+                    onClick={async () => {
+                      try {
+                        await api(`/v1/patients/${id}/marketing-consent`, {
+                          method: "POST",
+                          body: { granted },
+                        });
+                        toast(t("common.saved"));
+                      } catch (e) {
+                        toast(e instanceof ApiError ? e.message : t("common.error"), "error");
+                      }
+                    }}
+                  >
+                    {t(granted ? "campaigns.marketingYes" : "campaigns.marketingNo")}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <p className="mt-3 text-xs text-slate-500">
+              {t("patients.lastVisit")}:{" "}
+              {p.lastVisitAt ? localDateOf(new Date(p.lastVisitAt), tz) : t("patients.never")}
+              {p.fileNumber ? ` · ${t("patients.fileNumber")}: ${p.fileNumber}` : ""}
             </p>
-            {p.phone ? (
-              <a href={`tel:${p.phone}`} className="mt-1 inline-block text-brand-700 underline">
-                {displayPhone(p.phone)}
-              </a>
-            ) : null}
-          </div>
-          <div className="flex flex-col gap-2">
-            {can("appointments.write") && config.data ? (
-              <Button
-                onClick={() =>
-                  setDraft({
-                    date: todayIn(tz),
-                    startMin: Math.ceil(localMinutesOf(new Date(), tz) / 15) * 15,
-                    patient: p,
-                  })
-                }
-              >
-                {t("patients.book")}
-              </Button>
-            ) : null}
-            {can("patients.write") ? (
-              <Button variant="secondary" onClick={() => setEditing(true)}>
-                {t("common.edit")}
-              </Button>
-            ) : null}
-          </div>
+          </Card>
+          <Card>
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="font-semibold">{t("patients.family")}</h2>
+              {can("patients.write") ? (
+                <button className="text-sm text-brand-700 underline" onClick={() => setLinking(true)}>
+                  + {t("patients.addFamily")}
+                </button>
+              ) : null}
+            </div>
+            {detail.family.length === 0 ? (
+              <p className="text-sm text-slate-500">{t("patients.noFamily")}</p>
+            ) : (
+              <ul className="space-y-1 text-sm">
+                {detail.family.map((f) => (
+                  <li key={f.linkId}>
+                    <Link href={`/patients/${f.patientId}`} className="text-brand-700 underline">
+                      {f.name}
+                    </Link>{" "}
+                    <span className="text-slate-500">({f.relationship})</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+          <div className="hidden lg:block">{history}</div>
         </div>
-        {p.notes ? (
-          <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm whitespace-pre-line">{p.notes}</p>
-        ) : null}
-        {p.phone && can("patients.write") ? (
-          <div className="mt-3 flex gap-2 text-xs">
-            {([true, false] as const).map((granted) => (
+        <div className="min-w-0 space-y-4">
+          <div role="tablist" aria-label={t("patients.record")} className="flex gap-2 overflow-x-auto">
+            {tabs.map((k) => (
               <button
-                key={String(granted)}
-                className="rounded-full border border-slate-300 px-3 py-1"
-                onClick={async () => {
-                  try {
-                    await api(`/v1/patients/${id}/marketing-consent`, { method: "POST", body: { granted } });
-                    toast(t("common.saved"));
-                  } catch (e) {
-                    toast(e instanceof ApiError ? e.message : t("common.error"), "error");
-                  }
-                }}
+                key={k}
+                role="tab"
+                aria-selected={current === k}
+                onClick={() => setTab(k)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${k === "visits" ? "lg:hidden" : ""} ${current === k ? "bg-brand-600 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200"}`}
               >
-                {t(granted ? "campaigns.marketingYes" : "campaigns.marketingNo")}
+                {t(`patients.tabs.${k}`)}
               </button>
             ))}
           </div>
-        ) : null}
-        <p className="mt-3 text-xs text-slate-500">
-          {t("patients.lastVisit")}:{" "}
-          {p.lastVisitAt ? localDateOf(new Date(p.lastVisitAt), tz) : t("patients.never")}
-          {p.fileNumber ? ` · ${t("patients.fileNumber")}: ${p.fileNumber}` : ""}
-        </p>
-      </Card>
-
-      <Card>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-semibold">{t("patients.family")}</h2>
-          {can("patients.write") ? (
-            <button className="text-sm text-brand-700 underline" onClick={() => setLinking(true)}>
-              + {t("patients.addFamily")}
-            </button>
+          {current === "clinical" ? (
+            <ClinicalRecord
+              patient={{ id: p.id, name: p.name, phone: p.phone }}
+              visits={detail.appointments}
+              visitId={visitParam}
+              timezone={tz}
+              doctors={(config.data?.doctors ?? []).filter((d) => d.active)}
+            />
           ) : null}
+          {current === "plans" ? (
+            <TreatmentPlans
+              patientId={p.id}
+              timezone={tz}
+              onBookSitting={(step) =>
+                setDraft({
+                  date: step.date,
+                  startMin: 10 * 60,
+                  patient: p,
+                  procedureId: step.procedureTypeId,
+                  treatmentStepId: step.treatmentStepId,
+                })
+              }
+            />
+          ) : null}
+          {current === "bill" ? <PatientAccount patientId={p.id} hasPhone={!!p.phone} /> : null}
+          {current === "visits" ? <div className="lg:hidden">{history}</div> : null}
         </div>
-        {detail.family.length === 0 ? (
-          <p className="text-sm text-slate-500">{t("patients.noFamily")}</p>
-        ) : (
-          <ul className="space-y-1 text-sm">
-            {detail.family.map((f) => (
-              <li key={f.linkId}>
-                <Link href={`/patients/${f.patientId}`} className="text-brand-700 underline">
-                  {f.name}
-                </Link>{" "}
-                <span className="text-slate-500">({f.relationship})</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      <TreatmentPlans
-        patientId={p.id}
-        timezone={tz}
-        onBookSitting={(step) =>
-          setDraft({
-            date: step.date,
-            startMin: 10 * 60,
-            patient: p,
-            procedureId: step.procedureTypeId,
-            treatmentStepId: step.treatmentStepId,
-          })
-        }
-      />
-
-      <PatientAccount patientId={p.id} hasPhone={!!p.phone} />
-
-      <Card>
-        <h2 className="mb-2 font-semibold">{t("patients.history")}</h2>
-        {detail.appointments.length === 0 ? (
-          <p className="text-sm text-slate-500">{t("patients.noHistory")}</p>
-        ) : (
-          <ul className="divide-y divide-slate-100 text-sm">
-            {detail.appointments.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-2 py-2">
-                <div>
-                  <p>
-                    {localDateOf(new Date(a.startsAt), tz)} · {formatClock(a.startsAt, tz, locale)}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {a.procedureName ?? t("appointment.noProcedure")} · {a.doctorName}
-                  </p>
-                </div>
-                <StatusBadge status={a.status} label={t(`status.${a.status}`)} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      </div>
 
       <Sheet open={editing} onClose={() => setEditing(false)} title={t("common.edit")}>
         <PatientForm

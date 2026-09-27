@@ -32,7 +32,8 @@ export type TemplatePurpose =
   | "billing_link"
   | "lead_welcome"
   | "lead_nudge"
-  | "owner_daily_report";
+  | "owner_daily_report"
+  | "prescription";
 
 export interface TemplateDefinition {
   purpose: TemplatePurpose;
@@ -355,6 +356,16 @@ export const TEMPLATES: Record<TemplatePurpose, TemplateDefinition> = {
     body: {
       en: "{{1}}, today at {{2}}: {{3}} Full report: {{4}}",
       hi: "{{1}}, {{2}} में आज: {{3}} पूरी रिपोर्ट: {{4}}",
+    },
+  },
+  prescription: {
+    purpose: "prescription",
+    name: "sentio_prescription",
+    category: "utility",
+    params: ["patient name", "doctor name", "clinic name", "prescription link"],
+    body: {
+      en: "{{1}}, your prescription from {{2}} at {{3}}: {{4}} Please take medicines only as written.",
+      hi: "{{1}}, {{3}} में {{2}} का आपका पर्चा: {{4}} कृपया दवाएँ केवल पर्चे के अनुसार ही लें।",
     },
   },
 };

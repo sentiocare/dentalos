@@ -76,7 +76,7 @@ export default function IncompleteTreatmentsPage() {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <Link href={`/patients/${r.patientId}`} className="font-medium hover:underline">
+                <Link href={`/patients/${r.patientId}?tab=plans`} className="font-medium hover:underline">
                   {r.patientName}
                 </Link>
                 <p className="text-sm text-slate-600">

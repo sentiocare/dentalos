@@ -34,6 +34,7 @@ test("a new plan can be created from a template on the patient page", async ({ p
   await signIn(page, "90000 00001");
   await page.getByRole("link", { name: "Patients" }).click();
   await page.locator('a[href^="/patients/"]').nth(2).click();
+  await page.getByRole("tab", { name: "Treatment plans" }).click();
   await page.getByRole("button", { name: "+ New plan" }).click();
   await page.getByLabel("Treatment").selectOption({ label: "Root canal" });
   await page.getByLabel(/Teeth/).fill("36");

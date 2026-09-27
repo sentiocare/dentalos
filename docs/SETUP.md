@@ -494,6 +494,8 @@ There are two kinds of money, kept apart on purpose:
 
 ### Onboarding a new clinic (the owner does this, with Sentio on the phone)
 
+Before doctors write prescriptions, add each doctor's **qualification** and **Dental Council registration number** under Settings → Doctors. They are printed on every prescription.
+
 The owner signs in and taps the **Setup** banner on Today (or **More → Setup checklist**). It lists every step with a link to where it is done, and shows a tick when the clinic's data shows the step is finished:
 
 1. **Turn test mode on first.** Messages and calls then go only to staff numbers (and any test numbers entered there). Messages to patients are recorded as "blocked: test mode", never sent.
@@ -538,6 +540,7 @@ pnpm --filter @dentalos/api dev    # API on http://localhost:8080
 pnpm --filter @dentalos/worker dev # background worker
 pnpm --filter @dentalos/web dev    # dashboard on http://localhost:3000
 pnpm --filter @dentalos/api seed:demo  # demo clinic: sign in as 90000 00001 (owner) or 90000 00002 (reception), any code
+pnpm --filter @dentalos/api seed:demo -- --reset --at=12:10  # today as it looks at 12:10 (demos outside clinic hours)
 pnpm e2e                          # browser tests at phone size (resets the demo clinic in DATABASE_URL)
 ```
 

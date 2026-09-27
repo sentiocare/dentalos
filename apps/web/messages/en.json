@@ -204,7 +204,14 @@
     "lastVisit": "Last visit",
     "never": "Never",
     "book": "Book",
-    "years": "{age} yrs"
+    "years": "{age} yrs",
+    "record": "Patient record",
+    "tabs": {
+      "clinical": "Doctor's notes",
+      "plans": "Treatment plans",
+      "bill": "Bill",
+      "visits": "Visits"
+    }
   },
   "import": {
     "title": "Import",
@@ -321,7 +328,9 @@
     "emergency": "Emergency slots",
     "addEmergency": "Reserve emergency slot",
     "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-    "canAdjustBills": "Can give discounts, refunds and corrections"
+    "canAdjustBills": "Can give discounts, refunds and corrections",
+    "qualification": "Qualification",
+    "registrationNo": "Registration no. (Dental Council)"
   },
   "activity": {
     "title": "Activity log",
@@ -1144,7 +1153,8 @@
     "tokenHelp": "They wait in the queue on the Today screen.",
     "sendInTitle": "Send in {name}",
     "busy": "busy",
-    "sendInHelp": "The visit is fitted before the doctor's next booked patient, so bookings are never pushed back."
+    "sendInHelp": "The visit is fitted before the doctor's next booked patient, so bookings are never pushed back.",
+    "notesRx": "Notes & Rx"
   },
   "checkout": {
     "title": "Bill & payment",
@@ -1178,5 +1188,82 @@
     "printReceipt": "Print receipt",
     "nextSitting": "Next sitting in the treatment plan: {name}",
     "enterAmounts": "Enter the amount for each item."
+  },
+  "clinical": {
+    "visitNote": "Note for this visit",
+    "visit": "Visit",
+    "visitWord": "Visit",
+    "noVisit": "Without a visit (e.g. phone advice)",
+    "fields": {
+      "complaint": "Complaint",
+      "findings": "Findings",
+      "diagnosis": "Diagnosis",
+      "treatment": "Treatment done",
+      "advice": "Advice"
+    },
+    "saveNote": "Save note",
+    "noteSaved": "Note saved",
+    "writeRx": "Write prescription",
+    "chart": "Tooth chart",
+    "chartHelp": "Tap a tooth to record what you found. Numbers are FDI.",
+    "adult": "Adult",
+    "child": "Child",
+    "tooth": "Tooth {n}",
+    "toothIs": "Tooth {n}: {condition}",
+    "condition": "Condition",
+    "conditions": {
+      "healthy": "Healthy",
+      "caries": "Cavity",
+      "filled": "Filled",
+      "rct": "Root canal",
+      "crown": "Crown",
+      "missing": "Missing",
+      "implant": "Implant",
+      "bridge": "Bridge",
+      "mobile": "Mobile",
+      "fractured": "Broken",
+      "impacted": "Impacted",
+      "to_extract": "To extract",
+      "other": "Other"
+    },
+    "surfaces": "Surfaces",
+    "toothNote": "Note",
+    "saveTooth": "Save",
+    "toothSaved": "Tooth chart updated",
+    "toothHistory": "This tooth's history",
+    "nothingRecorded": "Nothing recorded yet.",
+    "prescriptions": "Prescriptions",
+    "noRx": "No prescriptions yet.",
+    "print": "Print",
+    "whatsapp": "WhatsApp",
+    "cancel": "Cancel",
+    "cancelled": "Cancelled: {reason}",
+    "cancelReason": "Why cancel this prescription? (It stays on file.)",
+    "rxCancelled": "Prescription cancelled",
+    "rxSentToast": "Prescription sent on WhatsApp",
+    "history": "Earlier notes",
+    "noNotes": "No notes yet.",
+    "edited": "edited",
+    "newRx": "Prescription for {name}",
+    "doctor": "Doctor",
+    "fromTemplate": "Start from",
+    "chooseTemplate": "Choose a template…",
+    "noTemplates": "No templates yet",
+    "medicine": "Medicine {n}",
+    "medicinePlaceholder": "Medicine and strength",
+    "dose": "Dose",
+    "frequency": "How often",
+    "duration": "For how long",
+    "instructions": "Instructions",
+    "addMedicine": "Add medicine",
+    "advice": "Advice",
+    "reviewOn": "Review on",
+    "saveAsTemplate": "Save as template (optional)",
+    "templateNamePlaceholder": "e.g. After extraction",
+    "sendOnWhatsApp": "Send to the patient on WhatsApp",
+    "rxFinal": "A prescription can't be changed once saved. A wrong one is cancelled and written again.",
+    "saveRx": "Save prescription",
+    "rxSaved": "Prescription {number} saved.",
+    "rxSent": "It is on its way on WhatsApp."
   }
 }

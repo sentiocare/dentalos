@@ -22,6 +22,12 @@ import {
   linkFamily,
   addWalkIn,
   localDateOf,
+  recordTooth,
+  saveNote,
+  saveRxTemplate,
+  writePrescription,
+  type RxItem,
+  type ToothCondition,
   localMinutesOf,
   setAppointmentStatus,
   weekdayOf,
@@ -145,6 +151,7 @@ async function reset(pool: Pool) {
     ["usage_ledger", "usage_ledger_append_only"],
     ["wallet_credits", "wallet_credits_append_only"],
     ["consents", "consents_append_only"],
+    ["prescriptions", "prescriptions_not_deleted"],
   ];
   const client = await pool.connect();
   try {
@@ -160,6 +167,9 @@ async function reset(pool: Pool) {
       await client.query("delete from invoices where clinic_id = $1", [id]);
       await client.query("delete from payment_links where clinic_id = $1", [id]);
       await client.query("delete from queue_entries where clinic_id = $1", [id]);
+      await client.query("delete from prescriptions where clinic_id = $1", [id]);
+      await client.query("delete from clinical_notes where clinic_id = $1", [id]);
+      await client.query("delete from tooth_findings where clinic_id = $1", [id]);
       await client.query("delete from appointments where clinic_id = $1", [id]);
       // Treatment data references patients and procedure types without cascading.
       await client.query("delete from estimates where clinic_id = $1", [id]);
@@ -394,6 +404,7 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
   await withClinic(pool, ctx, (c) => seedDemoChats(c, anchor));
   await withClinic(pool, ctx, (c) => seedDemoCalls(c, anchor));
   await withClinic(pool, ctx, (c) => seedDemoPlans(c, now));
+  await withClinic(pool, ctx, (c) => seedDemoClinical(c, now));
   await withClinic(pool, ctx, (c) => seedDemoMoney(c, now, day.unbilled));
   await withClinic(pool, ctx, (c) => seedDemoLeads(c, anchor));
   await withClinic(pool, ctx, (c) => seedBookingDates(c, now));
@@ -899,4 +910,145 @@ async function seedBookingDates(c: PoolClient, now: Date) {
       i === 1 ? "voice" : "whatsapp",
       new Date(now.getTime() - (20 + i * 70) * 60_000),
     ]);
+}
+
+/**
+ * The doctor's side: registration numbers for prescriptions, the doctors' usual prescriptions as
+ * templates, and a few past visits with notes, tooth-chart findings and a prescription.
+ */
+async function seedDemoClinical(c: PoolClient, now: Date) {
+  await c.query(
+    `update doctors set qualification = v.q, registration_no = v.r
+     from (values ('Dr. Rakesh Sharma', 'BDS, MDS (Oral Surgery)', 'JH-A-1123'),
+                  ('Dr. Neha Verma', 'BDS', 'JH-A-2087'),
+                  ('Dr. Amit Mehta', 'BDS, MDS (Orthodontics)', 'BR-A-3310'),
+                  ('Dr. Sunil Prasad', 'BDS, MDS (Endodontics)', 'JH-A-1790'),
+                  ('Dr. Kavita Singh', 'BDS, MDS (Oral Surgery)', 'JH-A-2544')) as v(n, q, r)
+     where doctors.name = v.n`,
+  );
+  const sharma = (await c.query("select id from doctors where name = 'Dr. Rakesh Sharma'")).rows[0]
+    .id as string;
+  const templates: [string, RxItem[], string][] = [
+    [
+      "After extraction",
+      [
+        {
+          drug: "Amoxicillin 500 mg",
+          dose: "1 capsule",
+          frequency: "1-1-1",
+          duration: "5 days",
+          instructions: "After food",
+        },
+        {
+          drug: "Aceclofenac 100 mg + Paracetamol 325 mg",
+          dose: "1 tablet",
+          frequency: "1-0-1",
+          duration: "3 days",
+          instructions: "After food",
+        },
+        {
+          drug: "Pantoprazole 40 mg",
+          dose: "1 tablet",
+          frequency: "1-0-0",
+          duration: "5 days",
+          instructions: "Before breakfast",
+        },
+      ],
+      "Bite on the gauze for 30 minutes. Cold, soft food today. No spitting, no hot drinks, no smoking for 24 hours.",
+    ],
+    [
+      "After root canal",
+      [
+        {
+          drug: "Ibuprofen 400 mg",
+          dose: "1 tablet",
+          frequency: "SOS (when needed)",
+          duration: "3 days",
+          instructions: "After food",
+        },
+      ],
+      "Avoid chewing on this side until the crown is placed.",
+    ],
+    [
+      "Sensitivity",
+      [
+        {
+          drug: "Potassium nitrate toothpaste",
+          frequency: "Twice a day",
+          duration: "1 month",
+          instructions: "Leave on the teeth for 1 minute",
+        },
+      ],
+      "Use a soft brush. Avoid very cold drinks for two weeks.",
+    ],
+  ];
+  for (const [name, items, advice] of templates)
+    await saveRxTemplate(c, { name, doctorId: sharma, items, advice });
+
+  // Three patients with a past visit on record.
+  const visits = (
+    await c.query(
+      `select a.id, a.patient_id, a.doctor_id, a.starts_at, pt.code
+       from appointments a join procedure_types pt on pt.id = a.procedure_type_id
+       where a.status = 'completed' and pt.code in ('extraction', 'rct_sitting', 'scaling') and a.starts_at < $1
+       order by a.starts_at desc limit 3`,
+      [now],
+    )
+  ).rows;
+  for (const v of visits) {
+    const note =
+      v.code === "extraction"
+        ? {
+            complaint: "Pain and swelling, lower right back tooth",
+            findings: "Grossly decayed 46, tender on percussion",
+            diagnosis: "Non-restorable 46",
+            treatment: "Extraction of 46 under LA",
+            advice: "Post-extraction instructions given",
+          }
+        : v.code === "rct_sitting"
+          ? {
+              complaint: "Night pain upper left",
+              findings: "Deep caries 26, lingering pain on cold",
+              diagnosis: "Irreversible pulpitis 26",
+              treatment: "Access opening and cleaning, RCT sitting 1",
+              advice: "Next sitting in one week",
+            }
+          : {
+              complaint: "Bleeding gums while brushing",
+              findings: "Generalised calculus, gingivitis",
+              diagnosis: "Chronic gingivitis",
+              treatment: "Scaling and polishing",
+              advice: "Brush twice, floss daily",
+            };
+    await saveNote(c, { patientId: v.patient_id, appointmentId: v.id, doctorId: v.doctor_id, ...note });
+    const teeth: [number, ToothCondition][] =
+      v.code === "extraction"
+        ? [
+            [46, "missing"],
+            [36, "caries"],
+            [48, "impacted"],
+          ]
+        : v.code === "rct_sitting"
+          ? [
+              [26, "rct"],
+              [16, "filled"],
+            ]
+          : [
+              [31, "healthy"],
+              [17, "caries"],
+            ];
+    for (const [tooth, condition] of teeth)
+      await recordTooth(c, { patientId: v.patient_id, tooth, condition, appointmentId: v.id });
+    if (v.code === "extraction") {
+      const tpl = templates[0]!;
+      await writePrescription(c, {
+        patientId: v.patient_id,
+        doctorId: v.doctor_id,
+        appointmentId: v.id,
+        items: tpl[1],
+        advice: tpl[2],
+        now: new Date(v.starts_at.getTime() + 20 * 60_000),
+      });
+    }
+  }
 }

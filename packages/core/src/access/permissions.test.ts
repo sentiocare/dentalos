@@ -23,4 +23,14 @@ describe("effectivePermissions", () => {
     expect(effectivePermissions("assistant").has("patients.write")).toBe(false);
     expect(effectivePermissions("assistant", { "patients.write": true }).has("patients.write")).toBe(true);
   });
+
+  it("only doctors and the owner write clinical records; reception can be allowed to read them", () => {
+    expect(effectivePermissions("doctor").has("clinical.write")).toBe(true);
+    expect(effectivePermissions("receptionist").has("clinical.read")).toBe(false);
+    expect(effectivePermissions("receptionist", { "clinical.read": true }).has("clinical.read")).toBe(true);
+    expect(effectivePermissions("receptionist", { "clinical.write": true }).has("clinical.write")).toBe(
+      false,
+    );
+    expect(effectivePermissions("assistant", { "clinical.write": true }).has("clinical.write")).toBe(false);
+  });
 });

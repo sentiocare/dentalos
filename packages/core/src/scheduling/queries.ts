@@ -57,7 +57,7 @@ export async function listAppointments(
 
 export async function listPatientAppointments(client: PoolClient, patientId: string, limit = 50) {
   const { rows } = await client.query(
-    `select a.id, a.starts_at, a.ends_at, a.status, d.name as doctor_name, pt.name as procedure_name
+    `select a.id, a.starts_at, a.ends_at, a.status, a.doctor_id, d.name as doctor_name, pt.name as procedure_name
      from appointments a join doctors d on d.id = a.doctor_id left join procedure_types pt on pt.id = a.procedure_type_id
      where a.patient_id = $1 order by a.starts_at desc limit $2`,
     [patientId, limit],
@@ -67,6 +67,7 @@ export async function listPatientAppointments(client: PoolClient, patientId: str
     startsAt: r.starts_at as Date,
     endsAt: r.ends_at as Date,
     status: r.status as string,
+    doctorId: r.doctor_id as string,
     doctorName: r.doctor_name as string,
     procedureName: r.procedure_name as string | null,
   }));

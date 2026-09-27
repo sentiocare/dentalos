@@ -17,6 +17,10 @@ export const PERMISSIONS = [
   "billing.read",
   "billing.write",
   "billing.adjust",
+  // The doctor's record: case notes, tooth chart, prescriptions. Writing is for doctors (and the owner)
+  // only and can't be granted to anyone else, so no one else writes a prescription in a doctor's name.
+  "clinical.read",
+  "clinical.write",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -32,6 +36,8 @@ const ROLE_DEFAULTS: Record<Role, Permission[]> = {
     "audit.read",
     "billing.read",
     "billing.write",
+    "clinical.read",
+    "clinical.write",
   ],
   receptionist: [
     "patients.read",
@@ -43,7 +49,7 @@ const ROLE_DEFAULTS: Record<Role, Permission[]> = {
     "billing.read",
     "billing.write",
   ],
-  assistant: ["patients.read", "appointments.read", "appointments.write"],
+  assistant: ["patients.read", "appointments.read", "appointments.write", "clinical.read"],
 };
 
 /** Permissions the owner may switch on or off per person. Owners always keep everything. */
@@ -58,6 +64,7 @@ export const OVERRIDABLE: Permission[] = [
   "billing.read",
   "billing.write",
   "billing.adjust",
+  "clinical.read",
 ];
 
 export function effectivePermissions(role: Role, overrides: Record<string, unknown> = {}): Set<Permission> {

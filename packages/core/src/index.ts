@@ -14,6 +14,7 @@ export * from "./clinics/create";
 export * from "./clinics/test-mode";
 export * from "./clinics/setup";
 export * from "./frontdesk/desk";
+export * from "./clinical/clinical";
 export * from "./jobs";
 export * from "./i18n/when";
 export * from "./comms/templates";

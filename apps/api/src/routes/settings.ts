@@ -51,6 +51,9 @@ const doctorBody = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/)
     .nullish(),
   active: z.boolean().optional(),
+  // Printed on prescriptions.
+  qualification: z.string().trim().max(100).nullish(),
+  registrationNo: z.string().trim().max(50).nullish(),
 });
 const DOCTOR_COLUMNS = {
   name: "name",
@@ -60,6 +63,8 @@ const DOCTOR_COLUMNS = {
   emergencyOrder: "emergency_order",
   color: "color",
   active: "active",
+  qualification: "qualification",
+  registrationNo: "registration_no",
 };
 
 const chairBody = z.object({
@@ -281,9 +286,18 @@ export function settingsRoutes(app: FastifyInstance, deps: { staff: StaffContext
     manage(request, async (c) => {
       const b = parse(doctorBody, request.body);
       const { rows } = await c.query(
-        `insert into doctors (clinic_id, name, speciality, kind, phone, emergency_order, color)
-         values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6) returning *`,
-        [b.name, b.speciality ?? null, b.kind, b.phone ?? null, b.emergencyOrder ?? null, b.color ?? null],
+        `insert into doctors (clinic_id, name, speciality, kind, phone, emergency_order, color, qualification, registration_no)
+         values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6, $7, $8) returning *`,
+        [
+          b.name,
+          b.speciality ?? null,
+          b.kind,
+          b.phone ?? null,
+          b.emergencyOrder ?? null,
+          b.color ?? null,
+          b.qualification ?? null,
+          b.registrationNo ?? null,
+        ],
       );
       return rows[0];
     }),

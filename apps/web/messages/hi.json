@@ -204,7 +204,14 @@
     "lastVisit": "पिछली विज़िट",
     "never": "कभी नहीं",
     "book": "बुक करें",
-    "years": "{age} साल"
+    "years": "{age} साल",
+    "record": "मरीज़ का रिकॉर्ड",
+    "tabs": {
+      "clinical": "डॉक्टर के नोट्स",
+      "plans": "इलाज की योजना",
+      "bill": "बिल",
+      "visits": "विज़िट"
+    }
   },
   "import": {
     "title": "इंपोर्ट",
@@ -321,7 +328,9 @@
     "emergency": "इमरजेंसी समय",
     "addEmergency": "इमरजेंसी समय रखें",
     "weekdays": ["रविवार", "सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"],
-    "canAdjustBills": "छूट, रिफंड और सुधार कर सकते हैं"
+    "canAdjustBills": "छूट, रिफंड और सुधार कर सकते हैं",
+    "qualification": "योग्यता",
+    "registrationNo": "रजिस्ट्रेशन नंबर (डेंटल काउंसिल)"
   },
   "activity": {
     "title": "गतिविधि लॉग",
@@ -1144,7 +1153,8 @@
     "tokenHelp": "वे आज की स्क्रीन पर लाइन में इंतज़ार करेंगे।",
     "sendInTitle": "{name} को अंदर भेजें",
     "busy": "व्यस्त",
-    "sendInHelp": "विज़िट डॉक्टर के अगले बुक मरीज़ से पहले रखी जाती है, इसलिए बुकिंग कभी पीछे नहीं होती।"
+    "sendInHelp": "विज़िट डॉक्टर के अगले बुक मरीज़ से पहले रखी जाती है, इसलिए बुकिंग कभी पीछे नहीं होती।",
+    "notesRx": "नोट्स और पर्चा"
   },
   "checkout": {
     "title": "बिल और भुगतान",
@@ -1178,5 +1188,82 @@
     "printReceipt": "रसीद प्रिंट करें",
     "nextSitting": "इलाज की अगली सिटिंग: {name}",
     "enterAmounts": "हर आइटम की रकम डालें।"
+  },
+  "clinical": {
+    "visitNote": "इस विज़िट का नोट",
+    "visit": "विज़िट",
+    "visitWord": "विज़िट",
+    "noVisit": "बिना विज़िट (जैसे फ़ोन पर सलाह)",
+    "fields": {
+      "complaint": "शिकायत",
+      "findings": "जाँच में मिला",
+      "diagnosis": "निदान",
+      "treatment": "किया गया इलाज",
+      "advice": "सलाह"
+    },
+    "saveNote": "नोट सेव करें",
+    "noteSaved": "नोट सेव हो गया",
+    "writeRx": "पर्चा लिखें",
+    "chart": "दाँतों का चार्ट",
+    "chartHelp": "जो मिला उसे दर्ज करने के लिए दाँत पर टैप करें। नंबर FDI के हैं।",
+    "adult": "बड़े",
+    "child": "बच्चे",
+    "tooth": "दाँत {n}",
+    "toothIs": "दाँत {n}: {condition}",
+    "condition": "हालत",
+    "conditions": {
+      "healthy": "स्वस्थ",
+      "caries": "कैविटी",
+      "filled": "फ़िलिंग",
+      "rct": "रूट कैनाल",
+      "crown": "क्राउन",
+      "missing": "नहीं है",
+      "implant": "इम्प्लांट",
+      "bridge": "ब्रिज",
+      "mobile": "हिलता",
+      "fractured": "टूटा",
+      "impacted": "फँसा (इम्पैक्टेड)",
+      "to_extract": "निकालना है",
+      "other": "अन्य"
+    },
+    "surfaces": "सतहें",
+    "toothNote": "नोट",
+    "saveTooth": "सेव करें",
+    "toothSaved": "दाँतों का चार्ट अपडेट हुआ",
+    "toothHistory": "इस दाँत का इतिहास",
+    "nothingRecorded": "अभी कुछ दर्ज नहीं।",
+    "prescriptions": "पर्चे",
+    "noRx": "अभी कोई पर्चा नहीं।",
+    "print": "प्रिंट",
+    "whatsapp": "WhatsApp",
+    "cancel": "रद्द करें",
+    "cancelled": "रद्द: {reason}",
+    "cancelReason": "यह पर्चा क्यों रद्द कर रहे हैं? (यह रिकॉर्ड में रहेगा।)",
+    "rxCancelled": "पर्चा रद्द हुआ",
+    "rxSentToast": "पर्चा WhatsApp पर भेजा गया",
+    "history": "पहले के नोट्स",
+    "noNotes": "अभी कोई नोट नहीं।",
+    "edited": "बदला गया",
+    "newRx": "{name} का पर्चा",
+    "doctor": "डॉक्टर",
+    "fromTemplate": "यहाँ से शुरू करें",
+    "chooseTemplate": "टेम्पलेट चुनें…",
+    "noTemplates": "अभी कोई टेम्पलेट नहीं",
+    "medicine": "दवा {n}",
+    "medicinePlaceholder": "दवा और मात्रा",
+    "dose": "खुराक",
+    "frequency": "कितनी बार",
+    "duration": "कितने दिन",
+    "instructions": "निर्देश",
+    "addMedicine": "दवा जोड़ें",
+    "advice": "सलाह",
+    "reviewOn": "दोबारा दिखाएँ",
+    "saveAsTemplate": "टेम्पलेट के रूप में सेव करें (ज़रूरी नहीं)",
+    "templateNamePlaceholder": "जैसे: दाँत निकालने के बाद",
+    "sendOnWhatsApp": "मरीज़ को WhatsApp पर भेजें",
+    "rxFinal": "सेव होने के बाद पर्चा बदला नहीं जा सकता। गलत पर्चा रद्द करके दोबारा लिखा जाता है।",
+    "saveRx": "पर्चा सेव करें",
+    "rxSaved": "पर्चा {number} सेव हो गया।",
+    "rxSent": "यह WhatsApp पर भेजा जा रहा है।"
   }
 }
