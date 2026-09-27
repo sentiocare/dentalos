@@ -53,7 +53,10 @@
     "calls": "Phone calls",
     "treatments": "Incomplete treatments",
     "followups": "Follow-ups",
-    "campaigns": "Campaigns"
+    "campaigns": "Campaigns",
+    "money": "Payments & dues",
+    "wallet": "Sentio balance & billing",
+    "admin": "Sentio admin"
   },
   "login": {
     "title": "Sign in",
@@ -303,7 +306,8 @@
     "canSeeRevenue": "Can see revenue",
     "emergency": "Emergency slots",
     "addEmergency": "Reserve emergency slot",
-    "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "canAdjustBills": "Can give discounts, refunds and corrections"
   },
   "activity": {
     "title": "Activity log",
@@ -540,7 +544,8 @@
       "no_show": "Missed visit",
       "unconfirmed": "Unconfirmed",
       "recall": "Recall",
-      "aftercare_checkin": "After-care"
+      "aftercare_checkin": "After-care",
+      "dues": "Payment due"
     },
     "status": {
       "active": "Running",
@@ -587,5 +592,240 @@
     "aftercareEn": "After-care (English)",
     "aftercareHi": "After-care (Hindi)",
     "aftercareApproved": "Doctor has approved this after-care wording"
+  },
+  "billing": {
+    "title": "Bill and payments",
+    "due": "Due {amount}",
+    "advance": "Advance {amount}",
+    "settled": "Settled",
+    "none": "No charges or payments yet.",
+    "addCharge": "Add charge",
+    "takePayment": "Take payment",
+    "paymentLink": "Payment link",
+    "makeInvoice": "Make invoice",
+    "discount": "Discount",
+    "chargeAdded": "Charge added",
+    "paid": "Payment saved. Receipt {number}",
+    "invoiceMade": "Invoice {number} made",
+    "receipt": "Receipt",
+    "invoice": "Invoice",
+    "cancelled": "cancelled",
+    "sendReceipt": "Send on WhatsApp",
+    "receiptSent": "Receipt sent on WhatsApp",
+    "reverse": "Undo (mistake)",
+    "refund": "Refund",
+    "gstIncluded": "incl. GST {amount}",
+    "treatment": "Treatment",
+    "other": "Other",
+    "description": "Description",
+    "amount": "Amount (₹)",
+    "method": "Paid by",
+    "reference": "Reference (UPI or card ref.)",
+    "sendReceiptWhatsApp": "Send the receipt on WhatsApp",
+    "savePayment": "Save payment",
+    "linkReady": "Payment link ready. It pays the clinic directly; the receipt is sent automatically.",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "linkHint": "The patient can pay by UPI or card. It is marked paid by itself.",
+    "makeLink": "Make link",
+    "reason": "Reason",
+    "methods": {
+      "cash": "Cash",
+      "upi": "UPI",
+      "card": "Card",
+      "bank": "Bank transfer",
+      "gateway_link": "Online link"
+    },
+    "kinds": {
+      "charge": "Charge",
+      "payment": "Payment",
+      "adjustment": "Adjustment",
+      "refund": "Refund"
+    },
+    "sheets": {
+      "charge": "Add charge",
+      "payment": "Take payment",
+      "link": "Payment link",
+      "discount": "Discount",
+      "reverse": "Undo an entry made by mistake",
+      "refund": "Refund"
+    }
+  },
+  "money": {
+    "title": "Payments & dues",
+    "periods": {
+      "today": "Today",
+      "month": "This month",
+      "last_month": "Last month"
+    },
+    "received": "Received",
+    "billed": "Billed",
+    "byMethod": "By payment method",
+    "refunded": "Refunds: {amount}",
+    "export": "Download Excel",
+    "dues": "Patients who owe",
+    "noDues": "Nobody owes anything.",
+    "reminding": "reminders on",
+    "xls": {
+      "date": "Date",
+      "file": "File no.",
+      "patient": "Patient",
+      "type": "Type",
+      "description": "Description",
+      "method": "Method",
+      "reference": "Reference",
+      "amount": "Amount (₹)",
+      "gst": "GST (₹)",
+      "receipt": "Receipt",
+      "invoice": "Invoice",
+      "correction": "correction"
+    }
+  },
+  "wallet": {
+    "title": "Sentio balance & billing",
+    "balance": "Usage balance",
+    "notStarted": "Billing has not started yet: nothing is paused.",
+    "states": {
+      "active": "Everything is running.",
+      "low": "Balance is low. Add money to avoid any pause.",
+      "grace": "Balance used up. AI answering, campaigns and recalls are paused; reminders and emergencies still work.",
+      "suspended": "Paused: AI answering, reminders, campaigns and recalls. Emergencies still reach your doctors."
+    },
+    "banner": {
+      "low": "Sentio balance is low.",
+      "grace": "Sentio balance used up: AI answering is paused.",
+      "suspended": "Sentio balance used up: AI answering and reminders are paused."
+    },
+    "addMoney": "Add money",
+    "amountRupees": "Amount (₹)",
+    "pay": "Pay",
+    "gstNote": "You pay this amount including 18% GST; the balance goes up by the amount before GST. A GST invoice is issued.",
+    "thisMonth": "Used this month",
+    "noUsage": "No usage yet this month.",
+    "total": "Total",
+    "capUsed": "{pct}% of your monthly limit ({cap}) used",
+    "kinds": {
+      "telephony_min": "Phone call minutes",
+      "stt_sec": "Speech understood (seconds)",
+      "tts_char": "Speech spoken (characters)",
+      "llm_input_token": "AI reading (tokens)",
+      "llm_output_token": "AI writing (tokens)",
+      "wa_utility": "WhatsApp messages (service)",
+      "wa_marketing": "WhatsApp messages (offers)",
+      "wa_authentication": "WhatsApp login codes",
+      "sms_segment": "SMS"
+    },
+    "autoRecharge": "Automatic recharge",
+    "mandateActive": "On, through {method} (up to {max} per debit).",
+    "mandateFailed": "The last debits did not go through. Please set it up again.",
+    "mandatePending": "Waiting for you to approve it in your UPI app, card or bank.",
+    "mandateNone": "Not set up. Set it up once and the balance is topped up automatically.",
+    "method": "Method",
+    "methods": {
+      "upi_autopay": "UPI Autopay",
+      "card": "Card",
+      "enach": "Bank (e-NACH)"
+    },
+    "setUp": "Set up",
+    "rbiNote": "Before every automatic debit you get a WhatsApp at least 24 hours ahead. A single debit is never more than ₹15,000.",
+    "lowLevel": "Low-balance level (₹)",
+    "rechargeAmount": "Recharge amount (₹, incl. GST)",
+    "monthlyCap": "Monthly spending limit (₹)",
+    "capHint": "Optional. Alerts at 50%, 80% and 100%; at 100% campaigns, recalls and AI outbound calls pause.",
+    "autoOn": "Recharge automatically",
+    "recharges": "Recharges",
+    "debitOn": "debit on {date}",
+    "rechargeStatus": {
+      "notified": "announced",
+      "debiting": "being debited",
+      "link_sent": "link sent",
+      "paid": "paid",
+      "failed": "failed",
+      "cancelled": "not needed"
+    },
+    "license": "License",
+    "licenseLine": "{sku} · {status}",
+    "supportUntil": "updates and support until {date}",
+    "noLicense": "No license yet.",
+    "licenseStatus": {
+      "pending": "waiting for payment",
+      "paid": "paid (perpetual)",
+      "refunded": "refunded",
+      "cancelled": "cancelled"
+    },
+    "invoices": "Sentio invoices"
+  },
+  "payments": {
+    "title": "Online payments (Razorpay)",
+    "connected": "Connected: {keyId}. Patients' payment links pay the clinic's account.",
+    "notConnected": "Not connected. Payment links and advances need the clinic's own Razorpay account.",
+    "keyId": "Key ID (rzp_live_…)",
+    "keySecret": "Key secret",
+    "webhookSecret": "Webhook secret",
+    "webhookHint": "In Razorpay → Webhooks, add {url} with the events payment_link.paid and payment.captured, and the same secret.",
+    "connect": "Connect"
+  },
+  "admin": {
+    "title": "Sentio admin",
+    "only": "Only Sentio staff can open this page.",
+    "tabs": {
+      "clinics": "Clinics",
+      "rates": "Rates",
+      "reconciliation": "Reconciliation",
+      "health": "Health"
+    },
+    "clinic": "Clinic",
+    "balance": "Balance",
+    "license": "License",
+    "mandate": "Mandate",
+    "usage30": "Usage (30 days)",
+    "margin30": "Margin (30 days)",
+    "notBilled": "billing off",
+    "newRate": "New rate (from a date; past usage keeps its price)",
+    "kind": "Kind",
+    "unit": "Unit",
+    "costPaise": "Provider cost (paise)",
+    "marginPct": "Margin %",
+    "from": "From",
+    "clinicRate": "clinic",
+    "defaultRate": "default",
+    "fromDate": "from {date}",
+    "enterBills": "Provider bills",
+    "billsHint": "Enter each provider's bill for the period (from their invoice). Blank means not known yet.",
+    "periodStart": "From",
+    "periodEnd": "To",
+    "providers": {
+      "telephony": "Exotel (₹)",
+      "speech": "Sarvam (₹)",
+      "llm": "AI model (₹)",
+      "whatsapp": "Meta WhatsApp (₹)",
+      "sms": "SMS (₹)"
+    },
+    "compare": "Compare",
+    "recon": {
+      "ok": "within 1%",
+      "drift": "off by more than 1%",
+      "unavailable": "no bill"
+    },
+    "ok": "OK",
+    "down": "down",
+    "secondsAgo": "{n} s ago",
+    "failedMessages": "Messages failed (24 h)",
+    "failedPayments": "Failed payments",
+    "sellLicense": "Sell license (price before GST)",
+    "sku": "Edition",
+    "priceRupees": "Price (₹)",
+    "months": "Updates (months)",
+    "sendLicenseLink": "Send payment link to owner",
+    "linkSent": "Link sent to the owner on WhatsApp",
+    "sendMandateLink": "Send auto-recharge set-up link",
+    "startBilling": "Start billing",
+    "stopBilling": "Stop billing (pilot)",
+    "adjust": "Credit or debit the wallet",
+    "amountRupees": "Amount (₹)",
+    "reason": "Reason",
+    "recharges": "Recharges",
+    "invoices": "Invoices",
+    "costShort": "cost"
   }
 }

@@ -26,6 +26,8 @@ export interface ClinicSummary {
 interface MeResponse {
   user: { id: string; phone: string | null; name: string | null; uiLanguage: "en" | "hi" };
   clinics: ClinicSummary[];
+  /** Sentio staff: can open the Sentio admin panel. */
+  platformAdmin?: boolean;
 }
 
 interface Session {
@@ -36,6 +38,8 @@ interface Session {
   clinic: ClinicSummary | null;
   permissions: Set<string>;
   can: (permission: string) => boolean;
+  /** Opens a PDF from the API (receipts, invoices) in a new tab; the request carries the sign-in token. */
+  openPdf: (path: string) => Promise<void>;
   selectClinic: (id: string) => void;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -142,6 +146,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
+  const openPdf = useCallback(
+    async (path: string) => {
+      // Open the tab first (inside the click), then fill it: browsers block pop-ups opened after an await.
+      const tab = window.open("", "_blank");
+      const token = await driver.getToken();
+      const res = await fetch(`${config.apiUrl}${path}`, {
+        headers: {
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+          ...(clinicIdRef.current ? { "x-clinic-id": clinicIdRef.current } : {}),
+        },
+      });
+      if (!res.ok) {
+        tab?.close();
+        throw new Error("Could not open the document");
+      }
+      const url = URL.createObjectURL(await res.blob());
+      if (tab) tab.location.href = url;
+      else window.location.href = url;
+    },
+    [config.apiUrl, driver],
+  );
+
   const clinic = me?.clinics.find((c) => c.id === clinicId) ?? null;
   const value: Session = {
     status,
@@ -151,6 +177,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     clinic,
     permissions,
     can: (p) => permissions.has(p),
+    openPdf,
     selectClinic,
     refresh,
     signOut,

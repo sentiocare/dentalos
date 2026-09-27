@@ -7,8 +7,11 @@
  *   DATABASE_URL=... pnpm --filter @dentalos/api seed:demo -- --reset # delete the demo clinic and recreate
  */
 import {
+  addCharge,
   addDays,
   createTreatmentPlan,
+  meter,
+  recordPayment,
   estimateFromPlan,
   bookDirect,
   createClinic,
@@ -129,17 +132,45 @@ const PRICES: Record<string, [number, number]> = {
 
 async function reset(pool: Pool) {
   const { rows } = await pool.query("select id from clinics where name = $1", [DEMO_NAME]);
-  for (const { id } of rows) {
-    // Order matters: appointments reference patients, doctors and chairs without cascading.
-    await pool.query("delete from slot_holds where clinic_id = $1", [id]);
-    await pool.query("delete from appointments where clinic_id = $1", [id]);
-    // Treatment data references patients and procedure types without cascading.
-    await pool.query("delete from estimates where clinic_id = $1", [id]);
-    await pool.query("delete from treatment_steps where clinic_id = $1", [id]);
-    await pool.query("delete from treatment_plans where clinic_id = $1", [id]);
-    await pool.query("delete from clinics where id = $1", [id]);
+  if (!rows.length) return;
+  // Money ledgers are append-only; the demo is the one place they are wiped, with their guards paused
+  // inside this transaction (needs the table owner, as the admin commands run).
+  const guarded: [string, string][] = [
+    ["patient_ledger", "patient_ledger_append_only"],
+    ["usage_ledger", "usage_ledger_append_only"],
+    ["wallet_credits", "wallet_credits_append_only"],
+    ["consents", "consents_append_only"],
+  ];
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    for (const [table, trigger] of guarded)
+      await client.query(`alter table ${table} disable trigger ${trigger}`);
+    for (const { id } of rows) {
+      // Order matters: appointments reference patients, doctors and chairs without cascading.
+      await client.query("delete from slot_holds where clinic_id = $1", [id]);
+      await client.query("delete from receipts where clinic_id = $1", [id]);
+      await client.query("delete from invoice_charges where clinic_id = $1", [id]);
+      await client.query("delete from patient_ledger where clinic_id = $1", [id]);
+      await client.query("delete from invoices where clinic_id = $1", [id]);
+      await client.query("delete from payment_links where clinic_id = $1", [id]);
+      await client.query("delete from appointments where clinic_id = $1", [id]);
+      // Treatment data references patients and procedure types without cascading.
+      await client.query("delete from estimates where clinic_id = $1", [id]);
+      await client.query("delete from treatment_steps where clinic_id = $1", [id]);
+      await client.query("delete from treatment_plans where clinic_id = $1", [id]);
+      await client.query("delete from clinics where id = $1", [id]);
+    }
+    await client.query("delete from resource_occupancy where clinic_id = any($1)", [rows.map((r) => r.id)]);
+    for (const [table, trigger] of guarded)
+      await client.query(`alter table ${table} enable trigger ${trigger}`);
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
   }
-  await pool.query("delete from resource_occupancy where clinic_id = any($1)", [rows.map((r) => r.id)]);
 }
 
 export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
@@ -354,6 +385,8 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
   await withClinic(pool, ctx, (c) => seedDemoChats(c, now));
   await withClinic(pool, ctx, (c) => seedDemoCalls(c, now));
   await withClinic(pool, ctx, (c) => seedDemoPlans(c, now));
+  await withClinic(pool, ctx, (c) => seedDemoMoney(c, now));
+  await seedDemoWallet(pool, clinicId, now);
   console.log(`Demo clinic ready: ${patients.length} patients, ${booked} appointments.`);
   return clinicId;
 }
@@ -576,4 +609,61 @@ async function seedDemoPlans(c: PoolClient, now: Date) {
       .rows[0];
     if (plan) await estimateFromPlan(c, plan.id, { now });
   }
+}
+
+/** Bills for recent visits: most paid in full at the desk, some part-paid (dues), a few by payment link. */
+async function seedDemoMoney(c: PoolClient, now: Date) {
+  const { rows } = await c.query(
+    `select a.id, a.patient_id, a.ends_at, pt.id as procedure_id, pt.name, coalesce(pt.price_min_paise, 50000) as price
+     from appointments a join procedure_types pt on pt.id = a.procedure_type_id
+     where a.status = 'completed' and a.ends_at > $1::timestamptz - interval '30 days' and a.ends_at < $1
+     order by a.ends_at limit 60`,
+    [now],
+  );
+  const methods = ["cash", "upi", "upi", "card", "cash"] as const;
+  for (const [i, a] of rows.entries()) {
+    const price = Number(a.price);
+    await addCharge(c, {
+      patientId: a.patient_id,
+      amountPaise: price,
+      description: a.name,
+      procedureTypeId: a.procedure_id,
+      appointmentId: a.id,
+      at: a.ends_at,
+    });
+    // Every seventh visit is left part-paid, so the dues list has people on it.
+    const paid = i % 7 === 3 ? Math.round(price / 2 / 100) * 100 : price;
+    await recordPayment(c, {
+      patientId: a.patient_id,
+      amountPaise: paid,
+      method: methods[i % methods.length]!,
+      reference: methods[i % methods.length] === "upi" ? `UPI${100200 + i}` : null,
+      appointmentId: a.id,
+      now: new Date(a.ends_at.getTime() + 5 * 60_000),
+    });
+  }
+}
+
+/**
+ * The Sentio side for the demo: billing on, an opening balance, and a month of metered usage (calls and
+ * WhatsApp messages), so the wallet page and the Sentio admin panel have something to show.
+ */
+async function seedDemoWallet(pool: Pool, clinicId: string, now: Date) {
+  await pool.query(
+    "insert into wallet_credits (clinic_id, kind, amount_paise, note) values ($1, 'opening', 500000, 'Demo opening balance')",
+    [clinicId],
+  );
+  await withClinic(pool, { clinicId, actor: "system", role: "system" }, async (c) => {
+    for (let d = 1; d <= 25; d++) {
+      const at = new Date(now.getTime() - d * 86_400_000);
+      for (let n = 0; n < 4; n++) {
+        const ref = `demo-${d}-${n}`;
+        await meter(c, { kind: "telephony_min", quantity: 2 + ((d + n) % 4), refType: "call", ref, at });
+        await meter(c, { kind: "stt_sec", quantity: 40 + ((d * 7 + n) % 60), refType: "call", ref, at });
+        await meter(c, { kind: "tts_char", quantity: 600 + ((d * 13 + n) % 400), refType: "call", ref, at });
+        await meter(c, { kind: "wa_utility", quantity: 1, refType: "outbox", ref, at });
+      }
+    }
+  });
+  await pool.query("update wallets set enforced = true where clinic_id = $1", [clinicId]);
 }

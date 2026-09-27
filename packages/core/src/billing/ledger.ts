@@ -61,6 +61,8 @@ export async function addCharge(
     treatmentStepId?: string | null;
     dedupeKey?: string;
     userId?: string | null;
+    /** When it happened, if not now (imports, demo data). */
+    at?: Date;
   },
 ): Promise<{ id: string; gstPaise: number }> {
   if (!Number.isSafeInteger(input.amountPaise) || input.amountPaise <= 0)
@@ -80,8 +82,8 @@ export async function addCharge(
   const gst = gstIncluded(input.amountPaise, rate);
   const { rows } = await client.query(
     `insert into patient_ledger (clinic_id, patient_id, kind, amount_paise, description, procedure_type_id, appointment_id,
-                                 treatment_step_id, gst_rate_bps, gst_paise, dedupe_key, created_by)
-     values (app.current_clinic_id(), $1, 'charge', $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id`,
+                                 treatment_step_id, gst_rate_bps, gst_paise, dedupe_key, created_by, created_at)
+     values (app.current_clinic_id(), $1, 'charge', $2, $3, $4, $5, $6, $7, $8, $9, $10, coalesce($11, now())) returning id`,
     [
       input.patientId,
       input.amountPaise,
@@ -93,6 +95,7 @@ export async function addCharge(
       gst,
       input.dedupeKey ?? null,
       input.userId ?? null,
+      input.at ?? null,
     ],
   );
   return { id: rows[0].id, gstPaise: gst };

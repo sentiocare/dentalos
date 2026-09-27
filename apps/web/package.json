@@ -21,7 +21,8 @@
     "papaparse": "^5.7.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "read-excel-file": "^9.3.10"
+    "read-excel-file": "^9.3.10",
+    "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

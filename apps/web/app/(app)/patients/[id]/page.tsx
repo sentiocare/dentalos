@@ -10,6 +10,7 @@ import { BookingSheet, type BookingDraft } from "../../../../components/booking-
 import { ConfirmWarnings } from "../../../../components/confirm-warnings";
 import { PatientForm } from "../../../../components/patient-form";
 import { PatientPicker } from "../../../../components/patient-picker";
+import { PatientAccount } from "../../../../components/patient-account";
 import { TreatmentPlans } from "../../../../components/treatment-plans";
 import { Button, Card, Field, Input, Sheet, Spinner, StatusBadge, useToast } from "../../../../components/ui";
 import { ApiError } from "../../../../lib/api";
@@ -195,6 +196,8 @@ export default function PatientPage() {
           })
         }
       />
+
+      <PatientAccount patientId={p.id} hasPhone={!!p.phone} />
 
       <Card>
         <h2 className="mb-2 font-semibold">{t("patients.history")}</h2>

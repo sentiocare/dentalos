@@ -40,21 +40,20 @@ export function walletRoutes(
       const status = await walletStatus(c, now);
       const tz = (await c.query("select timezone from clinics where id = app.current_clinic_id()")).rows[0]
         .timezone;
-      const [license, mandate, recharges, invoices] = await Promise.all([
-        c.query(
-          "select sku, status, purchased_at, updates_support_until::text, checkout_url from licenses order by created_at desc limit 1",
-        ),
-        c.query(
-          "select method, status, max_amount_paise, last_failure, registration_url, created_at from mandates order by created_at desc limit 1",
-        ),
-        c.query(
-          `select id, via, amount_paise, gst_paise, status, debit_after, link_url, failure, paid_at, created_at
-           from recharges order by created_at desc limit 20`,
-        ),
-        c.query(
-          "select id, number, kind, total_paise, issued_at from sentio_invoices order by issued_at desc limit 20",
-        ),
-      ]);
+      // One connection runs one query at a time, so these go one after another.
+      const license = await c.query(
+        "select sku, status, purchased_at, updates_support_until::text, checkout_url from licenses order by created_at desc limit 1",
+      );
+      const mandate = await c.query(
+        "select method, status, max_amount_paise, last_failure, registration_url, created_at from mandates order by created_at desc limit 1",
+      );
+      const recharges = await c.query(
+        `select id, via, amount_paise, gst_paise, status, debit_after, link_url, failure, paid_at, created_at
+         from recharges order by created_at desc limit 20`,
+      );
+      const invoices = await c.query(
+        "select id, number, kind, total_paise, issued_at from sentio_invoices order by issued_at desc limit 20",
+      );
       const month = await usageSummary(c, { from: monthStart(now, tz), to: now });
       return {
         ...status,

@@ -17,9 +17,12 @@ export default function MorePage() {
     { href: "/treatments", label: t("treatments"), show: session.can("patients.read") },
     { href: "/followups", label: t("followups"), show: session.can("appointments.read") },
     { href: "/campaigns", label: t("campaigns"), show: session.can("settings.manage") },
+    { href: "/money", label: t("money"), show: session.can("reports.revenue") },
+    { href: "/wallet", label: t("wallet"), show: session.can("settings.manage") },
     { href: "/import", label: t("import"), show: session.can("patients.import") },
     { href: "/settings", label: t("settings"), show: true },
     { href: "/activity", label: t("activity"), show: session.can("audit.read") },
+    { href: "/admin", label: t("admin"), show: !!session.me?.platformAdmin },
   ];
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 py-4">

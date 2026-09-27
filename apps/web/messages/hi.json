@@ -53,7 +53,10 @@
     "calls": "फ़ोन कॉल",
     "treatments": "अधूरे इलाज",
     "followups": "फ़ॉलो-अप",
-    "campaigns": "अभियान"
+    "campaigns": "अभियान",
+    "money": "भुगतान और बकाया",
+    "wallet": "Sentio बैलेंस और बिलिंग",
+    "admin": "Sentio एडमिन"
   },
   "login": {
     "title": "साइन इन",
@@ -303,7 +306,8 @@
     "canSeeRevenue": "कमाई देख सकते हैं",
     "emergency": "इमरजेंसी समय",
     "addEmergency": "इमरजेंसी समय रखें",
-    "weekdays": ["रविवार", "सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"]
+    "weekdays": ["रविवार", "सोमवार", "मंगलवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"],
+    "canAdjustBills": "छूट, रिफंड और सुधार कर सकते हैं"
   },
   "activity": {
     "title": "गतिविधि लॉग",
@@ -540,7 +544,8 @@
       "no_show": "छूटी विज़िट",
       "unconfirmed": "पक्का नहीं",
       "recall": "रिकॉल",
-      "aftercare_checkin": "देखभाल"
+      "aftercare_checkin": "देखभाल",
+      "dues": "बकाया भुगतान"
     },
     "status": {
       "active": "चल रहा",
@@ -587,5 +592,240 @@
     "aftercareEn": "देखभाल (अंग्रेज़ी)",
     "aftercareHi": "देखभाल (हिंदी)",
     "aftercareApproved": "डॉक्टर ने यह देखभाल वाला संदेश मंज़ूर किया है"
+  },
+  "billing": {
+    "title": "बिल और भुगतान",
+    "due": "बकाया {amount}",
+    "advance": "एडवांस {amount}",
+    "settled": "चुकता",
+    "none": "अभी कोई शुल्क या भुगतान नहीं।",
+    "addCharge": "शुल्क जोड़ें",
+    "takePayment": "भुगतान लें",
+    "paymentLink": "भुगतान लिंक",
+    "makeInvoice": "इनवॉइस बनाएँ",
+    "discount": "छूट",
+    "chargeAdded": "शुल्क जोड़ा गया",
+    "paid": "भुगतान सेव हुआ। रसीद {number}",
+    "invoiceMade": "इनवॉइस {number} बनी",
+    "receipt": "रसीद",
+    "invoice": "इनवॉइस",
+    "cancelled": "रद्द",
+    "sendReceipt": "WhatsApp पर भेजें",
+    "receiptSent": "रसीद WhatsApp पर भेजी गई",
+    "reverse": "वापस लें (गलती)",
+    "refund": "रिफंड",
+    "gstIncluded": "GST {amount} शामिल",
+    "treatment": "इलाज",
+    "other": "अन्य",
+    "description": "विवरण",
+    "amount": "रकम (₹)",
+    "method": "भुगतान का तरीका",
+    "reference": "रेफरेंस (UPI या कार्ड)",
+    "sendReceiptWhatsApp": "रसीद WhatsApp पर भेजें",
+    "savePayment": "भुगतान सेव करें",
+    "linkReady": "भुगतान लिंक तैयार है। पैसा सीधे क्लिनिक को जाता है; रसीद अपने आप भेजी जाती है।",
+    "copy": "लिंक कॉपी करें",
+    "copied": "कॉपी हुआ",
+    "linkHint": "मरीज़ UPI या कार्ड से भुगतान कर सकते हैं। भुगतान अपने आप दर्ज हो जाता है।",
+    "makeLink": "लिंक बनाएँ",
+    "reason": "कारण",
+    "methods": {
+      "cash": "नकद",
+      "upi": "UPI",
+      "card": "कार्ड",
+      "bank": "बैंक ट्रांसफर",
+      "gateway_link": "ऑनलाइन लिंक"
+    },
+    "kinds": {
+      "charge": "शुल्क",
+      "payment": "भुगतान",
+      "adjustment": "समायोजन",
+      "refund": "रिफंड"
+    },
+    "sheets": {
+      "charge": "शुल्क जोड़ें",
+      "payment": "भुगतान लें",
+      "link": "भुगतान लिंक",
+      "discount": "छूट",
+      "reverse": "गलती से हुई एंट्री वापस लें",
+      "refund": "रिफंड"
+    }
+  },
+  "money": {
+    "title": "भुगतान और बकाया",
+    "periods": {
+      "today": "आज",
+      "month": "इस महीने",
+      "last_month": "पिछले महीने"
+    },
+    "received": "मिला",
+    "billed": "बिल किया",
+    "byMethod": "भुगतान के तरीके से",
+    "refunded": "रिफंड: {amount}",
+    "export": "Excel डाउनलोड करें",
+    "dues": "जिन मरीज़ों पर बकाया है",
+    "noDues": "किसी पर बकाया नहीं।",
+    "reminding": "रिमाइंडर चालू",
+    "xls": {
+      "date": "तारीख",
+      "file": "फ़ाइल नं.",
+      "patient": "मरीज़",
+      "type": "प्रकार",
+      "description": "विवरण",
+      "method": "तरीका",
+      "reference": "रेफरेंस",
+      "amount": "रकम (₹)",
+      "gst": "GST (₹)",
+      "receipt": "रसीद",
+      "invoice": "इनवॉइस",
+      "correction": "सुधार"
+    }
+  },
+  "wallet": {
+    "title": "Sentio बैलेंस और बिलिंग",
+    "balance": "उपयोग बैलेंस",
+    "notStarted": "बिलिंग अभी शुरू नहीं हुई: कुछ भी रुका नहीं है।",
+    "states": {
+      "active": "सब चल रहा है।",
+      "low": "बैलेंस कम है। रुकावट से बचने के लिए पैसे जोड़ें।",
+      "grace": "बैलेंस खत्म। AI जवाब, कैंपेन और रिकॉल रुके हैं; रिमाइंडर और इमरजेंसी चालू हैं।",
+      "suspended": "रुका हुआ: AI जवाब, रिमाइंडर, कैंपेन और रिकॉल। इमरजेंसी अब भी आपके डॉक्टरों तक पहुँचती है।"
+    },
+    "banner": {
+      "low": "Sentio बैलेंस कम है।",
+      "grace": "Sentio बैलेंस खत्म: AI जवाब रुका है।",
+      "suspended": "Sentio बैलेंस खत्म: AI जवाब और रिमाइंडर रुके हैं।"
+    },
+    "addMoney": "पैसे जोड़ें",
+    "amountRupees": "रकम (₹)",
+    "pay": "भुगतान करें",
+    "gstNote": "आप यह रकम 18% GST सहित देते हैं; बैलेंस GST से पहले की रकम से बढ़ता है। GST इनवॉइस मिलती है।",
+    "thisMonth": "इस महीने का उपयोग",
+    "noUsage": "इस महीने अभी कोई उपयोग नहीं।",
+    "total": "कुल",
+    "capUsed": "आपकी मासिक सीमा ({cap}) का {pct}% उपयोग हुआ",
+    "kinds": {
+      "telephony_min": "फ़ोन कॉल मिनट",
+      "stt_sec": "समझी गई आवाज़ (सेकंड)",
+      "tts_char": "बोली गई आवाज़ (अक्षर)",
+      "llm_input_token": "AI पढ़ना (टोकन)",
+      "llm_output_token": "AI लिखना (टोकन)",
+      "wa_utility": "WhatsApp मैसेज (सेवा)",
+      "wa_marketing": "WhatsApp मैसेज (ऑफ़र)",
+      "wa_authentication": "WhatsApp लॉगिन कोड",
+      "sms_segment": "SMS"
+    },
+    "autoRecharge": "ऑटोमैटिक रिचार्ज",
+    "mandateActive": "चालू, {method} से (हर बार अधिकतम {max})।",
+    "mandateFailed": "पिछली कटौतियाँ नहीं हो पाईं। कृपया फिर से सेट करें।",
+    "mandatePending": "आपके UPI ऐप, कार्ड या बैंक में मंज़ूरी का इंतज़ार।",
+    "mandateNone": "सेट नहीं है। एक बार सेट करें, बैलेंस अपने आप भरता रहेगा।",
+    "method": "तरीका",
+    "methods": {
+      "upi_autopay": "UPI ऑटोपे",
+      "card": "कार्ड",
+      "enach": "बैंक (e-NACH)"
+    },
+    "setUp": "सेट करें",
+    "rbiNote": "हर ऑटोमैटिक कटौती से कम से कम 24 घंटे पहले आपको WhatsApp मिलेगा। एक बार में कभी ₹15,000 से ज़्यादा नहीं कटेगा।",
+    "lowLevel": "कम बैलेंस की सीमा (₹)",
+    "rechargeAmount": "रिचार्ज रकम (₹, GST सहित)",
+    "monthlyCap": "मासिक खर्च सीमा (₹)",
+    "capHint": "वैकल्पिक। 50%, 80% और 100% पर सूचना; 100% पर कैंपेन, रिकॉल और AI कॉल रुकते हैं।",
+    "autoOn": "अपने आप रिचार्ज करें",
+    "recharges": "रिचार्ज",
+    "debitOn": "{date} को कटौती",
+    "rechargeStatus": {
+      "notified": "सूचना दी गई",
+      "debiting": "कट रहा है",
+      "link_sent": "लिंक भेजा",
+      "paid": "भुगतान हुआ",
+      "failed": "नहीं हुआ",
+      "cancelled": "ज़रूरत नहीं"
+    },
+    "license": "लाइसेंस",
+    "licenseLine": "{sku} · {status}",
+    "supportUntil": "{date} तक अपडेट और सपोर्ट",
+    "noLicense": "अभी कोई लाइसेंस नहीं।",
+    "licenseStatus": {
+      "pending": "भुगतान बाकी",
+      "paid": "भुगतान हुआ (हमेशा के लिए)",
+      "refunded": "रिफंड",
+      "cancelled": "रद्द"
+    },
+    "invoices": "Sentio इनवॉइस"
+  },
+  "payments": {
+    "title": "ऑनलाइन भुगतान (Razorpay)",
+    "connected": "जुड़ा है: {keyId}। मरीज़ों के भुगतान लिंक का पैसा क्लिनिक के खाते में जाता है।",
+    "notConnected": "जुड़ा नहीं है। भुगतान लिंक और एडवांस के लिए क्लिनिक का अपना Razorpay खाता चाहिए।",
+    "keyId": "Key ID (rzp_live_…)",
+    "keySecret": "Key secret",
+    "webhookSecret": "Webhook secret",
+    "webhookHint": "Razorpay → Webhooks में {url} जोड़ें, इवेंट payment_link.paid और payment.captured चुनें, और यही secret डालें।",
+    "connect": "जोड़ें"
+  },
+  "admin": {
+    "title": "Sentio एडमिन",
+    "only": "यह पेज केवल Sentio स्टाफ़ के लिए है।",
+    "tabs": {
+      "clinics": "Clinics",
+      "rates": "Rates",
+      "reconciliation": "Reconciliation",
+      "health": "Health"
+    },
+    "clinic": "Clinic",
+    "balance": "Balance",
+    "license": "License",
+    "mandate": "Mandate",
+    "usage30": "Usage (30 days)",
+    "margin30": "Margin (30 days)",
+    "notBilled": "billing off",
+    "newRate": "New rate (from a date; past usage keeps its price)",
+    "kind": "Kind",
+    "unit": "Unit",
+    "costPaise": "Provider cost (paise)",
+    "marginPct": "Margin %",
+    "from": "From",
+    "clinicRate": "clinic",
+    "defaultRate": "default",
+    "fromDate": "from {date}",
+    "enterBills": "Provider bills",
+    "billsHint": "Enter each provider's bill for the period (from their invoice). Blank means not known yet.",
+    "periodStart": "From",
+    "periodEnd": "To",
+    "providers": {
+      "telephony": "Exotel (₹)",
+      "speech": "Sarvam (₹)",
+      "llm": "AI model (₹)",
+      "whatsapp": "Meta WhatsApp (₹)",
+      "sms": "SMS (₹)"
+    },
+    "compare": "Compare",
+    "recon": {
+      "ok": "within 1%",
+      "drift": "off by more than 1%",
+      "unavailable": "no bill"
+    },
+    "ok": "OK",
+    "down": "down",
+    "secondsAgo": "{n} s ago",
+    "failedMessages": "Messages failed (24 h)",
+    "failedPayments": "Failed payments",
+    "sellLicense": "Sell license (price before GST)",
+    "sku": "Edition",
+    "priceRupees": "Price (₹)",
+    "months": "Updates (months)",
+    "sendLicenseLink": "Send payment link to owner",
+    "linkSent": "Link sent to the owner on WhatsApp",
+    "sendMandateLink": "Send auto-recharge set-up link",
+    "startBilling": "Start billing",
+    "stopBilling": "Stop billing (pilot)",
+    "adjust": "Credit or debit the wallet",
+    "amountRupees": "Amount (₹)",
+    "reason": "Reason",
+    "recharges": "Recharges",
+    "invoices": "Invoices",
+    "costShort": "cost"
   }
 }

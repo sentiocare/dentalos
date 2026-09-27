@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useOutbox } from "../lib/outbox";
 import { useSession } from "../lib/session";
 import { Button, Spinner } from "./ui";
@@ -42,6 +42,34 @@ function SyncBanner() {
         </details>
       ) : null}
     </div>
+  );
+}
+
+/** For the owner: the usage wallet is low or paused (checked when the app opens, and every 10 minutes). */
+function WalletBanner() {
+  const t = useTranslations("wallet");
+  const { api, can, clinic } = useSession();
+  const [state, setState] = useState<string | null>(null);
+  const allowed = can("settings.manage");
+  useEffect(() => {
+    if (!allowed || !clinic) return;
+    const check = () =>
+      void api<{ enforced: boolean; state: string }>("/v1/wallet")
+        .then((w) => setState(w.enforced && w.state !== "active" ? w.state : null))
+        .catch(() => {});
+    check();
+    const timer = setInterval(check, 10 * 60_000);
+    return () => clearInterval(timer);
+  }, [api, allowed, clinic]);
+  if (!state) return null;
+  return (
+    <Link
+      href="/wallet"
+      data-testid="wallet-banner"
+      className={`block border-b px-4 py-2 text-sm ${state === "low" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-red-200 bg-red-50 text-red-900"}`}
+    >
+      {t(`banner.${state}`)} <span className="underline">{t("addMoney")}</span>
+    </Link>
   );
 }
 
@@ -97,6 +125,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="ml-2 shrink-0 truncate text-xs text-slate-500">{session.clinic?.displayName}</span>
         </header>
         <SyncBanner />
+        <WalletBanner />
         <main className="flex-1 pb-20 md:pb-6">{children}</main>
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">

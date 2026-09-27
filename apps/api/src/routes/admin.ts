@@ -77,24 +77,25 @@ export function adminRoutes(
       ).rows[0];
       if (!clinic) throw new HttpError(404, "not_found", "Clinic not found");
       const q = (sql: string) => c.query(sql, [id]).then((r) => r.rows);
-      const [wallet, licenses, mandates, recharges, invoices, usage] = await Promise.all([
-        q("select * from wallets where clinic_id = $1"),
-        q(
-          "select id, sku, price_paise, gst_paise, status, purchased_at, updates_support_until::text, checkout_url from licenses where clinic_id = $1 order by created_at desc",
-        ),
-        q(
-          "select id, method, status, max_amount_paise, consecutive_failures, last_failure, created_at from mandates where clinic_id = $1 order by created_at desc",
-        ),
-        q(
-          "select id, via, amount_paise, status, failure, debit_after, paid_at, created_at from recharges where clinic_id = $1 order by created_at desc limit 50",
-        ),
-        q(
-          "select id, number, kind, total_paise, issued_at from sentio_invoices where clinic_id = $1 order by issued_at desc limit 50",
-        ),
-        q(`select kind, sum(quantity)::float8 as quantity, sum(total_paise)::bigint as total, sum(provider_cost_paise)::float8 as cost
-           from usage_ledger where clinic_id = $1 and at > now() - interval '30 days' group by kind order by kind`),
-      ]);
-      return { clinic, wallet: wallet[0], licenses, mandates, recharges, invoices, usage };
+      // One connection runs one query at a time, so these go one after another.
+      const wallet = (await q("select * from wallets where clinic_id = $1"))[0];
+      const licenses = await q(
+        "select id, sku, price_paise, gst_paise, status, purchased_at, updates_support_until::text, checkout_url from licenses where clinic_id = $1 order by created_at desc",
+      );
+      const mandates = await q(
+        "select id, method, status, max_amount_paise, consecutive_failures, last_failure, created_at from mandates where clinic_id = $1 order by created_at desc",
+      );
+      const recharges = await q(
+        "select id, via, amount_paise, status, failure, debit_after, paid_at, created_at from recharges where clinic_id = $1 order by created_at desc limit 50",
+      );
+      const invoices = await q(
+        "select id, number, kind, total_paise, issued_at from sentio_invoices where clinic_id = $1 order by issued_at desc limit 50",
+      );
+      const usage = await q(
+        `select kind, sum(quantity)::float8 as quantity, sum(total_paise)::bigint as total, sum(provider_cost_paise)::float8 as cost
+         from usage_ledger where clinic_id = $1 and at > now() - interval '30 days' group by kind order by kind`,
+      );
+      return { clinic, wallet, licenses, mandates, recharges, invoices, usage };
     }),
   );
 

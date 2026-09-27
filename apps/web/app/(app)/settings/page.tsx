@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Button, Field, Input, Select, Sheet, Spinner, useToast } from "../../../components/ui";
 import { ApiError } from "../../../lib/api";
 import { useClinicConfig } from "../../../lib/data";
+import { useRuntimeConfig } from "../../../lib/runtime-config";
 import { useSession } from "../../../lib/session";
 import { formatRupees, zonedInstant } from "../../../lib/time";
 import type { ClinicConfig, Doctor, Procedure } from "../../../lib/types";
@@ -29,6 +30,7 @@ export default function SettingsPage() {
   const t = useTranslations("settings");
   const tw = useTranslations("whatsapp");
   const tv = useTranslations("voice");
+  const tpay = useTranslations("payments");
   const tf = useTranslations("followups");
   const tc = useTranslations("common");
   const { api, can } = useSession();
@@ -98,6 +100,11 @@ export default function SettingsPage() {
       {manage ? (
         <Section title={tv("title")}>
           <VoiceSettings />
+        </Section>
+      ) : null}
+      {manage ? (
+        <Section title={tpay("title")}>
+          <PaymentsAccount />
         </Section>
       ) : null}
       {can("staff.manage") ? (
@@ -858,6 +865,21 @@ function Staff({ save }: { save: Save }) {
                 {t("canSeeRevenue")}
               </label>
             ) : null}
+            {s.role === "receptionist" || s.role === "doctor" ? (
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  className="size-4"
+                  checked={s.permissions["billing.adjust"] === true}
+                  onChange={(e) =>
+                    void save("PATCH", `/v1/staff/${s.id}`, {
+                      permissions: { ...s.permissions, "billing.adjust": e.target.checked },
+                    }).then(load)
+                  }
+                />
+                {t("canAdjustBills")}
+              </label>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -1306,5 +1328,81 @@ function Ladders() {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** The clinic's own Razorpay account: patients' payment links pay the clinic directly (Phase 5). */
+function PaymentsAccount() {
+  const t = useTranslations("payments");
+  const tc = useTranslations("common");
+  const { api, clinic } = useSession();
+  const config = useRuntimeConfig();
+  const toast = useToast();
+  const [status, setStatus] = useState<{ connected: boolean; keyId?: string } | null>(null);
+  const [keys, setKeys] = useState({ keyId: "", keySecret: "", webhookSecret: "" });
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void api<{ connected: boolean; keyId?: string }>("/v1/payments-account")
+      .then(setStatus)
+      .catch(() => {});
+  }, [api]);
+  if (!status) return <Spinner />;
+  const webhookUrl = `${config.apiUrl}/webhooks/payments/clinic/${clinic?.id ?? ""}`;
+  return (
+    <div className="space-y-3">
+      <p className="text-sm">
+        {status.connected ? t("connected", { keyId: status.keyId ?? "" }) : t("notConnected")}
+      </p>
+      <Field label={t("keyId")}>
+        {(id) => (
+          <Input
+            id={id}
+            autoComplete="off"
+            value={keys.keyId}
+            onChange={(e) => setKeys({ ...keys, keyId: e.target.value })}
+          />
+        )}
+      </Field>
+      <Field label={t("keySecret")}>
+        {(id) => (
+          <Input
+            id={id}
+            type="password"
+            autoComplete="off"
+            value={keys.keySecret}
+            onChange={(e) => setKeys({ ...keys, keySecret: e.target.value })}
+          />
+        )}
+      </Field>
+      <Field label={t("webhookSecret")} hint={t("webhookHint", { url: webhookUrl })}>
+        {(id) => (
+          <Input
+            id={id}
+            type="password"
+            autoComplete="off"
+            value={keys.webhookSecret}
+            onChange={(e) => setKeys({ ...keys, webhookSecret: e.target.value })}
+          />
+        )}
+      </Field>
+      <Button
+        busy={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await api("/v1/payments-account", { method: "PUT", body: keys });
+            setStatus({ connected: true, keyId: keys.keyId });
+            setKeys({ keyId: "", keySecret: "", webhookSecret: "" });
+            toast(tc("saved"));
+          } catch (e) {
+            toast(e instanceof ApiError ? e.message : tc("error"), "error");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {t("connect")}
+      </Button>
+    </div>
   );
 }
