@@ -1,8 +1,9 @@
 import type { StorageProvider } from "@dentalos/adapters";
-import { formatINR, romanize, type Paise } from "@dentalos/shared";
+import { formatINR, type Paise } from "@dentalos/shared";
 import type { PoolClient } from "pg";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { enqueueMessage } from "../comms/outbox";
+import { pdfRupees as rupees, pdfText } from "../pdf";
 import { DomainError } from "../errors";
 import { addDays, localDateOf } from "../time";
 
@@ -107,12 +108,6 @@ export async function estimateFromPlan(
 }
 
 /** PDF text must stay in the standard PDF fonts: Hindi names are written in Roman letters, ₹ as "Rs.". */
-const pdfText = (s: string) =>
-  romanize(s)
-    .replace(/₹/g, "Rs. ")
-    .replace(/[^\x20-\x7E\u00A0-\u00FF]/g, "")
-    .trim();
-const rupees = (paise: number) => formatINR(paise as Paise).replace("₹", "Rs. ");
 
 export interface EstimatePdfInput {
   clinic: { name: string; address: string | null; phone: string | null };

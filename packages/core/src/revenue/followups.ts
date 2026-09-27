@@ -13,7 +13,7 @@ import { addDays, localDateOf, localMinutesOf, zonedInstant, type LocalDate } fr
  * planner or the stepper twice never sends twice.
  */
 export type FollowupKind =
-  "treatment_continuity" | "estimate" | "no_show" | "unconfirmed" | "recall" | "aftercare_checkin";
+  "treatment_continuity" | "estimate" | "no_show" | "unconfirmed" | "recall" | "aftercare_checkin" | "dues";
 
 export interface LadderStep {
   /** Hours after the previous step (for the first step: after the run's start). */
@@ -52,7 +52,15 @@ export const DEFAULT_LADDERS: Record<FollowupKind, LadderStep[]> = {
     { afterHours: 0, action: "whatsapp", template: "aftercare" },
     { afterHours: 12, atLocalTime: "10:00", action: "whatsapp", template: "checkin" },
   ],
+  dues: [
+    { afterHours: 0, action: "whatsapp", template: "dues_reminder" },
+    { afterHours: 168, atLocalTime: "11:00", action: "whatsapp", template: "dues_reminder" },
+    { afterHours: 168, atLocalTime: "10:00", action: "staff_task" },
+  ],
 };
+
+/** Dues reminders start when a patient owes at least this much for this many days (ASSUMPTIONS A-46). */
+export const DUES_DEFAULTS = { minPaise: 50_000, afterDays: 3 };
 
 /** AI calls only between these clinic-local hours (§6.9, ASSUMPTIONS A-7). */
 export const DEFAULT_CALL_HOURS: [string, string] = ["09:00", "20:00"];
@@ -81,7 +89,10 @@ interface ClinicInfo {
   name: string;
   timezone: string;
   defaultLanguage: string;
-  settings: { voice?: { outboundHours?: [string, string]; outboundCalls?: boolean } };
+  settings: {
+    voice?: { outboundHours?: [string, string]; outboundCalls?: boolean };
+    billing?: { duesMinPaise?: number; duesAfterDays?: number };
+  };
 }
 
 async function clinicInfo(client: PoolClient): Promise<ClinicInfo> {
@@ -102,7 +113,7 @@ async function clinicInfo(client: PoolClient): Promise<ClinicInfo> {
 
 interface NewRun {
   kind: FollowupKind;
-  subjectType: "treatment_step" | "estimate" | "appointment";
+  subjectType: "treatment_step" | "estimate" | "appointment" | "ledger_entry";
   subjectId: string;
   patientId: string;
   phone: string | null;
@@ -137,6 +148,7 @@ export async function planFollowups(
     unconfirmed: 0,
     recall: 0,
     aftercare_checkin: 0,
+    dues: 0,
     deposits: 0,
   };
   const add = async (r: NewRun) => {
@@ -255,6 +267,36 @@ export async function planFollowups(
       });
   }
 
+  // Dues: a patient who has owed money for a few days, with no reminder running. The subject is their latest
+  // charge, so a later bill starts a fresh reminder once the earlier one is settled.
+  const minDues = clinic.settings.billing?.duesMinPaise ?? DUES_DEFAULTS.minPaise;
+  const afterDays = clinic.settings.billing?.duesAfterDays ?? DUES_DEFAULTS.afterDays;
+  const dues = await client.query(
+    `select b.patient_id, p.phone,
+            (select l.id from patient_ledger l where l.patient_id = b.patient_id and l.kind = 'charge'
+             order by l.created_at desc, l.id desc limit 1) as charge_id,
+            (select max(l.created_at) from patient_ledger l where l.patient_id = b.patient_id and l.kind = 'charge') as last_charge
+     from patient_balances b join patients p on p.id = b.patient_id
+     where b.balance_paise >= $1 and p.deleted_at is null and p.phone is not null
+       and not exists (select 1 from followup_runs r where r.kind = 'dues' and r.patient_id = b.patient_id and r.status = 'active')`,
+    [minDues],
+  );
+  for (const d of dues.rows) {
+    if (!d.charge_id || now.getTime() - d.last_charge.getTime() < afterDays * 86_400_000) continue;
+    const start = at10(today, tz);
+    await add({
+      kind: "dues",
+      subjectType: "ledger_entry",
+      subjectId: d.charge_id,
+      patientId: d.patient_id,
+      phone: d.phone,
+      startAt:
+        start > now
+          ? start
+          : nextStepTime(now, { afterHours: 0, atLocalTime: "10:00", action: "whatsapp" }, tz),
+    });
+  }
+
   // Deposits: online bookings for procedures that ask for an advance get a payment link (made by the worker).
   const deposits = await client.query(
     `update appointments a set deposit_status = 'requested', deposit_paise = pt.deposit_paise
@@ -329,6 +371,13 @@ async function goal(client: PoolClient, run: RunRow, now: Date): Promise<Outcome
     }
     case "aftercare_checkin":
       return null;
+    case "dues": {
+      const r = await q(
+        `select coalesce(sum(balance_paise), 0)::bigint as owed from patient_balances
+         where patient_id = (select patient_id from patient_ledger where id = $1)`,
+      );
+      return Number(r.owed) <= 0 ? "stopped_success" : null;
+    }
   }
 }
 
@@ -351,11 +400,19 @@ export interface CallRequest {
   purpose: "confirm_appointment";
 }
 
+/** A dues reminder waiting for its payment link (made by the worker, which holds the gateway keys). */
+export interface LinkRequest {
+  runId: string;
+  patientId: string;
+  amountPaise: number;
+}
+
 export interface StepResult {
   stopped: number;
   messages: number;
   calls: CallRequest[];
   tasks: number;
+  links: LinkRequest[];
 }
 
 function inHours(now: Date, tz: string, hours: [string, string]) {
@@ -383,7 +440,7 @@ export async function advanceFollowups(
   const canCall =
     clinic.settings.voice?.outboundCalls !== false &&
     ((await client.query("select 1 from clinic_channels where kind = 'voice' and active")).rowCount ?? 0) > 0;
-  const result: StepResult = { stopped: 0, messages: 0, calls: [], tasks: 0 };
+  const result: StepResult = { stopped: 0, messages: 0, calls: [], tasks: 0, links: [] };
 
   const { rows } = await client.query<RunRow>(
     `select r.id, r.kind, r.subject_id, r.patient_id, r.phone, r.step, r.next_at, p.name as patient_name, p.language_pref
@@ -459,6 +516,26 @@ export async function advanceFollowups(
         continue;
       }
       action = "staff_task";
+    }
+
+    if (action === "whatsapp" && run.kind === "dues" && run.phone) {
+      // The reminder carries a payment link for the exact amount owed; wait for the worker to make it.
+      const owed = Number(
+        (
+          await client.query("select balance_paise from patient_balances where patient_id = $1", [
+            run.patient_id,
+          ])
+        ).rows[0]?.balance_paise ?? 0,
+      );
+      const link = await client.query(
+        `select 1 from payment_links where patient_id = $1 and purpose = 'dues' and status = 'created'
+           and amount_paise = $2 and created_at > now() - interval '10 days'`,
+        [run.patient_id, owed],
+      );
+      if (!link.rowCount) {
+        result.links.push({ runId: run.id, patientId: run.patient_id, amountPaise: owed });
+        continue;
+      }
     }
 
     if (action === "whatsapp") {
@@ -682,6 +759,24 @@ async function buildMessage(
         appointmentId: run.subject_id,
       };
     }
+    case "dues_reminder": {
+      const l = (
+        await client.query(
+          `select l.url, l.amount_paise from payment_links l
+           where l.patient_id = $1 and l.purpose = 'dues' and l.status = 'created'
+             and l.amount_paise = (select balance_paise from patient_balances b where b.patient_id = $1)
+             and l.created_at > now() - interval '10 days'
+           order by l.created_at desc limit 1`,
+          [run.patient_id],
+        )
+      ).rows[0];
+      if (!l) return null;
+      return {
+        language,
+        params: [name, clinic.name, formatINR(Number(l.amount_paise) as Paise), l.url],
+        buttons: [`callme:${run.id}`],
+      };
+    }
     default:
       return null;
   }
@@ -694,6 +789,7 @@ const TASK_TITLES: Record<FollowupKind, [kind: string, title: string]> = {
   unconfirmed: ["unconfirmed", "Appointment not confirmed"],
   recall: ["followup", "Recall due, no response"],
   aftercare_checkin: ["followup", "After-care check"],
+  dues: ["followup", "Payment due, not received"],
 };
 
 async function staffTask(client: PoolClient, run: RunRow, now: Date): Promise<string | null> {

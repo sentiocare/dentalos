@@ -32,6 +32,10 @@ export const adapterEnvSchema = z.object({
   EXOTEL_API_HOST: z.string().default("api.exotel.com"),
   /** Secret put in every Exotel flow URL as `key=` (openssl rand -hex 24). */
   EXOTEL_CALLBACK_TOKEN: z.string().min(16).optional(),
+  /** Sentio's own Razorpay account (licenses, wallet recharges). Clinics connect their own for patients. */
+  RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().min(12).optional(),
   /** 32 random bytes, base64 (openssl rand -base64 32). Encrypts clinics' provider credentials. */
   CHANNEL_SECRET_KEY: z.string().optional(),
 });
@@ -82,6 +86,14 @@ export function adapterOptions(env: AdapterEnv): AdapterOptions {
             callbackToken: env.EXOTEL_CALLBACK_TOKEN,
           }
         : undefined,
+    razorpay:
+      env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET && env.RAZORPAY_WEBHOOK_SECRET
+        ? {
+            keyId: env.RAZORPAY_KEY_ID,
+            keySecret: env.RAZORPAY_KEY_SECRET,
+            webhookSecret: env.RAZORPAY_WEBHOOK_SECRET,
+          }
+        : undefined,
     anthropic: env.ANTHROPIC_API_KEY
       ? { apiKey: env.ANTHROPIC_API_KEY, model: env.LLM_MODEL, effort: env.LLM_EFFORT }
       : undefined,
@@ -121,6 +133,9 @@ export function checkAdapterEnv(env: AdapterEnv, appEnv: string, ctx: z.Refineme
     ] as const)
       if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: "required for Exotel" });
   }
+  if (env.PAYMENT_PROVIDER === "razorpay")
+    for (const key of ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"] as const)
+      if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: "required for Razorpay" });
   if (env.LLM_PROVIDER === "anthropic" && !env.ANTHROPIC_API_KEY) {
     ctx.addIssue({
       code: "custom",

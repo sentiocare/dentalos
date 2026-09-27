@@ -1,7 +1,7 @@
 import { ingestMessagingEvents } from "@dentalos/agent";
 import type { Adapters } from "@dentalos/adapters";
-import type { JobQueue } from "@dentalos/core";
-import type { Pool } from "@dentalos/db";
+import { getPaymentAccount, ingestClinicPaymentEvent, type JobQueue } from "@dentalos/core";
+import { withClinic, type Pool } from "@dentalos/db";
 import type { FastifyInstance } from "fastify";
 
 /**
@@ -10,7 +10,7 @@ import type { FastifyInstance } from "fastify";
  */
 export async function webhookRoutes(
   app: FastifyInstance,
-  deps: { pool: Pool; adapters: Adapters; jobs: JobQueue },
+  deps: { pool: Pool; adapters: Adapters; jobs: JobQueue; channelKey: Buffer | null },
 ) {
   app.addContentTypeParser(
     "application/json",
@@ -42,6 +42,41 @@ export async function webhookRoutes(
       const result = await ingestMessagingEvents(deps.pool, deps.jobs, events);
       if (result.unrouted)
         request.log.warn({ unrouted: result.unrouted }, "whatsapp events for an unknown number");
+      return reply.send({ ok: true });
+    },
+  );
+
+  // Patients paying a clinic, on the clinic's own gateway account: one webhook URL per clinic, verified
+  // with that clinic's webhook secret.
+  app.post(
+    "/webhooks/payments/clinic/:clinicId",
+    { config: { rateLimit: { max: 600, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      const { clinicId } = request.params as { clinicId: string };
+      if (!/^[0-9a-f-]{36}$/i.test(clinicId)) return reply.code(404).send({ error: "not_found" });
+      const webhook = {
+        headers: request.headers as Record<string, string | undefined>,
+        rawBody: String(request.body ?? ""),
+      };
+      const payments = deps.adapters.payments;
+      const account = await withClinic(deps.pool, { clinicId, actor: "system", role: "system" }, (c) =>
+        getPaymentAccount(c, deps.channelKey),
+      );
+      // Only the fake provider (tests, demo) may run without a connected account.
+      if (!account && payments.name !== "fake-payments") return reply.code(404).send({ error: "not_found" });
+      if (!payments.verifyWebhook(webhook, account ?? undefined)) {
+        request.log.warn("payment webhook with a bad signature");
+        return reply.code(401).send({ error: "bad_signature" });
+      }
+      for (const event of payments.parseWebhook(webhook, account ?? undefined)) {
+        const result = await ingestClinicPaymentEvent(deps.pool, clinicId, event);
+        if (result.receiptId)
+          await deps.jobs.add(
+            "send_receipt",
+            { clinicId, receiptId: result.receiptId },
+            { jobKey: `receipt:${result.receiptId}` },
+          );
+      }
       return reply.send({ ok: true });
     },
   );

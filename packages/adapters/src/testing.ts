@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import type { RawWebhook } from "./common";
 import type { MessagingChannel, MessagingEvent, MessagingProvider } from "./messaging/types";
-import type { PaymentEvent, PaymentProvider } from "./payments/types";
+import type { PaymentAccount, PaymentEvent, PaymentProvider } from "./payments/types";
 import type { StorageProvider } from "./storage/types";
 import type { TelephonyProvider } from "./telephony/types";
 import type { SpeechProvider } from "./voice/types";
@@ -197,7 +197,7 @@ export function paymentContract(
   label: string,
   setup: () => {
     provider: PaymentProvider;
-    signedWebhook: (events: PaymentEvent[]) => RawWebhook;
+    signedWebhook: (events: PaymentEvent[], account?: PaymentAccount) => RawWebhook;
     activeMandateId: (maxAmountPaise: number) => string;
   },
 ) {
@@ -228,10 +228,16 @@ export function paymentContract(
         providerMandateId: mandateId,
         amountPaise: 200_000,
         referenceId: "recharge-1",
+        customer: { phone: "+919876543210" },
       });
       expect(ok.providerPaymentId).toMatch(/\S/);
       await expect(
-        provider.chargeMandate({ providerMandateId: mandateId, amountPaise: 1_500_001, referenceId: "r2" }),
+        provider.chargeMandate({
+          providerMandateId: mandateId,
+          amountPaise: 1_500_001,
+          referenceId: "r2",
+          customer: { phone: "+919876543210" },
+        }),
       ).rejects.toThrow();
     });
 
@@ -240,7 +246,12 @@ export function paymentContract(
       const mandateId = activeMandateId(1_500_000);
       await provider.cancelMandate(mandateId);
       await expect(
-        provider.chargeMandate({ providerMandateId: mandateId, amountPaise: 100, referenceId: "r3" }),
+        provider.chargeMandate({
+          providerMandateId: mandateId,
+          amountPaise: 100,
+          referenceId: "r3",
+          customer: { phone: "+919876543210" },
+        }),
       ).rejects.toThrow();
     });
 
@@ -260,6 +271,39 @@ export function paymentContract(
       expect(provider.verifyWebhook(webhook)).toBe(true);
       expect(provider.verifyWebhook(tamper(webhook))).toBe(false);
       expectStableEventIds(provider.parseWebhook(webhook));
+    });
+
+    it("a clinic's own account signs its own webhooks; Sentio's secret does not verify them", () => {
+      const { provider, signedWebhook } = setup();
+      const clinic = {
+        keyId: "rzp_clinic",
+        keySecret: "clinic-secret",
+        webhookSecret: "clinic-webhook-secret-1",
+      };
+      const event: PaymentEvent = {
+        type: "payment_failed",
+        eventId: "pe2",
+        providerPaymentId: "p2",
+        referenceId: "plink:x",
+        reason: "declined",
+        at: new Date("2026-10-01T06:00:00Z"),
+      };
+      const theirs = signedWebhook([event], clinic);
+      expect(provider.verifyWebhook(theirs, clinic)).toBe(true);
+      expect(provider.verifyWebhook(theirs)).toBe(false);
+      expect(() => provider.parseWebhook(theirs)).toThrow();
+    });
+
+    it("creates a mandate registration page", async () => {
+      const { provider } = setup();
+      const reg = await provider.createMandateRegistration({
+        referenceId: "mandate:c1",
+        maxAmountPaise: 1_500_000,
+        method: "upi_autopay",
+        customer: { name: "Dr. Sharma", phone: "+919876543210" },
+      });
+      expect(reg.url).toMatch(/^https:\/\//);
+      expect(reg.providerCustomerId).toMatch(/\S/);
     });
   });
 }

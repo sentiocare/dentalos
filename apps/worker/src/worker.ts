@@ -7,7 +7,7 @@ import { makeProcessInboundTask } from "./tasks/inbound";
 import { makePlanMessagesTask } from "./tasks/plan-messages";
 import { makeOutboxSweepTask, makeSendOutboxTask } from "./tasks/outbox";
 import { makePlaceCallTask } from "./tasks/calls";
-import { makeFollowupsTask, makeRequestDepositTask } from "./tasks/followups";
+import { makeFollowupsTask, makeRequestDepositTask, makeSendReceiptTask } from "./tasks/followups";
 import { makeFetchRecordingTask, makePurgeRecordingsTask } from "./tasks/recordings";
 import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling";
 
@@ -36,6 +36,7 @@ export function buildTaskList(deps: WorkerDeps): TaskList {
     purge_recordings: makePurgeRecordingsTask(deps),
     followups: makeFollowupsTask(deps),
     request_deposit: makeRequestDepositTask(deps),
+    send_receipt: makeSendReceiptTask(deps),
     place_call: makePlaceCallTask(deps),
   };
 }

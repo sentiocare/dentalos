@@ -15,6 +15,7 @@ export { ExotelProvider, exotelStreamCodec, type ExotelConfig } from "./telephon
 export * from "./audio";
 export { FakeLLMProvider } from "./llm/fake";
 export { FakePaymentProvider } from "./payments/fake";
+export { RazorpayPaymentProvider, type RazorpayConfig } from "./payments/razorpay";
 export { FakeSmsProvider } from "./sms/fake";
 export { FakeStorageProvider } from "./storage/fake";
 export { SupabaseStorageProvider, type SupabaseStorageConfig } from "./storage/supabase";

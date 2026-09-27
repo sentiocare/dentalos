@@ -1,6 +1,9 @@
 import {
   advanceFollowups,
+  createPatientPaymentLink,
   enqueueMessage,
+  getPaymentAccount,
+  sendReceipt,
   expireEstimates,
   planFollowups,
   scheduleSend,
@@ -15,7 +18,7 @@ import { queueFromHelpers } from "./outbox";
  * Every few minutes, for each clinic: start follow-ups for new subjects, run the steps that are due, queue
  * the AI calls they asked for, and expire old estimates.
  */
-export function makeFollowupsTask(deps: Pick<WorkerDeps, "pool" | "logger">) {
+export function makeFollowupsTask(deps: Pick<WorkerDeps, "pool" | "logger" | "adapters" | "channelKey">) {
   return async (_payload: unknown, helpers: JobHelpers) => {
     const queue = queueFromHelpers(helpers);
     const { rows } = await deps.pool.query("select id from clinics");
@@ -35,6 +38,22 @@ export function makeFollowupsTask(deps: Pick<WorkerDeps, "pool" | "logger">) {
           return { started, stepped, due };
         },
       );
+      // Dues reminders carry a payment link on the clinic's own gateway account; the next run sends them.
+      for (const l of result.stepped.links) {
+        try {
+          await withClinic(deps.pool, { clinicId, actor: "job:followups", role: "system" }, async (c) => {
+            const account = await getPaymentAccount(c, deps.channelKey);
+            if (!account && deps.adapters.payments.name !== "fake-payments") return;
+            await createPatientPaymentLink(
+              c,
+              { payments: deps.adapters.payments, account },
+              { patientId: l.patientId, amountPaise: l.amountPaise, purpose: "dues" },
+            );
+          });
+        } catch (error) {
+          deps.logger.warn({ clinicId, err: error }, "dues payment link not created");
+        }
+      }
       for (const call of result.stepped.calls)
         await queue.add("place_call", { clinicId, ...call }, { jobKey: `call:${call.runId}:${call.step}` });
       for (const r of result.due) await scheduleSend(queue, clinicId, r.id);
@@ -48,8 +67,8 @@ export function makeFollowupsTask(deps: Pick<WorkerDeps, "pool" | "logger">) {
   };
 }
 
-/** A payment link for an appointment's advance, sent on WhatsApp. Phase 5 marks it paid from the webhook. */
-export function makeRequestDepositTask(deps: Pick<WorkerDeps, "pool" | "adapters">) {
+/** A payment link for an appointment's advance, sent on WhatsApp; the payment webhook marks it paid. */
+export function makeRequestDepositTask(deps: Pick<WorkerDeps, "pool" | "adapters" | "channelKey">) {
   return async (payload: unknown, helpers: JobHelpers) => {
     const { clinicId, appointmentId } = payload as { clinicId: string; appointmentId: string };
     const ctx = { clinicId, actor: "job:request_deposit" as const, role: "system" as const };
@@ -67,16 +86,26 @@ export function makeRequestDepositTask(deps: Pick<WorkerDeps, "pool" | "adapters
         ).rows[0],
     );
     if (!a || a.deposit_status !== "requested" || !a.phone || !a.deposit_paise) return;
+    // The link is on the clinic's own gateway account; the payment webhook marks the advance paid.
     const link =
       a.deposit_link ??
-      (
-        await deps.adapters.payments.createPaymentLink({
-          amountPaise: Number(a.deposit_paise),
-          description: `Advance for your appointment at ${a.clinic}`,
-          customerPhone: a.phone,
-          referenceId: `deposit:${a.id}`,
-        })
-      ).url;
+      (await withClinic(deps.pool, ctx, async (c) => {
+        const account = await getPaymentAccount(c, deps.channelKey);
+        if (!account && deps.adapters.payments.name !== "fake-payments") return null;
+        return (
+          await createPatientPaymentLink(
+            c,
+            { payments: deps.adapters.payments, account },
+            {
+              patientId: a.patient_id,
+              amountPaise: Number(a.deposit_paise),
+              purpose: "deposit",
+              appointmentId: a.id,
+            },
+          )
+        ).url;
+      }));
+    if (!link) return; // No gateway connected: the clinic collects the advance at the desk.
     const outboxId = await withClinic(deps.pool, ctx, async (c) => {
       await c.query("update appointments set deposit_link = $2 where id = $1", [a.id, link]);
       const language =
@@ -96,6 +125,19 @@ export function makeRequestDepositTask(deps: Pick<WorkerDeps, "pool" | "adapters
         },
       });
     });
+    if (outboxId) await scheduleSend(queueFromHelpers(helpers), clinicId, outboxId);
+  };
+}
+
+/** Sends the receipt for a payment made online (PDF link on WhatsApp). */
+export function makeSendReceiptTask(deps: Pick<WorkerDeps, "pool" | "adapters">) {
+  return async (payload: unknown, helpers: JobHelpers) => {
+    const { clinicId, receiptId } = payload as { clinicId: string; receiptId: string };
+    const { outboxId } = await withClinic(
+      deps.pool,
+      { clinicId, actor: "job:send_receipt", role: "system" },
+      (c) => sendReceipt(c, receiptId, { storage: deps.adapters.storage }),
+    );
     if (outboxId) await scheduleSend(queueFromHelpers(helpers), clinicId, outboxId);
   };
 }

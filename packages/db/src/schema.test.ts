@@ -312,6 +312,19 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       "followup_actions",
       "campaigns",
       "campaign_recipients",
+      "doc_sequences",
+      "invoices",
+      "payment_links",
+      "patient_ledger",
+      "invoice_charges",
+      "receipts",
+      "licenses",
+      "wallets",
+      "usage_ledger",
+      "wallet_credits",
+      "mandates",
+      "recharges",
+      "sentio_invoices",
     ];
 
     beforeAll(async () => {
@@ -433,6 +446,56 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
         "insert into campaign_recipients (clinic_id, campaign_id, patient_id, phone) values ($1, $2, $3, '+919876543210')",
         [b.clinicId, campaign.rows[0].id, b.patientIds[0]],
       );
+      await q("insert into doc_sequences (clinic_id, kind, fy) values ($1, 'receipt', '2026-27')", [
+        b.clinicId,
+      ]);
+      const inv = await q(
+        "insert into invoices (clinic_id, number, fy, patient_id, doc_type, lines, taxable_paise, gst_paise, total_paise) values ($1, 'INV-1', '2026-27', $2, 'bill_of_supply', '[]', 100, 0, 100) returning id",
+        [b.clinicId, b.patientIds[0]],
+      );
+      await q(
+        "insert into payment_links (clinic_id, patient_id, purpose, amount_paise, provider, provider_link_id, url) values ($1, $2, 'dues', 100, 'fake', 'pl-b', 'https://x')",
+        [b.clinicId, b.patientIds[0]],
+      );
+      const charge = await q(
+        "insert into patient_ledger (clinic_id, patient_id, kind, amount_paise, description) values ($1, $2, 'charge', 100, 'x') returning id",
+        [b.clinicId, b.patientIds[0]],
+      );
+      await q("insert into invoice_charges (clinic_id, invoice_id, ledger_id) values ($1, $2, $3)", [
+        b.clinicId,
+        inv.rows[0].id,
+        charge.rows[0].id,
+      ]);
+      const pay = await q(
+        "insert into patient_ledger (clinic_id, patient_id, kind, amount_paise, method, description) values ($1, $2, 'payment', 100, 'cash', 'x') returning id",
+        [b.clinicId, b.patientIds[0]],
+      );
+      await q(
+        "insert into receipts (clinic_id, number, fy, patient_id, ledger_id, amount_paise, method) values ($1, 'R-1', '2026-27', $2, $3, 100, 'cash')",
+        [b.clinicId, b.patientIds[0], pay.rows[0].id],
+      );
+      await q("insert into licenses (clinic_id, sku, price_paise) values ($1, 'standard', 100)", [
+        b.clinicId,
+      ]);
+      await q(
+        "insert into usage_ledger (clinic_id, kind, quantity, provider_cost_paise, margin_paise, total_paise, ref_type, ref) values ($1, 'sms_segment', 1, 20, 10, 30, 'sms', 'b1')",
+        [b.clinicId],
+      );
+      await q("insert into wallet_credits (clinic_id, kind, amount_paise) values ($1, 'opening', 1000)", [
+        b.clinicId,
+      ]);
+      const m = await q(
+        "insert into mandates (clinic_id, provider, provider_mandate_id, payer_phone, max_amount_paise, status) values ($1, 'fake', 'm-b', '+919800000001', 1500000, 'active') returning id",
+        [b.clinicId],
+      );
+      await q(
+        "insert into recharges (clinic_id, via, mandate_id, amount_paise, pre_debit_notified_at, debit_after) values ($1, 'mandate', $2, 100, now(), now() + interval '25 hours')",
+        [b.clinicId, m.rows[0].id],
+      );
+      await q(
+        "insert into sentio_invoices (clinic_id, number, fy, kind, lines, taxable_paise, total_paise, buyer) values ($1, 'S-1', '2026-27', 'recharge', '[]', 100, 118, '{}')",
+        [b.clinicId],
+      );
     });
 
     it.each(tables)("clinic A cannot read clinic B's %s", async (table) => {
@@ -550,6 +613,131 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
         { userId },
       );
       expect(list).toEqual([{ clinic_id: a.clinicId, role: "receptionist" }]);
+    });
+  });
+
+  describe("money (Phase 5)", () => {
+    const inA2 = <T>(fn: (c: import("pg").PoolClient) => Promise<T>) =>
+      withClinic(db.pool, { clinicId: a.clinicId, actor: "system", role: "system" }, fn);
+
+    it("the patient ledger and usage ledger are append-only", async () => {
+      const row = await inA2(
+        async (c) =>
+          (
+            await c.query(
+              "insert into patient_ledger (clinic_id, patient_id, kind, amount_paise, description) values ($1, $2, 'charge', 50000, 'RCT') returning id",
+              [a.clinicId, a.patientIds[0]],
+            )
+          ).rows[0].id,
+      );
+      await expect(
+        inA2((c) => c.query("update patient_ledger set amount_paise = 1 where id = $1", [row])),
+      ).rejects.toThrow(/append-only/);
+      // No delete right at all for the app, and the trigger stops the owner role too.
+      await expect(inA2((c) => c.query("delete from patient_ledger where id = $1", [row]))).rejects.toThrow(
+        /permission denied/,
+      );
+      await expect(db.pool.query("delete from patient_ledger where id = $1", [row])).rejects.toThrow(
+        /append-only/,
+      );
+      await inA2((c) =>
+        c.query(
+          "insert into usage_ledger (clinic_id, kind, quantity, provider_cost_paise, margin_paise, total_paise, ref_type, ref) values ($1, 'sms_segment', 1, 20, 10, 30, 'sms', 'a-append')",
+          [a.clinicId],
+        ),
+      );
+      await expect(db.pool.query("delete from usage_ledger where ref = 'a-append'")).rejects.toThrow(
+        /append-only/,
+      );
+    });
+
+    it("a payment needs a method, a charge must not have one, and amounts are positive", async () => {
+      const bad = [
+        "insert into patient_ledger (clinic_id, patient_id, kind, amount_paise, description) values ($1, $2, 'payment', 100, 'x')",
+        "insert into patient_ledger (clinic_id, patient_id, kind, amount_paise, method, description) values ($1, $2, 'charge', 100, 'cash', 'x')",
+        "insert into patient_ledger (clinic_id, patient_id, kind, amount_paise, method, description) values ($1, $2, 'payment', -5, 'cash', 'x')",
+      ];
+      for (const sql of bad)
+        await expect(inA2((c) => c.query(sql, [a.clinicId, a.patientIds[0]]))).rejects.toThrow(/check/);
+    });
+
+    it("receipt numbers run without gaps, per clinic and financial year, even when requested at once", async () => {
+      const numbers = await Promise.all(
+        Array.from({ length: 20 }, () =>
+          inA2(
+            async (c) => (await c.query("select app.next_doc_number('receipt', '2030-31') as n")).rows[0].n,
+          ),
+        ),
+      );
+      expect([...numbers].sort((x, y) => x - y)).toEqual(Array.from({ length: 20 }, (_, i) => i + 1));
+      const other = await withClinic(
+        db.pool,
+        { clinicId: b.clinicId, actor: "system" },
+        async (c) => (await c.query("select app.next_doc_number('receipt', '2030-31') as n")).rows[0].n,
+      );
+      expect(other).toBe(1);
+    });
+
+    it("the wallet balance and state follow every usage and credit row", async () => {
+      const wallet = () =>
+        db.pool
+          .query("select balance_paise, state from wallets where clinic_id = $1", [a.clinicId])
+          .then((r) => r.rows[0]);
+      const start = (await wallet()).balance_paise as number;
+      await db.pool.query(
+        "insert into wallet_credits (clinic_id, kind, amount_paise) values ($1, 'adjustment', $2)",
+        [a.clinicId, 100000 - start],
+      );
+      expect(await wallet()).toEqual({ balance_paise: 100000, state: "active" });
+      const use = (ref: string, paise: number) =>
+        inA2((c) =>
+          c.query(
+            "insert into usage_ledger (clinic_id, kind, quantity, provider_cost_paise, margin_paise, total_paise, ref_type, ref) values ($1, 'telephony_min', 1, 0, 0, $2, 'call', $3)",
+            [a.clinicId, paise, ref],
+          ),
+        );
+      await use("w1", 60000);
+      expect(await wallet()).toEqual({ balance_paise: 40000, state: "low" });
+      await use("w2", 50000);
+      expect(await wallet()).toEqual({ balance_paise: -10000, state: "grace" });
+      await use("w3", 10000);
+      expect(await wallet()).toEqual({ balance_paise: -20000, state: "suspended" });
+      // The same usage twice is charged once.
+      await expect(use("w3", 10000)).rejects.toThrow(/duplicate key/);
+      const truth = (await db.pool.query("select app.wallet_ledger_balance($1) as b", [a.clinicId])).rows[0]
+        .b;
+      expect(Number(truth)).toBe(-20000);
+    });
+
+    it("a clinic can change its wallet settings but never its balance", async () => {
+      await inA2((c) =>
+        c.query("update wallets set threshold_paise = 30000 where clinic_id = $1", [a.clinicId]),
+      );
+      await expect(
+        inA2((c) =>
+          c.query("update wallets set balance_paise = 99999999 where clinic_id = $1", [a.clinicId]),
+        ),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        inA2((c) =>
+          c.query("insert into wallet_credits (clinic_id, kind, amount_paise) values ($1, 'topup', 100)", [
+            a.clinicId,
+          ]),
+        ),
+      ).rejects.toThrow(/permission denied/);
+    });
+
+    it("an auto-debit cannot be scheduled less than 24 hours after its pre-debit notice", async () => {
+      const m = await db.pool.query(
+        "insert into mandates (clinic_id, provider, provider_mandate_id, payer_phone, max_amount_paise, status) values ($1, 'fake', 'm-a', '+919800000002', 1500000, 'active') returning id",
+        [a.clinicId],
+      );
+      await expect(
+        db.pool.query(
+          "insert into recharges (clinic_id, via, mandate_id, amount_paise, pre_debit_notified_at, debit_after) values ($1, 'mandate', $2, 100, now(), now() + interval '2 hours')",
+          [a.clinicId, m.rows[0].id],
+        ),
+      ).rejects.toThrow(/check/);
     });
   });
 });

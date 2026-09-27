@@ -34,7 +34,7 @@ paymentContract("fake", () => {
   const provider = new FakePaymentProvider();
   return {
     provider,
-    signedWebhook: (events) => provider.eventWebhook(events),
+    signedWebhook: (events, account) => provider.eventWebhook(events, account),
     activeMandateId: (max) => provider.activateMandate(max),
   };
 });
@@ -137,10 +137,10 @@ describe("createAdapters", () => {
         telephony: "fake",
         voice: "fake",
         llm: "fake",
-        payments: "razorpay",
-        sms: "fake",
+        payments: "fake",
+        sms: "dlt",
         storage: "fake",
       }),
-    ).toThrow(/Phase 5/);
+    ).toThrow(/Phase 2/);
   });
 });

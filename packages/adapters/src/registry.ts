@@ -9,6 +9,7 @@ import { AnthropicLLMProvider, type AnthropicConfig } from "./llm/anthropic";
 import { FakeLLMProvider } from "./llm/fake";
 import { FakeMessagingProvider } from "./messaging/fake";
 import { FakePaymentProvider } from "./payments/fake";
+import { RazorpayPaymentProvider, type RazorpayConfig } from "./payments/razorpay";
 import { FakeSmsProvider } from "./sms/fake";
 import { FakeStorageProvider } from "./storage/fake";
 import { SupabaseStorageProvider, type SupabaseStorageConfig } from "./storage/supabase";
@@ -45,7 +46,6 @@ export interface AdapterSelection {
 
 /** When each real adapter is built (PLAN §7). Until then, selecting it fails at startup, not mid-call. */
 const PLANNED: Record<string, string> = {
-  razorpay: "Phase 5",
   dlt: "Phase 2",
 };
 
@@ -62,6 +62,7 @@ export interface AdapterOptions {
   sarvam?: SarvamConfig;
   supabaseStorage?: SupabaseStorageConfig;
   exotel?: ExotelConfig;
+  razorpay?: RazorpayConfig;
 }
 
 function required<T>(value: T | undefined, what: string): T {
@@ -95,7 +96,14 @@ export function createAdapters(selection: AdapterSelection, options: AdapterOpti
         ? new FakeLLMProvider()
         : new AnthropicLLMProvider(required(options.anthropic, "LLM (ANTHROPIC_API_KEY)")),
     payments:
-      selection.payments === "fake" ? new FakePaymentProvider() : notYet("Payment", selection.payments),
+      selection.payments === "fake"
+        ? new FakePaymentProvider()
+        : new RazorpayPaymentProvider(
+            required(
+              options.razorpay,
+              "Razorpay (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET)",
+            ),
+          ),
     sms: selection.sms === "fake" ? new FakeSmsProvider() : notYet("SMS", selection.sms),
     storage:
       selection.storage === "fake"

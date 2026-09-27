@@ -18,6 +18,7 @@ import { patientRoutes } from "./routes/patients";
 import { settingsRoutes } from "./routes/settings";
 import { staffRoutes } from "./routes/staff";
 import { revenueRoutes } from "./routes/revenue";
+import { billingRoutes } from "./routes/billing";
 import { callRoutes } from "./routes/calls";
 import { telephonyRoutes } from "./routes/telephony";
 import { webhookRoutes } from "./routes/webhooks";
@@ -75,7 +76,12 @@ export function buildApp(deps: AppDeps) {
     deps.auth.devLogin && deps.auth.jwtSecret
       ? { secret: deps.auth.jwtSecret, audience: deps.auth.audience }
       : undefined;
-  void app.register(webhookRoutes, { pool: deps.pool, adapters: deps.adapters, jobs: deps.jobs });
+  void app.register(webhookRoutes, {
+    pool: deps.pool,
+    adapters: deps.adapters,
+    jobs: deps.jobs,
+    channelKey: deps.channelKey,
+  });
   void app.register(telephonyRoutes, { pool: deps.pool, adapters: deps.adapters, jobs: deps.jobs });
   void app.register(async (api) => {
     meRoutes(api, { pool: deps.pool, staff, devLogin });
@@ -88,6 +94,13 @@ export function buildApp(deps: AppDeps) {
     inboxRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
     callRoutes(api, { staff, pool: deps.pool, storage: deps.adapters.storage });
     revenueRoutes(api, { staff, storage: deps.adapters.storage, jobs: deps.jobs });
+    billingRoutes(api, {
+      staff,
+      storage: deps.adapters.storage,
+      payments: deps.adapters.payments,
+      jobs: deps.jobs,
+      channelKey: deps.channelKey,
+    });
   });
   return app;
 }

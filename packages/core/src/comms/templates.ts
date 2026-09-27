@@ -21,7 +21,15 @@ export type TemplatePurpose =
   | "aftercare"
   | "checkin"
   | "reactivation"
-  | "deposit_request";
+  | "deposit_request"
+  | "payment_receipt"
+  | "dues_reminder"
+  | "billing_wallet_low"
+  | "billing_wallet_paused"
+  | "billing_predebit"
+  | "billing_recharge_failed"
+  | "billing_spend_alert"
+  | "billing_link";
 
 export interface TemplateDefinition {
   purpose: TemplatePurpose;
@@ -220,6 +228,88 @@ export const TEMPLATES: Record<TemplatePurpose, TemplateDefinition> = {
     body: {
       en: "{{1}}, to confirm your appointment at {{2}}, please pay the advance of {{3}} here: {{4}}",
       hi: "{{1}}, {{2}} में अपना अपॉइंटमेंट पक्का करने के लिए {{3}} का एडवांस यहाँ दें: {{4}}",
+    },
+  },
+  payment_receipt: {
+    purpose: "payment_receipt",
+    name: "sentio_payment_receipt",
+    category: "utility",
+    params: ["patient name", "amount", "clinic name", "receipt link"],
+    body: {
+      en: "{{1}}, we have received {{2}}. Thank you. Your receipt from {{3}}: {{4}}",
+      hi: "{{1}}, हमें {{2}} मिल गए हैं। धन्यवाद। {{3}} की आपकी रसीद: {{4}}",
+    },
+  },
+  dues_reminder: {
+    purpose: "dues_reminder",
+    name: "sentio_dues_reminder",
+    category: "utility",
+    params: ["patient name", "clinic name", "amount due", "payment link"],
+    body: {
+      en: "Namaste {{1}}, the balance on your account at {{2}} is {{3}}. You can pay online here: {{4}} If you have already paid, please ignore this message.",
+      hi: "नमस्ते {{1}}, {{2}} में आपके खाते में {{3}} बाकी है। आप यहाँ ऑनलाइन भुगतान कर सकते हैं: {{4}} अगर आप भुगतान कर चुके हैं, तो इस मैसेज को अनदेखा करें।",
+    },
+    buttons: [{ en: "Call me", hi: "मुझे कॉल करें" }],
+  },
+  // To the clinic owner, about the Sentio usage wallet (Build Prompt §4.3). Never gated by the wallet.
+  billing_wallet_low: {
+    purpose: "billing_wallet_low",
+    name: "sentio_wallet_low",
+    category: "utility",
+    params: ["owner name", "clinic name", "balance", "top-up link"],
+    body: {
+      en: "{{1}}, the Sentio usage balance for {{2}} is {{3}}. To avoid any pause, add money here: {{4}}",
+      hi: "{{1}}, {{2}} का Sentio उपयोग बैलेंस {{3}} है। रुकावट से बचने के लिए यहाँ पैसे जोड़ें: {{4}}",
+    },
+  },
+  billing_wallet_paused: {
+    purpose: "billing_wallet_paused",
+    name: "sentio_wallet_paused",
+    category: "utility",
+    params: ["owner name", "clinic name", "what is paused", "top-up link"],
+    body: {
+      en: "{{1}}, the Sentio usage balance for {{2}} has run out. Paused: {{3}}. Emergency calls still reach your doctors. Add money here to resume: {{4}}",
+      hi: "{{1}}, {{2}} का Sentio उपयोग बैलेंस खत्म हो गया है। रुका हुआ: {{3}}। इमरजेंसी कॉल अब भी आपके डॉक्टरों तक पहुँचती हैं। फिर से शुरू करने के लिए यहाँ पैसे जोड़ें: {{4}}",
+    },
+  },
+  billing_predebit: {
+    purpose: "billing_predebit",
+    name: "sentio_predebit_notice",
+    category: "utility",
+    params: ["owner name", "clinic name", "amount", "debit date", "mandate"],
+    body: {
+      en: "{{1}}, advance notice: {{3}} will be debited on {{4}} via your {{5}} to recharge the Sentio usage wallet for {{2}}. To change or cancel, reply to this message.",
+      hi: "{{1}}, पूर्व सूचना: {{2}} के Sentio उपयोग वॉलेट को रिचार्ज करने के लिए {{4}} को आपके {{5}} से {{3}} काटे जाएँगे। बदलने या रद्द करने के लिए इस मैसेज का जवाब दें।",
+    },
+  },
+  billing_recharge_failed: {
+    purpose: "billing_recharge_failed",
+    name: "sentio_recharge_failed",
+    category: "utility",
+    params: ["owner name", "clinic name", "amount", "payment link"],
+    body: {
+      en: "{{1}}, the automatic recharge of {{3}} for {{2}} did not go through. Please pay here instead: {{4}}",
+      hi: "{{1}}, {{2}} के लिए {{3}} का ऑटोमैटिक रिचार्ज नहीं हो पाया। कृपया यहाँ भुगतान करें: {{4}}",
+    },
+  },
+  billing_spend_alert: {
+    purpose: "billing_spend_alert",
+    name: "sentio_spend_alert",
+    category: "utility",
+    params: ["owner name", "clinic name", "percent", "spent", "monthly limit"],
+    body: {
+      en: "{{1}}, {{2}} has used {{3}}% of this month's Sentio spending limit ({{4}} of {{5}}).",
+      hi: "{{1}}, {{2}} ने इस महीने की Sentio खर्च सीमा का {{3}}% उपयोग कर लिया है ({{5}} में से {{4}})।",
+    },
+  },
+  billing_link: {
+    purpose: "billing_link",
+    name: "sentio_billing_link",
+    category: "utility",
+    params: ["owner name", "what it is for", "link"],
+    body: {
+      en: "{{1}}, here is the link for {{2}}: {{3}}",
+      hi: "{{1}}, {{2}} के लिए लिंक: {{3}}",
     },
   },
 };
