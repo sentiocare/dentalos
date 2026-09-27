@@ -87,4 +87,20 @@ describe.skipIf(!hasTestDatabase)("reports API", () => {
     await call(owner, "PATCH", `/v1/staff/${rec.id}`, { permissions: { "reports.revenue": false } });
     expect((await call(reception, "GET", "/v1/reports?date=2030-03-12")).statusCode).toBe(403);
   });
+
+  it("setup checklist: the owner ticks steps, turns test mode on with extra numbers; reception can't", async () => {
+    const list = (await call(owner, "GET", "/v1/setup")).json();
+    expect(list.steps.find((s: { key: string }) => s.key === "hours")).toMatchObject({
+      done: false,
+      ticked: true,
+    });
+    const ticked = (await call(owner, "PUT", "/v1/setup/steps/hours", { done: true })).json();
+    expect(ticked.steps.find((s: { key: string }) => s.key === "hours").done).toBe(true);
+    expect((await call(owner, "PUT", "/v1/setup/steps/license", { done: true })).statusCode).toBe(400);
+    expect((await call(owner, "PUT", "/v1/test-mode", { on: true, phones: ["98111 22233"] })).json()).toEqual(
+      { on: true, phones: ["+919811122233"] },
+    );
+    expect((await call(owner, "GET", "/v1/setup")).json().testMode.on).toBe(true);
+    expect((await call(reception, "PUT", "/v1/test-mode", { on: false })).statusCode).toBe(403);
+  });
 });

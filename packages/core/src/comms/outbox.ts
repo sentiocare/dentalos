@@ -1,3 +1,4 @@
+import { blockedByTestMode } from "../clinics/test-mode";
 import { ProviderError, type MessagingChannel, type MessagingProvider } from "@dentalos/adapters";
 import type { PoolClient } from "pg";
 import type { JobQueue } from "../jobs";
@@ -142,6 +143,20 @@ export async function processOutbox(
     await client.query("select name, timezone, settings from clinics where id = app.current_clinic_id()")
   ).rows[0];
   const conversation = await ensureConversation(client, row.to_phone);
+  // Test mode: only staff and listed test numbers get messages; the rest are logged, not sent.
+  if (await blockedByTestMode(client, row.to_phone, clinic.settings)) {
+    await logMessage(client, {
+      conversationId: conversation.id,
+      direction: "out",
+      author: "system",
+      kind: payload.kind === "template" ? "template" : payload.kind === "buttons" ? "buttons" : "text",
+      body: previewOf(payload),
+      status: "blocked",
+      error: "test_mode",
+    });
+    await settle("blocked", { error: "test_mode" });
+    return { status: "blocked", reason: "test_mode" };
+  }
   const optOuts = (
     await client.query("select channel, category from opt_outs where phone = $1 and revoked_at is null", [
       row.to_phone,

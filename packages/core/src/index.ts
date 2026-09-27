@@ -11,6 +11,8 @@ export * from "./patients/import";
 export * from "./patients/service";
 export * from "./clinics/defaults";
 export * from "./clinics/create";
+export * from "./clinics/test-mode";
+export * from "./clinics/setup";
 export * from "./jobs";
 export * from "./i18n/when";
 export * from "./comms/templates";

@@ -12,6 +12,7 @@ export default function MorePage() {
   const t = useTranslations("nav");
   const session = useSession();
   const links = [
+    { href: "/setup", label: t("setup"), show: session.can("settings.manage") },
     { href: "/reports", label: t("reports"), show: session.can("reports.revenue") },
     { href: "/leads", label: t("leads"), show: session.can("patients.read") },
     { href: "/tasks", label: t("tasks"), show: session.can("appointments.read") },

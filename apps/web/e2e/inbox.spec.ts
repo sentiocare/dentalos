@@ -17,7 +17,7 @@ async function signIn(page: Page) {
 
 test("receptionist takes over a WhatsApp chat, replies and hands it back", async ({ page }) => {
   await signIn(page);
-  await expect(page.getByRole("link", { name: /task needs attention/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /tasks? needs? attention/ })).toBeVisible();
 
   await page.getByRole("link", { name: "WhatsApp" }).click();
   await page.getByRole("button", { name: "Needs action" }).click();

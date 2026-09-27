@@ -58,7 +58,8 @@
     "wallet": "Sentio balance & billing",
     "admin": "Sentio admin",
     "leads": "Leads",
-    "reports": "Reports"
+    "reports": "Reports",
+    "setup": "Setup checklist"
   },
   "login": {
     "title": "Sign in",
@@ -102,7 +103,9 @@
     "inClinic": "In clinic",
     "finished": "Finished",
     "missed": "Cancelled / no-show",
-    "tasksWaiting": "{count, plural, one {# task needs attention} other {# tasks need attention}}"
+    "tasksWaiting": "{count, plural, one {# task needs attention} other {# tasks need attention}}",
+    "setup": "Setup: {done} of {total} steps done",
+    "setupTestMode": "Test mode is on: patients get no messages. Turn it off to go live"
   },
   "calendar": {
     "title": "Calendar",
@@ -987,5 +990,98 @@
       "lead": "Lead"
     },
     "nightly": "Send me this report on WhatsApp every night at 9 pm"
+  },
+  "setup": {
+    "title": "Setup checklist",
+    "ownerOnly": "Only the owner can see the setup checklist.",
+    "progress": "{done} of {total} steps done",
+    "ready": "All steps done. The clinic is live.",
+    "optional": "optional",
+    "open": "Open",
+    "tick": "Done",
+    "doneLabel": "Step done",
+    "todoLabel": "Not done yet",
+    "steps": {
+      "clinic": {
+        "title": "Clinic details",
+        "help": "Address and phone number. Patients hear and see these."
+      },
+      "doctors": {
+        "title": "Doctors",
+        "help": "Add every doctor, with visiting days for visiting doctors."
+      },
+      "hours": {
+        "title": "Working hours",
+        "help": "Check the clinic hours and breaks, then tick."
+      },
+      "procedures": {
+        "title": "Treatments and prices",
+        "help": "Check durations and prices. The assistant only quotes what is here."
+      },
+      "staff": {
+        "title": "Staff",
+        "help": "Add reception and doctors so they can sign in with their phone."
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "help": "Connect the clinic's WhatsApp Business number."
+      },
+      "voice": {
+        "title": "Phone number for calls",
+        "help": "Sentio gives the clinic a number that the assistant answers."
+      },
+      "forwarding": {
+        "title": "Call forwarding",
+        "help": "Set the clinic phone to forward missed calls (codes below), then tick."
+      },
+      "testCall": {
+        "title": "Test call",
+        "help": "Call the clinic from another phone and do not pick up. When the assistant answers, book a test visit. Then open Calls and mark it as passed."
+      },
+      "payments": {
+        "title": "Online payments",
+        "help": "Connect the clinic's Razorpay account for UPI payment links."
+      },
+      "leadAds": {
+        "title": "Facebook and Instagram leads",
+        "help": "Connect the clinic's Facebook Page so ad leads get a reply within a minute."
+      },
+      "license": {
+        "title": "License",
+        "help": "Pay the one-time license. Usage is paid from the prepaid wallet."
+      }
+    },
+    "testMode": {
+      "title": "Test mode",
+      "help": "While you set up, messages and calls go only to your staff's numbers (and any numbers you add). Messages to patients are recorded but not sent.",
+      "on": "Test mode is on",
+      "phones": "Extra test numbers, separated by commas"
+    },
+    "forwarding": {
+      "title": "Call forwarding",
+      "number": "number",
+      "intro": "Forward calls to the assistant's number {number}.",
+      "noNumber": "The assistant's number appears here once Sentio connects it.",
+      "operators": {
+        "jio": "Jio",
+        "airtel": "Airtel",
+        "vi": "Vi",
+        "bsnl": "BSNL",
+        "landline": "Landline"
+      },
+      "dialEach": "Dial each code once on the clinic's mobile. Calls you answer stay with you; only calls you miss go to the assistant.",
+      "noAnswer": "When not answered",
+      "busy": "When busy",
+      "unreachable": "When switched off or unreachable",
+      "notes": {
+        "jio": "If a code shows an error on Jio, set it in the phone instead: Phone app → Settings → Calls (or Supplementary services) → Call forwarding.",
+        "airtel": "On Airtel these codes work on all phones. You can also set it in Phone app → Settings → Call forwarding.",
+        "vi": "On Vi these codes work on all phones. You can also set it in Phone app → Settings → Call forwarding.",
+        "bsnl": "On BSNL mobile these codes work on all phones. You can also set it in Phone app → Settings → Call forwarding."
+      },
+      "check": "To check, call the clinic from another phone and don't answer: the assistant should pick up. To stop all forwarding, dial ##002#.",
+      "landline": "Landlines (BSNL, Airtel, JioFiber, Tata and others) set forwarding differently. Call your provider's customer care and ask for \"call forwarding when busy or not answered\" to the assistant's number. Then make a test call.",
+      "cost": "Your operator charges a forwarded call like an outgoing call from your number; most unlimited plans include it."
+    }
   }
 }

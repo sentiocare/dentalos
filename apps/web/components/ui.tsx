@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   createContext,
   useCallback,
@@ -104,6 +105,7 @@ export function Sheet({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const tc = useTranslations("common");
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
@@ -126,7 +128,7 @@ export function Sheet({
             <button
               onClick={onClose}
               className="rounded-full p-2 text-slate-500 hover:bg-slate-100"
-              aria-label="Close"
+              aria-label={tc("close")}
             >
               ✕
             </button>

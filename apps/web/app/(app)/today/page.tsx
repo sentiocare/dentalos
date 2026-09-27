@@ -33,6 +33,19 @@ export default function TodayPage() {
   const [selected, setSelected] = useState<Appointment | null>(null);
   const [draft, setDraft] = useState<BookingDraft | null>(null);
   const [openTasks, setOpenTasks] = useState<{ priority: string }[]>([]);
+  const [setup, setSetup] = useState<{
+    ready: boolean;
+    done: number;
+    total: number;
+    testMode: { on: boolean };
+  } | null>(null);
+  const owner = can("settings.manage");
+  useEffect(() => {
+    if (!owner) return;
+    api<{ ready: boolean; done: number; total: number; testMode: { on: boolean } }>("/v1/setup")
+      .then(setSetup)
+      .catch(() => {});
+  }, [api, owner]);
   const seesTasks = can("appointments.read");
   useEffect(() => {
     if (!seesTasks) return;
@@ -68,6 +81,19 @@ export default function TodayPage() {
           </Button>
         ) : null}
       </div>
+
+      {setup && (!setup.ready || setup.testMode.on) ? (
+        <Link
+          href="/setup"
+          data-testid="setup-banner"
+          className="block rounded-xl bg-sky-50 px-3 py-2 text-sm font-medium text-sky-900 ring-1 ring-sky-200"
+        >
+          {setup.ready
+            ? t("today.setupTestMode")
+            : t("today.setup", { done: setup.done, total: setup.total })}{" "}
+          ›
+        </Link>
+      ) : null}
 
       {openTasks.length ? (
         <Link

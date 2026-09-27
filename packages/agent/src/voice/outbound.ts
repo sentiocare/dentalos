@@ -1,4 +1,4 @@
-import { canUse, localMinutesOf } from "@dentalos/core";
+import { blockedByTestMode, canUse, localMinutesOf } from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
 import { voiceSettings } from "./routing";
 
@@ -13,6 +13,7 @@ export type OutboundCheck =
       ok: false;
       reason:
         | "not_booked"
+        | "test_mode"
         | "too_late"
         | "no_phone"
         | "opted_out"
@@ -58,6 +59,7 @@ export async function checkConfirmationCall(
       [a.phone],
     );
     if (opted.rowCount) return { ok: false, reason: "opted_out" };
+    if (await blockedByTestMode(c, a.phone, a.settings)) return { ok: false, reason: "test_mode" };
     const [from, to] = raw.outboundHours ?? ["09:00", "20:00"];
     const minutes = localMinutesOf(now, a.timezone);
     if (minutes < toMin(from) || minutes >= toMin(to)) return { ok: false, reason: "outside_hours" };

@@ -58,7 +58,8 @@
     "wallet": "Sentio बैलेंस और बिलिंग",
     "admin": "Sentio एडमिन",
     "leads": "लीड्स",
-    "reports": "रिपोर्ट"
+    "reports": "रिपोर्ट",
+    "setup": "सेटअप चेकलिस्ट"
   },
   "login": {
     "title": "साइन इन",
@@ -102,7 +103,9 @@
     "inClinic": "क्लिनिक में",
     "finished": "हो गए",
     "missed": "रद्द / नहीं आए",
-    "tasksWaiting": "{count} काम बाकी हैं"
+    "tasksWaiting": "{count} काम बाकी हैं",
+    "setup": "सेटअप: {total} में से {done} काम पूरे",
+    "setupTestMode": "टेस्ट मोड चालू है: मरीज़ों को मैसेज नहीं जा रहे। लाइव होने के लिए इसे बंद करें"
   },
   "calendar": {
     "title": "कैलेंडर",
@@ -772,64 +775,64 @@
     "title": "Sentio एडमिन",
     "only": "यह पेज केवल Sentio स्टाफ़ के लिए है।",
     "tabs": {
-      "clinics": "Clinics",
-      "rates": "Rates",
-      "reconciliation": "Reconciliation",
-      "health": "Health"
+      "clinics": "क्लिनिक",
+      "rates": "रेट",
+      "reconciliation": "मिलान",
+      "health": "सिस्टम की स्थिति"
     },
-    "clinic": "Clinic",
-    "balance": "Balance",
-    "license": "License",
-    "mandate": "Mandate",
-    "usage30": "Usage (30 days)",
-    "margin30": "Margin (30 days)",
-    "notBilled": "billing off",
-    "newRate": "New rate (from a date; past usage keeps its price)",
-    "kind": "Kind",
-    "unit": "Unit",
-    "costPaise": "Provider cost (paise)",
-    "marginPct": "Margin %",
-    "from": "From",
-    "clinicRate": "clinic",
-    "defaultRate": "default",
-    "fromDate": "from {date}",
-    "enterBills": "Provider bills",
-    "billsHint": "Enter each provider's bill for the period (from their invoice). Blank means not known yet.",
-    "periodStart": "From",
-    "periodEnd": "To",
+    "clinic": "क्लिनिक",
+    "balance": "बैलेंस",
+    "license": "लाइसेंस",
+    "mandate": "ऑटो-रिचार्ज मैंडेट",
+    "usage30": "इस्तेमाल (30 दिन)",
+    "margin30": "मार्जिन (30 दिन)",
+    "notBilled": "बिलिंग बंद",
+    "newRate": "नया रेट (किसी तारीख से; पुराना इस्तेमाल पुराने दाम पर ही रहेगा)",
+    "kind": "प्रकार",
+    "unit": "इकाई",
+    "costPaise": "प्रोवाइडर की लागत (पैसे)",
+    "marginPct": "मार्जिन %",
+    "from": "से",
+    "clinicRate": "क्लिनिक",
+    "defaultRate": "डिफ़ॉल्ट",
+    "fromDate": "{date} से",
+    "enterBills": "प्रोवाइडर के बिल",
+    "billsHint": "अवधि के लिए हर प्रोवाइडर का बिल (उनकी इनवॉइस से) डालें। खाली मतलब अभी पता नहीं।",
+    "periodStart": "से",
+    "periodEnd": "तक",
     "providers": {
       "telephony": "Exotel (₹)",
       "speech": "Sarvam (₹)",
-      "llm": "AI model (₹)",
+      "llm": "AI मॉडल (₹)",
       "whatsapp": "Meta WhatsApp (₹)",
       "sms": "SMS (₹)"
     },
-    "compare": "Compare",
+    "compare": "मिलान करें",
     "recon": {
-      "ok": "within 1%",
-      "drift": "off by more than 1%",
-      "unavailable": "no bill"
+      "ok": "1% के अंदर",
+      "drift": "1% से ज़्यादा अंतर",
+      "unavailable": "बिल नहीं"
     },
-    "ok": "OK",
-    "down": "down",
-    "secondsAgo": "{n} s ago",
-    "failedMessages": "Messages failed (24 h)",
-    "failedPayments": "Failed payments",
-    "sellLicense": "Sell license (price before GST)",
-    "sku": "Edition",
-    "priceRupees": "Price (₹)",
-    "months": "Updates (months)",
-    "sendLicenseLink": "Send payment link to owner",
-    "linkSent": "Link sent to the owner on WhatsApp",
-    "sendMandateLink": "Send auto-recharge set-up link",
-    "startBilling": "Start billing",
-    "stopBilling": "Stop billing (pilot)",
-    "adjust": "Credit or debit the wallet",
-    "amountRupees": "Amount (₹)",
-    "reason": "Reason",
-    "recharges": "Recharges",
-    "invoices": "Invoices",
-    "costShort": "cost"
+    "ok": "ठीक",
+    "down": "बंद",
+    "secondsAgo": "{n} सेकंड पहले",
+    "failedMessages": "फ़ेल मैसेज (24 घंटे)",
+    "failedPayments": "फ़ेल भुगतान",
+    "sellLicense": "लाइसेंस बेचें (GST से पहले का दाम)",
+    "sku": "एडिशन",
+    "priceRupees": "दाम (₹)",
+    "months": "अपडेट (महीने)",
+    "sendLicenseLink": "मालिक को पेमेंट लिंक भेजें",
+    "linkSent": "लिंक मालिक को WhatsApp पर भेज दिया",
+    "sendMandateLink": "ऑटो-रिचार्ज सेट-अप लिंक भेजें",
+    "startBilling": "बिलिंग शुरू करें",
+    "stopBilling": "बिलिंग रोकें (पायलट)",
+    "adjust": "वॉलेट में जमा या कटौती",
+    "amountRupees": "रकम (₹)",
+    "reason": "कारण",
+    "recharges": "रिचार्ज",
+    "invoices": "इनवॉइस",
+    "costShort": "लागत"
   },
   "leads": {
     "title": "लीड्स",
@@ -987,5 +990,98 @@
       "lead": "लीड"
     },
     "nightly": "यह रिपोर्ट हर रात 9 बजे WhatsApp पर भेजें"
+  },
+  "setup": {
+    "title": "सेटअप चेकलिस्ट",
+    "ownerOnly": "सेटअप चेकलिस्ट सिर्फ़ मालिक देख सकते हैं।",
+    "progress": "{total} में से {done} काम पूरे",
+    "ready": "सब काम पूरे। क्लिनिक लाइव है।",
+    "optional": "ज़रूरी नहीं",
+    "open": "खोलें",
+    "tick": "हो गया",
+    "doneLabel": "यह काम हो गया",
+    "todoLabel": "अभी बाकी",
+    "steps": {
+      "clinic": {
+        "title": "क्लिनिक की जानकारी",
+        "help": "पता और फ़ोन नंबर। मरीज़ यही सुनते और देखते हैं।"
+      },
+      "doctors": {
+        "title": "डॉक्टर",
+        "help": "हर डॉक्टर जोड़ें; विज़िटिंग डॉक्टर के आने के दिन भी।"
+      },
+      "hours": {
+        "title": "क्लिनिक का समय",
+        "help": "क्लिनिक का समय और ब्रेक जाँचें, फिर टिक करें।"
+      },
+      "procedures": {
+        "title": "इलाज और दाम",
+        "help": "समय और दाम जाँचें। असिस्टेंट सिर्फ़ यहीं लिखे दाम बताता है।"
+      },
+      "staff": {
+        "title": "स्टाफ़",
+        "help": "रिसेप्शन और डॉक्टर जोड़ें ताकि वे अपने फ़ोन से साइन इन कर सकें।"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "help": "क्लिनिक का WhatsApp Business नंबर जोड़ें।"
+      },
+      "voice": {
+        "title": "कॉल के लिए नंबर",
+        "help": "Sentio क्लिनिक को एक नंबर देता है जिसका जवाब असिस्टेंट देता है।"
+      },
+      "forwarding": {
+        "title": "कॉल फ़ॉरवर्डिंग",
+        "help": "क्लिनिक फ़ोन पर छूटी कॉल फ़ॉरवर्ड करें (कोड नीचे), फिर टिक करें।"
+      },
+      "testCall": {
+        "title": "टेस्ट कॉल",
+        "help": "दूसरे फ़ोन से क्लिनिक को कॉल करें और न उठाएँ। असिस्टेंट के जवाब देने पर एक टेस्ट विज़िट बुक करें। फिर कॉल में जाकर उसे पास मार्क करें।"
+      },
+      "payments": {
+        "title": "ऑनलाइन भुगतान",
+        "help": "UPI पेमेंट लिंक के लिए क्लिनिक का Razorpay अकाउंट जोड़ें।"
+      },
+      "leadAds": {
+        "title": "Facebook और Instagram लीड",
+        "help": "क्लिनिक का Facebook पेज जोड़ें ताकि विज्ञापन की लीड को एक मिनट में जवाब मिले।"
+      },
+      "license": {
+        "title": "लाइसेंस",
+        "help": "एक बार का लाइसेंस शुल्क भरें। इस्तेमाल का खर्च प्रीपेड वॉलेट से कटता है।"
+      }
+    },
+    "testMode": {
+      "title": "टेस्ट मोड",
+      "help": "सेटअप के दौरान मैसेज और कॉल सिर्फ़ आपके स्टाफ़ के नंबरों (और आपके जोड़े नंबरों) पर जाते हैं। मरीज़ों के मैसेज दर्ज होते हैं, पर भेजे नहीं जाते।",
+      "on": "टेस्ट मोड चालू है",
+      "phones": "और टेस्ट नंबर, कॉमा से अलग करें"
+    },
+    "forwarding": {
+      "title": "कॉल फ़ॉरवर्डिंग",
+      "number": "नंबर",
+      "intro": "कॉल असिस्टेंट के नंबर {number} पर फ़ॉरवर्ड करें।",
+      "noNumber": "Sentio के जोड़ने के बाद असिस्टेंट का नंबर यहाँ दिखेगा।",
+      "operators": {
+        "jio": "Jio",
+        "airtel": "Airtel",
+        "vi": "Vi",
+        "bsnl": "BSNL",
+        "landline": "लैंडलाइन"
+      },
+      "dialEach": "क्लिनिक के मोबाइल से हर कोड एक बार डायल करें। जो कॉल आप उठाते हैं वे आपके पास ही रहती हैं; सिर्फ़ छूटी कॉल असिस्टेंट के पास जाती हैं।",
+      "noAnswer": "जब कॉल न उठे",
+      "busy": "जब लाइन व्यस्त हो",
+      "unreachable": "जब फ़ोन बंद हो या नेटवर्क न हो",
+      "notes": {
+        "jio": "अगर Jio पर कोड से एरर आए, तो फ़ोन में सेट करें: फ़ोन ऐप → सेटिंग्स → कॉल (या सप्लीमेंट्री सर्विसेज़) → कॉल फ़ॉरवर्डिंग।",
+        "airtel": "Airtel पर ये कोड सभी फ़ोन पर चलते हैं। फ़ोन ऐप → सेटिंग्स → कॉल फ़ॉरवर्डिंग में भी सेट कर सकते हैं।",
+        "vi": "Vi पर ये कोड सभी फ़ोन पर चलते हैं। फ़ोन ऐप → सेटिंग्स → कॉल फ़ॉरवर्डिंग में भी सेट कर सकते हैं।",
+        "bsnl": "BSNL मोबाइल पर ये कोड सभी फ़ोन पर चलते हैं। फ़ोन ऐप → सेटिंग्स → कॉल फ़ॉरवर्डिंग में भी सेट कर सकते हैं।"
+      },
+      "check": "जाँचने के लिए दूसरे फ़ोन से क्लिनिक को कॉल करें और न उठाएँ: असिस्टेंट को जवाब देना चाहिए। सारी फ़ॉरवर्डिंग बंद करने के लिए ##002# डायल करें।",
+      "landline": "लैंडलाइन (BSNL, Airtel, JioFiber, Tata आदि) पर फ़ॉरवर्डिंग अलग तरह से होती है। अपने प्रोवाइडर के कस्टमर केयर को कॉल करके असिस्टेंट के नंबर पर \"व्यस्त होने या न उठने पर कॉल फ़ॉरवर्डिंग\" माँगें। फिर एक टेस्ट कॉल करें।",
+      "cost": "फ़ॉरवर्ड हुई कॉल का शुल्क आपका ऑपरेटर आपके नंबर से की गई आउटगोइंग कॉल की तरह लेता है; ज़्यादातर अनलिमिटेड प्लान में यह शामिल है।"
+    }
   }
 }

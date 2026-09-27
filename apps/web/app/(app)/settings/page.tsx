@@ -3,7 +3,7 @@
 import { displayPhone } from "../../../lib/format";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button, Field, Input, Select, Sheet, Spinner, useToast } from "../../../components/ui";
 import { ApiError } from "../../../lib/api";
 import { useClinicConfig } from "../../../lib/data";
@@ -15,9 +15,32 @@ import type { ClinicConfig, Doctor, Procedure } from "../../../lib/types";
 /** Sends a change, shows the outcome, reloads settings. Returns the server response, or null on failure. */
 type Save = (method: string, path: string, body?: unknown) => Promise<Record<string, unknown> | null>;
 
-function Section({ title, children, open }: { title: string; children: ReactNode; open?: boolean }) {
+function Section({
+  title,
+  children,
+  open,
+  id,
+}: {
+  title: string;
+  children: ReactNode;
+  open?: boolean;
+  id?: string;
+}) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  // Links from the setup checklist (/settings#hours) open and show their section.
+  useEffect(() => {
+    if (id && ref.current && window.location.hash === `#${id}`) {
+      ref.current.open = true;
+      ref.current.scrollIntoView({ block: "start" });
+    }
+  }, [id]);
   return (
-    <details open={open} className="group rounded-2xl border border-slate-200 bg-white">
+    <details
+      ref={ref}
+      id={id}
+      open={open}
+      className="group scroll-mt-16 rounded-2xl border border-slate-200 bg-white"
+    >
       <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 font-semibold">
         {title} <span className="text-slate-400 group-open:rotate-90">›</span>
       </summary>
@@ -63,16 +86,16 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-2xl space-y-3 px-4 py-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       {manage ? <ClinicDetails save={save} /> : null}
-      <Section title={t("doctors")}>
+      <Section id="doctors" title={t("doctors")}>
         <Doctors config={c} save={save} manage={manage} />
       </Section>
       <Section title={t("chairs")}>
         <Chairs config={c} save={save} manage={manage} />
       </Section>
-      <Section title={t("procedures")}>
+      <Section id="procedures" title={t("procedures")}>
         <Procedures config={c} save={save} manage={manage} />
       </Section>
-      <Section title={t("hours")}>
+      <Section id="hours" title={t("hours")}>
         <Hours config={c} save={save} manage={manage} />
       </Section>
       <Section title={t("holidays")}>
@@ -89,7 +112,7 @@ export default function SettingsPage() {
         </Section>
       ) : null}
       {manage ? (
-        <Section title={tw("title")}>
+        <Section id="whatsapp" title={tw("title")}>
           <WhatsApp />
         </Section>
       ) : null}
@@ -99,22 +122,22 @@ export default function SettingsPage() {
         </Section>
       ) : null}
       {manage ? (
-        <Section title={tv("title")}>
+        <Section id="voice" title={tv("title")}>
           <VoiceSettings />
         </Section>
       ) : null}
       {manage ? (
-        <Section title={tla("title")}>
+        <Section id="leadAds" title={tla("title")}>
           <LeadAds />
         </Section>
       ) : null}
       {manage ? (
-        <Section title={tpay("title")}>
+        <Section id="payments" title={tpay("title")}>
           <PaymentsAccount />
         </Section>
       ) : null}
       {can("staff.manage") ? (
-        <Section title={t("staff")}>
+        <Section id="staff" title={t("staff")}>
           <Staff save={save} />
         </Section>
       ) : null}
@@ -142,7 +165,7 @@ function ClinicDetails({ save }: { save: Save }) {
   if (!v) return null;
   const set = (k: string) => (e: { target: { value: string } }) => setV({ ...v, [k]: e.target.value });
   return (
-    <Section title={t("clinic")} open>
+    <Section id="clinic" title={t("clinic")} open>
       <Field label={t("clinicName")}>{(id) => <Input id={id} value={v.name} onChange={set("name")} />}</Field>
       <Field label={t("clinicPhone")}>
         {(id) => <Input id={id} type="tel" value={v.phone} onChange={set("phone")} />}

@@ -65,6 +65,16 @@ describe.skipIf(!hasTestDatabase)("outbound confirmation calls (Phase 4)", () =>
     expect(
       await checkConfirmationCall(db.pool, clinicId, appointment.id, new Date("2030-01-09T10:30:00+05:30")),
     ).toEqual({ ok: false, reason: "too_late" });
+    // Test mode: no AI calls to patients while the clinic is being set up.
+    await db.pool.query(
+      `update clinics set settings = settings || '{"testMode": {"on": true, "phones": []}}' where id = $1`,
+      [clinicId],
+    );
+    expect(await checkConfirmationCall(db.pool, clinicId, appointment.id, EVENING)).toEqual({
+      ok: false,
+      reason: "test_mode",
+    });
+    await db.pool.query(`update clinics set settings = settings - 'testMode' where id = $1`, [clinicId]);
     await db.pool.query(
       "insert into opt_outs (clinic_id, phone, channel, category, source) values ($1, $2, 'voice', 'all', 'test')",
       [clinicId, phone],
