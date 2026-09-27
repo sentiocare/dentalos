@@ -17,6 +17,16 @@ const app = buildApp({
   adapters: createAdapters(adapterSelection(config)),
   logger,
   version: config.GIT_SHA,
+  auth: {
+    jwksUrl: config.AUTH_JWKS_URL,
+    jwtSecret: config.AUTH_JWT_SECRET,
+    issuer: config.AUTH_ISSUER,
+    audience: config.AUTH_AUDIENCE,
+    devLogin: config.DEV_LOGIN === "on",
+  },
+  webOrigins: config.WEB_ORIGINS.split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
 });
 
 async function shutdown(signal: string) {

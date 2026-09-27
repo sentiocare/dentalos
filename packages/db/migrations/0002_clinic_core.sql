@@ -538,6 +538,22 @@ begin
 end
 $$;
 
+-- Deactivating or deleting an emergency slot releases its future reserves immediately.
+create or replace function app.release_reserves_of_slot() returns trigger
+language plpgsql security definer set search_path = public, app
+as $$
+begin
+  if tg_op = 'DELETE' or not new.active then
+    delete from public.resource_occupancy
+    where source_kind = 'emergency_reserve' and source_id = old.id and upper(occupied) > now();
+  end if;
+  return coalesce(new, old);
+end
+$$;
+
+create trigger emergency_slots_release after update or delete on public.emergency_slots
+  for each row execute function app.release_reserves_of_slot();
+
 create or replace function app.sweep_expired_holds() returns int
 language plpgsql security definer set search_path = public, app
 as $$
