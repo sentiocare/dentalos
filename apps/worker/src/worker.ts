@@ -6,6 +6,7 @@ import { makeHeartbeatTask } from "./tasks/heartbeat";
 import { makeProcessInboundTask } from "./tasks/inbound";
 import { makePlanMessagesTask } from "./tasks/plan-messages";
 import { makeOutboxSweepTask, makeSendOutboxTask } from "./tasks/outbox";
+import { makeFetchRecordingTask, makePurgeRecordingsTask } from "./tasks/recordings";
 import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling";
 
 /**
@@ -29,6 +30,8 @@ export function buildTaskList(deps: WorkerDeps): TaskList {
     outbox_sweep: makeOutboxSweepTask(deps),
     process_inbound: makeProcessInboundTask(deps),
     plan_messages: makePlanMessagesTask(deps),
+    fetch_recording: makeFetchRecordingTask(deps),
+    purge_recordings: makePurgeRecordingsTask(deps),
   };
 }
 
@@ -40,6 +43,8 @@ export const CRONTAB = [
   "* * * * * plan_messages",
   // Hourly, and backfilled after downtime so reserves never lapse.
   "7 * * * * emergency_reserves ?fill=6h",
+  // 02:30 IST (21:00 UTC), when no clinic is open.
+  "0 21 * * * purge_recordings",
 ].join("\n");
 
 /**

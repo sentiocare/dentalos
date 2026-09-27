@@ -1,4 +1,5 @@
-import { createAdapters } from "@dentalos/adapters";
+import { createAdapters, type FakeStorageProvider, type FakeTelephonyProvider } from "@dentalos/adapters";
+import { seedMinimalClinic } from "@dentalos/db/testing";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import { createLogger } from "@dentalos/shared/logger";
 import { makeWorkerUtils, parseCrontab, runOnce } from "graphile-worker";
@@ -77,6 +78,45 @@ describe.skipIf(!hasTestDatabase)("worker with a database", () => {
       "select count(*)::int as n from graphile_worker.jobs where key = 'reminder:appt-1:day-before'",
     );
     expect(rows[0].n).toBe(1);
+    await utils.release();
+  });
+
+  it("copies a call recording into our storage, and deletes it after the retention period", async () => {
+    const clinic = await seedMinimalClinic(db.pool);
+    const url = "https://recordings.example/ca1.mp3";
+    (adapters.telephony as FakeTelephonyProvider).recordings.set(url, {
+      bytes: new Uint8Array([1, 2, 3]),
+      mimeType: "audio/mpeg",
+    });
+    const call = (
+      await db.pool.query(
+        "insert into calls (clinic_id, provider, provider_call_id, recording_url, started_at) values ($1, 'fake', 'ca-rec', $2, now() - interval '100 days') returning id",
+        [clinic.clinicId, url],
+      )
+    ).rows[0];
+    const utils = await makeWorkerUtils({ pgPool: db.pool, logger: graphileLogger(logger) });
+    await utils.addJob("fetch_recording", { clinicId: clinic.clinicId, callId: call.id });
+    await runOnce({
+      pgPool: db.pool,
+      taskList: buildTaskList(deps(db.pool as never)),
+      logger: graphileLogger(logger),
+    });
+    const key = (await db.pool.query("select recording_key from calls where id = $1", [call.id])).rows[0]
+      .recording_key;
+    expect(key).toBe(`recordings/${clinic.clinicId}/${call.id}.mp3`);
+    const storage = adapters.storage as FakeStorageProvider;
+    expect(await storage.get(key)).toMatchObject({ contentType: "audio/mpeg" });
+
+    await utils.addJob("purge_recordings", {});
+    await runOnce({
+      pgPool: db.pool,
+      taskList: buildTaskList(deps(db.pool as never)),
+      logger: graphileLogger(logger),
+    });
+    expect(
+      (await db.pool.query("select recording_key from calls where id = $1", [call.id])).rows[0].recording_key,
+    ).toBeNull();
+    expect(await storage.get(key)).toBeNull();
     await utils.release();
   });
 });

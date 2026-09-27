@@ -21,6 +21,7 @@ import {
 } from "@dentalos/core";
 import type { PoolClient } from "pg";
 import { parseClockPreference } from "../nlu/clock";
+import { detectLanguage } from "../nlu/language";
 import { matchProcedure, understand, type ProcedureOption, type Understanding } from "../nlu/intents";
 import { hasDevanagari, romanize } from "../nlu/romanize";
 import { detectEmergency } from "../safety/emergency";
@@ -472,10 +473,11 @@ export class VoiceDialog {
       return true;
     }
     if (this.s.step === "name") return false;
+    // The words decide, not the speech engine's label: Hinglish often comes back tagged as English.
     const words = text.trim().split(/\s+/).length;
-    if (hasDevanagari(text) && words >= 2) this.s.lang = "hi";
-    else if (sttLanguage?.startsWith("en") && words >= 3) this.s.lang = "en";
-    else if (sttLanguage?.startsWith("hi") && words >= 2) this.s.lang = "hi";
+    const detected = detectLanguage(text);
+    if ((detected === "hi" || detected === "hinglish") && words >= 2) this.s.lang = "hi";
+    else if (detected === "en" && words >= 3 && !sttLanguage?.startsWith("hi")) this.s.lang = "en";
     return false;
   }
 

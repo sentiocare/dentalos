@@ -260,6 +260,12 @@ describe.skipIf(!hasTestDatabase)("phone assistant (Phase 3 acceptance)", () => 
     );
   });
 
+  it("stays in Hindi for Hinglish even when the speech engine labels it English", async () => {
+    const call = caller();
+    await call.dial();
+    expect((await call.say("clinic kab khulta hai", "en-IN")).join(" ")).toMatch(/खुला रहता है/);
+  });
+
   it("switches to English on request", async () => {
     const call = caller();
     await call.dial();

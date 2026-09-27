@@ -17,6 +17,8 @@ import { meRoutes } from "./routes/me";
 import { patientRoutes } from "./routes/patients";
 import { settingsRoutes } from "./routes/settings";
 import { staffRoutes } from "./routes/staff";
+import { callRoutes } from "./routes/calls";
+import { telephonyRoutes } from "./routes/telephony";
 import { webhookRoutes } from "./routes/webhooks";
 import { createStaffContext } from "./staff-context";
 
@@ -73,6 +75,7 @@ export function buildApp(deps: AppDeps) {
       ? { secret: deps.auth.jwtSecret, audience: deps.auth.audience }
       : undefined;
   void app.register(webhookRoutes, { pool: deps.pool, adapters: deps.adapters, jobs: deps.jobs });
+  void app.register(telephonyRoutes, { pool: deps.pool, adapters: deps.adapters, jobs: deps.jobs });
   void app.register(async (api) => {
     meRoutes(api, { pool: deps.pool, staff, devLogin });
     settingsRoutes(api, { staff });
@@ -82,6 +85,7 @@ export function buildApp(deps: AppDeps) {
     importRoutes(api, { staff });
     auditRoutes(api, { staff });
     inboxRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
+    callRoutes(api, { staff, pool: deps.pool, storage: deps.adapters.storage });
   });
   return app;
 }
