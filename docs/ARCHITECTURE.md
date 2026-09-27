@@ -2,7 +2,7 @@
 
 The full design and its reasoning are in [PLAN.md](PLAN.md). This page describes **what exists in the code today** and how the pieces fit. It is updated at the end of every phase.
 
-## Current state: Phase 4 (revenue engine)
+## Current state: Phase 5 (money and billing)
 
 ```
 apps/
@@ -27,13 +27,23 @@ apps/
               /v1/incomplete-treatments           plans with sittings still to come, and their value
               /v1/followups, /v1/followup-ladders follow-up runs (list, stop) and the owner's ladders
               /v1/campaigns, /v1/…/marketing-consent reactivation campaigns (wording check, owner approval)
+              /v1/…/account, /charges, /payments  patient bills: charges, payments with receipts, invoices,
+              /v1/ledger/…, /v1/receipts, /v1/invoices  discounts, refunds, corrections, PDFs, payment links
+              /v1/collections, /v1/dues, /v1/ledger/export  collections by day and method, dues, Excel rows
+              /v1/payments-account                the clinic's own Razorpay keys (encrypted)
+              /v1/wallet                          the Sentio usage wallet: balance, usage, top-up, mandate, invoices
+              /v1/admin/…                         Sentio admin panel: clinics, license, rates, reconciliation, health
+              /webhooks/payments/clinic/:id       patients' payments (the clinic's own gateway account)
+              /webhooks/payments/sentio           licenses, recharges and mandates (Sentio's gateway account)
               src/admin/                          Sentio admin commands (create a clinic, demo data)
   worker/     Graphile Worker jobs: heartbeat, release expired holds, emergency reserves,
               process_inbound (run the assistant on a message), send_outbox (+ a sweeper),
               plan_messages (booking confirmations, reminders, cancellations, unconfirmed tasks),
               fetch_recording, purge_recordings (nightly, after the retention period),
               followups (every 5 minutes: start and advance follow-up ladders, expire estimates),
-              place_call (AI confirmation call, rules re-checked just before dialling), request_deposit
+              place_call (AI confirmation call, rules re-checked just before dialling), request_deposit,
+              send_receipt, wallet_watch (owner notices, spend alerts), recharge_forecast (hourly, pre-debit
+              notices), recharge_debit (every 15 minutes), reconcile (nightly)
   voice/      Phone-call media server: one WebSocket per call from the phone company; turn detection,
               speech-to-text, dialogue, text-to-speech, barge-in, heartbeat
   web/        Next.js staff dashboard (installable on Android): Today, Calendar, WhatsApp inbox, Tasks,
@@ -43,12 +53,14 @@ packages/
   shared/     Money in paise, Indian phone numbers, UUIDv7, PII scrubbing, redacting logger, env loader,
               encryption of provider credentials
   adapters/   Interfaces for all 7 external providers, a fake for each, contract test suites;
-              real adapters so far: WhatsApp Cloud API, Anthropic (LLM), Exotel (calls), Sarvam (speech);
+              real adapters so far: WhatsApp Cloud API, Anthropic (LLM), Exotel (calls), Sarvam (speech), Razorpay (payments), Supabase (storage);
               audio helpers (WAV, resampling)
   db/         SQL migrations, migration runner, clinic-scoped transactions, test helpers
   core/       Domain logic: scheduling engine and service, patients, imports, permissions, clinic creation,
               comms (contact policy, outbox, templates, reminders, conversations),
               revenue (treatment templates and plans, estimates and their PDF, follow-up engine, campaigns)
+              billing (patient ledger, receipts and invoices, payment links; metering, the usage wallet and
+              what each state allows; license, mandates, recharges, Sentio's GST invoices, reconciliation)
   agent/      The assistants: language, date and time understanding (Devanagari romanized first), intent
               detection, emergency detector, output safety filter; the WhatsApp assistant; the phone
               assistant (dialogue, spoken texts, call routing, call flow, outbound confirmation calls);
@@ -93,6 +105,25 @@ Messages go through the same outbox as everything else, so the contact rules (ho
 
 A sitting's status follows its appointment through a database trigger. Booked, completed and no-show states on the appointment update the sitting, so plan progress and the "Incomplete treatments" value never drift from the calendar.
 
+## How money is kept straight
+
+- **Two ledgers, both append-only.**
+  - The **patient ledger** holds what each patient was charged and paid. The balance is the sum of the rows.
+  - The **usage ledger** holds what each clinic used from Sentio. Each call, template or chat turn is priced from the rate card in force at that moment.
+  - The database refuses edits and deletions. Corrections are new rows with a reason.
+- **Metering happens where the cost happens.**
+  - A call is metered when it ends (speech and AI) and when the phone company reports its length (minutes).
+  - A WhatsApp template is metered when it is sent.
+  - A chat is metered when the assistant has answered.
+  - Each row is unique per kind and reference, so metering twice never charges twice.
+- **The wallet balance is kept by a database trigger** from credits minus usage. The wallet's state (active, low, grace, suspended) is derived from that balance. The single function `walletAllows` decides what each state permits. The call router, the outbox, the WhatsApp assistant, the follow-up engine, campaigns and outbound calls all ask it. Emergencies never do.
+- **Automatic recharges.**
+  1. The worker forecasts from the last 7 days' spend.
+  2. It stores the recharge with its notice time and sends the pre-debit WhatsApp.
+  3. It debits only after 24 hours. The database also refuses a debit dated sooner.
+  4. The gateway's webhook credits the wallet and issues the GST invoice, once.
+- **Webhooks are claimed and applied in one transaction.** A retry after success changes nothing, and a crash part-way leaves the event for the gateway's retry.
+
 ## How a booking stays correct
 
 1. **Offering slots.** The **availability engine** (`core/scheduling/availability.ts`) works out free slots. It is a pure function of the clinic's configuration (hours, breaks, visiting days, holidays, leave, procedure length and buffer, chair equipment) and what is already busy. The dashboard imports the same code to shade non-working time, so the screen and the server always agree.
@@ -130,4 +161,6 @@ A sitting's status follows its appointment through a database trigger. Booked, c
 | `packages/core` (revenue)  | Plans from templates, sitting windows, next-sitting proposal; estimates and PDF; every ladder step and stop condition; recall window; campaign wording check, consent and opt-out filtering, owner approval                                                                                                                                                                                                                                                                                                                               |
 | Clinic simulation          | **Phase 4 acceptance:** 30 simulated days, 300 patients, hourly clock, scripted replies including STOP. The follow-up schedule must match the golden file exactly. Nothing is sent after an opt-out or outside the allowed hours. Incomplete-treatment totals must match a hand-computed figure                                                                                                                                                                                                                                           |
 | `packages/agent` (Phase 4) | Follow-up buttons (book a sitting, estimate OK / call me, check-in answers) checked against the sender's records; outbound confirmation calls: confirm, change, staff, "don't call me", and every rule that stops a call                                                                                                                                                                                                                                                                                                                  |
+| `packages/core` (billing)  | Financial year and GST maths; receipts numbered without gaps even when taken at once; discounts, refunds, reversals; invoices (bill of supply or tax invoice); payment links paid once; dues reminders; metering once per event; every wallet state against every capability; owner notices once per change; license, mandate, the 24-hour debit rule, failed debits, top-ups, reconciliation                                                                                                                                             |
+| Billed-month simulation    | **Phase 5 acceptance:** 30 days, over 500 calls, templates and chats through the real code, a mandate revoked mid-month. Provider bills computed from the raw events reconcile within 1%. Calls, reminders, campaigns and emergencies behave as §4.3 in each state the wallet passes through. Every debit was announced 24 hours ahead and was at most ₹15,000                                                                                                                                                                            |
 | `apps/web/e2e`             | At 360px on a touch phone: book, drag to move, drag to resize, cancel; offline change queued then synced; app opens offline; Hindi; take over a WhatsApp chat, reply, hand back, close a task; review a phone call and mark a test result                                                                                                                                                                                                                                                                                                 |

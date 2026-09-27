@@ -458,6 +458,17 @@ Each phase ends only when all of its acceptance tests pass in CI. Relative size:
 - Sentio admin panel: clinics, license, wallet, usage, margins, failed payments, integration health.
 - **Accept when:** a test month of synthetic usage reconciles with mocked provider bills within 1%; the empty-wallet and failed-mandate scenarios match §4.3 exactly (tested for each capability); and emergency routing still works with a suspended wallet.
 
+**Update (27 Sep 2026, Phase 5 done):** Built as planned. The acceptance simulation (a billed month through the real code paths) reconciles within 1%: speech differs by 0.53% from per-second rounding, and the other providers match exactly. The wallet went active → low → grace → suspended → active, with each capability as in §4.3, and emergencies reached a doctor while suspended.
+
+Choices made along the way:
+
+- patients pay into the clinic's own Razorpay account, so Sentio never holds clinic money;
+- recharges are paid including GST, and the wallet is credited without it;
+- billing starts when the license is paid;
+- Sentio's own notices are recorded at cost and not charged.
+
+See ASSUMPTIONS A-44 to A-53. Not yet tried against live services: Razorpay (links, recurring payments and webhook shapes), and Meta approval of the 8 new WhatsApp templates.
+
 ### Phase 6: Owner reporting and onboarding (M)
 
 - Nightly 9 pm owner report (WhatsApp template plus a link to a detailed page), weekly and monthly "rupees recovered" (a defined, auditable formula, see ASSUMPTIONS A-12).

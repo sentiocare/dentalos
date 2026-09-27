@@ -407,6 +407,68 @@ The call uses the clinic's ExoPhone as caller ID. It is never made to a patient 
 3. Mark an appointment **No-show**. The patient gets the "we missed you" message within 5 minutes.
 4. **More → Incomplete treatments** shows incomplete treatments with the rupee value still to come.
 
+## Part D6: Money (Phase 5)
+
+There are two kinds of money, kept apart on purpose:
+
+- **Patients paying the clinic.** Patients pay into the **clinic's own** Razorpay account. The money never passes through Sentio.
+- **Clinics paying Sentio.** Clinics pay for the one-time license and for usage (calls, WhatsApp, AI) from a prepaid **usage wallet**. These payments go into **Sentio's** Razorpay account.
+
+### One time, for Sentio
+
+1. **Sentio's Razorpay account.** Sign up at [razorpay.com](https://razorpay.com) and finish the KYC. Then ask Razorpay support to switch on **Payment Links** and **Recurring Payments** (UPI Autopay, cards and e-NACH), which the automatic recharge uses.
+2. In Razorpay, open **Account & Settings → API Keys** and generate a key. Save the **Key ID** and **Key Secret**.
+3. Open **Webhooks → Add new webhook**:
+   - URL: `https://API/webhooks/payments/sentio`
+   - A long random **secret**, for example from `openssl rand -hex 24`.
+   - Events: `payment_link.paid`, `payment.captured`, `payment.failed`, `token.confirmed`, `token.rejected`, `token.paused`, `token.cancelled`.
+4. Add these to the **api** and **worker** services in Railway, then redeploy:
+
+   ```
+   PAYMENT_PROVIDER=razorpay
+   RAZORPAY_KEY_ID=(from step 2)
+   RAZORPAY_KEY_SECRET=(from step 2)
+   RAZORPAY_WEBHOOK_SECRET=(from step 3)
+   SENTIO_LEGAL_NAME=Sentio Care Private Limited
+   SENTIO_GSTIN=(your GSTIN)
+   SENTIO_STATE=Jharkhand
+   SENTIO_ADDRESS=(registered address, one line)
+   ```
+
+   The `SENTIO_*` values are printed on Sentio's GST invoices to clinics. Make sure `CHANNEL_SECRET_KEY` is set too (Part D3): it encrypts each clinic's Razorpay keys.
+
+5. **Make yourself a Sentio admin.** Sign in to the dashboard once with your phone number. Then, in the Railway **api** service shell, run:
+
+   ```
+   node admin.js make-admin --phone 98xxxxxxxx
+   ```
+
+   Reload the dashboard: **More → Sentio admin** appears. Only Sentio staff should be admins, because the admin panel shows every clinic's billing.
+
+6. **Check the rate card.** Open **Sentio admin → Rates**. It lists the default price per unit (what each provider charges Sentio) and Sentio's margin. Change a rate by adding a new one from a date; past usage keeps the price it had.
+
+### For each clinic
+
+1. **Sell the license.** Open **Sentio admin → Clinics → the clinic → Sell license**. Enter the edition, the price before GST and the months of updates, then press **Send payment link to owner**. The owner gets it on WhatsApp. Once they pay:
+   - the license shows **paid (perpetual)**,
+   - a GST invoice is issued, and
+   - billing starts for the clinic.
+2. **Opening balance.** The owner adds money under **More → Sentio balance & billing → Add money**. For a pilot, you can instead credit the wallet under Sentio admin (with a reason), or leave billing off.
+3. **Automatic recharge.** On the same page the owner presses **Set up** and approves the mandate in their UPI app, card or bank. You can also send them the link from the admin panel. From then on:
+   - the balance is topped up by the recharge amount when the forecast says it will run low;
+   - every debit is announced on WhatsApp at least 24 hours before it happens, and is never more than ₹15,000.
+4. **Patients paying the clinic online.** The owner opens **Settings → Online payments (Razorpay)** and enters the clinic's **own** Razorpay Key ID, Key Secret and a webhook secret. In the clinic's Razorpay account, they add the webhook address shown there (`https://API/webhooks/payments/clinic/<clinic id>`) with the events `payment_link.paid` and `payment.captured`. Until this is done:
+   - payments at the desk (cash, UPI, card) work as normal;
+   - payment links and online advances are not offered.
+
+### Check it works
+
+1. On a patient page, under **Bill and payments**:
+   - **Add charge** for a treatment, then **Take payment** by UPI. A receipt number like `R/2026-27/0001` appears, and the patient gets the receipt on WhatsApp.
+   - **Payment link**: pay it from your phone with a small amount. Within a minute the bill shows it paid, with a receipt.
+2. **More → Payments & dues** shows the day's collections by method and who owes money. **Download Excel** gives the ledger.
+3. **More → Sentio balance & billing** shows the balance, this month's usage and the recharges. **Sentio admin → Health** shows every provider's status.
+
 ---
 
 ## Part E: Updating the app
