@@ -14,7 +14,7 @@ const pool = createPool(config.DATABASE_URL, {
 const runner = await run({
   pgPool: pool,
   concurrency: config.WORKER_CONCURRENCY,
-  taskList: buildTaskList({ pool, version: config.GIT_SHA }),
+  taskList: buildTaskList({ pool, version: config.GIT_SHA, logger }),
   crontab: CRONTAB,
   logger: graphileLogger(logger),
   noHandleSignals: false,

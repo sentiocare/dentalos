@@ -13,7 +13,7 @@ describe("worker config and schedule", () => {
   });
 
   it("crontab parses and only names known tasks", () => {
-    const tasks = Object.keys(buildTaskList({ pool: undefined as never, version: "t" }));
+    const tasks = Object.keys(buildTaskList({ pool: undefined as never, version: "t", logger }));
     for (const item of parseCrontab(CRONTAB)) expect(tasks).toContain(item.task);
   });
 });
@@ -33,11 +33,27 @@ describe.skipIf(!hasTestDatabase)("worker with a database", () => {
     await utils.addJob("heartbeat", {});
     await runOnce({
       pgPool: db.pool,
-      taskList: buildTaskList({ pool: db.pool, version: "abc123" }),
+      taskList: buildTaskList({ pool: db.pool, version: "abc123", logger }),
       logger: graphileLogger(logger),
     });
     const { rows } = await db.pool.query("select detail from service_heartbeats where service = 'worker'");
     expect(rows[0].detail).toEqual({ version: "abc123" });
+    await utils.release();
+  });
+
+  it("runs the scheduling maintenance jobs without errors", async () => {
+    const utils = await makeWorkerUtils({ pgPool: db.pool, logger: graphileLogger(logger) });
+    await utils.addJob("sweep_holds", {});
+    await utils.addJob("emergency_reserves", {});
+    await runOnce({
+      pgPool: db.pool,
+      taskList: buildTaskList({ pool: db.pool, version: "t", logger }),
+      logger: graphileLogger(logger),
+    });
+    const { rows } = await db.pool.query(
+      "select count(*)::int as n from graphile_worker.jobs where task_identifier in ('sweep_holds','emergency_reserves')",
+    );
+    expect(rows[0].n).toBe(0);
     await utils.release();
   });
 

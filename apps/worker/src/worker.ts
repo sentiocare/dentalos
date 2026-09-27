@@ -2,19 +2,27 @@ import type { Pool } from "@dentalos/db";
 import type { Logger } from "@dentalos/shared/logger";
 import { Logger as GraphileLogger, type TaskList } from "graphile-worker";
 import { makeHeartbeatTask } from "./tasks/heartbeat.js";
+import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling.js";
 
 /**
  * Every job is idempotent: handlers must be safe to run twice (a crash after doing the work but before
  * marking the job done causes a retry). Jobs that must not be queued twice use a `jobKey`.
  */
-export function buildTaskList(deps: { pool: Pool; version: string }): TaskList {
+export function buildTaskList(deps: { pool: Pool; version: string; logger: Logger }): TaskList {
   return {
     heartbeat: makeHeartbeatTask(deps),
+    sweep_holds: makeSweepHoldsTask(deps),
+    emergency_reserves: makeEmergencyReservesTask(deps),
   };
 }
 
 /** Recurring schedule. Times are in IST where clinic-facing work depends on local time (added in later phases). */
-export const CRONTAB = ["* * * * * heartbeat"].join("\n");
+export const CRONTAB = [
+  "* * * * * heartbeat",
+  "* * * * * sweep_holds",
+  // Hourly, and backfilled after downtime so reserves never lapse.
+  "7 * * * * emergency_reserves ?fill=6h",
+].join("\n");
 
 /**
  * Routes Graphile Worker's internal logs through our PII-scrubbing logger. Job payloads are never logged;
