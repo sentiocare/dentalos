@@ -1,4 +1,4 @@
-import type { LLMProvider, MessagingChannel, MessagingProvider, VoiceProvider } from "@dentalos/adapters";
+import type { LLMProvider, MessagingChannel, MessagingProvider, SpeechProvider } from "@dentalos/adapters";
 import { getConversation, type JobQueue, scheduleSend } from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
 import { runAssistant, type AssistantInput } from "./assistant";
@@ -7,7 +7,7 @@ export interface InboundDeps {
   pool: Pool;
   jobs: JobQueue;
   llm?: LLMProvider;
-  voice?: VoiceProvider;
+  voice?: SpeechProvider;
   messaging?: MessagingProvider;
   /** The clinic's WhatsApp channel (to download voice notes). */
   channel?: (clinicId: string) => Promise<MessagingChannel | null>;
@@ -47,7 +47,14 @@ export async function processInboundMessage(
       if (channel) {
         const media = await deps.messaging.downloadMedia(channel, String(pre.payload.mediaId));
         transcript =
-          (await deps.voice.transcribe({ audio: media.bytes, mimeType: media.mimeType })).text.trim() || null;
+          (
+            await deps.voice.transcribe({
+              format: "file",
+              audio: media.bytes,
+              mimeType: media.mimeType,
+              language: "auto",
+            })
+          ).text.trim() || null;
       }
     } catch {
       transcript = null;

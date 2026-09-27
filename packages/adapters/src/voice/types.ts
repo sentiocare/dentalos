@@ -1,48 +1,56 @@
-import type { ProviderBase, UsageReport, WebhookReceiver } from "../common";
+import type { ProviderBase } from "../common";
 
 /**
- * The conversational voice layer (Sarvam in production). See PLAN decision D4: the adapter declares which
- * safety hooks it supports so the call flow can refuse to go live without the required ones.
+ * Speech in and out for our own voice pipeline (PLAN D4, founder decision 27 Sep 2026): we run the
+ * conversation ourselves and use a provider only to turn audio into text and text into audio. Sarvam in
+ * production; any provider with these two calls fits.
  */
-export interface VoiceProvider extends ProviderBase, WebhookReceiver<VoiceEvent> {
-  readonly capabilities: VoiceCapabilities;
-  startSession(input: {
-    providerCallId: string;
-    language: string;
-    /** System prompt generated from clinic configuration; never contains other patients' data. */
-    systemPrompt: string;
-    greeting: string;
-    /** Our Tool API base URL; the provider signs every tool request. */
-    toolEndpoint: string;
-    clientRef?: string;
-  }): Promise<{ sessionId: string; sipUri: string }>;
-  /** Forces the next thing the agent says (used for emergency scripts and safety-filter replacements). */
-  say(sessionId: string, text: string): Promise<void>;
-  endSession(sessionId: string): Promise<void>;
-  /** Speech-to-text for WhatsApp voice notes. */
-  transcribe(input: {
-    audio: Uint8Array;
-    mimeType: string;
-    languageHint?: string;
-  }): Promise<{ text: string; language: string }>;
+export interface SpeechProvider extends ProviderBase {
+  /** BCP-47 codes this provider can recognise and speak, e.g. "hi-IN", "en-IN". */
+  readonly languages: string[];
+  transcribe(input: TranscribeInput): Promise<Transcript>;
+  synthesize(input: SynthesizeInput): Promise<SynthesizedSpeech>;
 }
 
-export interface VoiceCapabilities {
-  toolWebhooks: boolean;
-  transcriptStream: boolean;
-  /** Can we inspect and replace an agent utterance before it is spoken? Required by the safety filter. */
-  responseInterception: boolean;
-  languages: string[];
-}
-
-export type VoiceEvent =
+export type TranscribeInput =
   | {
-      type: "turn";
-      eventId: string;
-      sessionId: string;
-      speaker: "caller" | "agent";
-      text: string;
-      language?: string;
-      at: Date;
+      /** Raw PCM16 mono from a phone call. */
+      format: "pcm16";
+      audio: Uint8Array;
+      sampleRate: number;
+      /** "auto" lets the provider detect the language. */
+      language?: string | "auto";
     }
-  | { type: "ended"; eventId: string; sessionId: string; reason: string; at: Date; usage?: UsageReport };
+  | {
+      /** A file, e.g. a WhatsApp voice note (ogg/opus). */
+      format: "file";
+      audio: Uint8Array;
+      mimeType: string;
+      language?: string | "auto";
+    };
+
+export interface Transcript {
+  text: string;
+  /** Detected language (BCP-47), or null when unknown. */
+  language: string | null;
+  /** Audio length the provider billed, for metering. */
+  audioMs: number;
+}
+
+export interface SynthesizeInput {
+  text: string;
+  language: string;
+  /** Output sample rate; telephony uses 8000. */
+  sampleRate: number;
+  voice?: string;
+  /** 1 = normal speed. */
+  pace?: number;
+}
+
+export interface SynthesizedSpeech {
+  /** PCM16 mono at `sampleRate`. */
+  pcm: Uint8Array;
+  sampleRate: number;
+  /** Characters billed, for metering. */
+  characters: number;
+}

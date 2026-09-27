@@ -4,7 +4,7 @@ import type { PaymentProvider } from "./payments/types";
 import type { SmsProvider } from "./sms/types";
 import type { StorageProvider } from "./storage/types";
 import type { TelephonyProvider } from "./telephony/types";
-import type { VoiceProvider } from "./voice/types";
+import type { SpeechProvider } from "./voice/types";
 import { AnthropicLLMProvider, type AnthropicConfig } from "./llm/anthropic";
 import { FakeLLMProvider } from "./llm/fake";
 import { FakeMessagingProvider } from "./messaging/fake";
@@ -12,13 +12,16 @@ import { FakePaymentProvider } from "./payments/fake";
 import { FakeSmsProvider } from "./sms/fake";
 import { FakeStorageProvider } from "./storage/fake";
 import { FakeTelephonyProvider } from "./telephony/fake";
-import { FakeVoiceProvider } from "./voice/fake";
+import { FakeSpeechProvider } from "./voice/fake";
+import { SarvamSpeechProvider, type SarvamConfig } from "./voice/sarvam";
+import { ExotelProvider, type ExotelConfig } from "./telephony/exotel";
 import { WhatsAppCloudProvider, type WhatsAppCloudConfig } from "./messaging/whatsapp-cloud";
 
 export interface Adapters {
   messaging: MessagingProvider;
   telephony: TelephonyProvider;
-  voice: VoiceProvider;
+  /** Speech-to-text and text-to-speech for our own voice pipeline. */
+  voice: SpeechProvider;
   llm: LLMProvider;
   payments: PaymentProvider;
   sms: SmsProvider;
@@ -31,7 +34,7 @@ export interface Adapters {
  */
 export interface AdapterSelection {
   messaging: "fake" | "whatsapp_cloud";
-  telephony: "fake" | "exotel" | "plivo";
+  telephony: "fake" | "exotel";
   voice: "fake" | "sarvam";
   llm: "fake" | "anthropic";
   payments: "fake" | "razorpay";
@@ -41,9 +44,6 @@ export interface AdapterSelection {
 
 /** When each real adapter is built (PLAN §7). Until then, selecting it fails at startup, not mid-call. */
 const PLANNED: Record<string, string> = {
-  exotel: "Phase 3",
-  plivo: "Phase 3",
-  sarvam: "Phase 3",
   razorpay: "Phase 5",
   dlt: "Phase 2",
   supabase: "Phase 1",
@@ -59,6 +59,8 @@ function notYet(kind: string, choice: string): never {
 export interface AdapterOptions {
   whatsapp?: WhatsAppCloudConfig;
   anthropic?: AnthropicConfig;
+  sarvam?: SarvamConfig;
+  exotel?: ExotelConfig;
 }
 
 function required<T>(value: T | undefined, what: string): T {
@@ -75,8 +77,18 @@ export function createAdapters(selection: AdapterSelection, options: AdapterOpti
             required(options.whatsapp, "WhatsApp (WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN)"),
           ),
     telephony:
-      selection.telephony === "fake" ? new FakeTelephonyProvider() : notYet("Telephony", selection.telephony),
-    voice: selection.voice === "fake" ? new FakeVoiceProvider() : notYet("Voice", selection.voice),
+      selection.telephony === "fake"
+        ? new FakeTelephonyProvider()
+        : new ExotelProvider(
+            required(
+              options.exotel,
+              "Exotel (EXOTEL_ACCOUNT_SID, EXOTEL_API_KEY, EXOTEL_API_TOKEN, EXOTEL_CALLBACK_TOKEN)",
+            ),
+          ),
+    voice:
+      selection.voice === "fake"
+        ? new FakeSpeechProvider()
+        : new SarvamSpeechProvider(required(options.sarvam, "Speech (SARVAM_API_KEY)")),
     llm:
       selection.llm === "fake"
         ? new FakeLLMProvider()

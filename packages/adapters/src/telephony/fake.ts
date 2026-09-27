@@ -1,58 +1,54 @@
-import type { RawWebhook } from "../common";
+import { safeEqualHex } from "../common";
 import { FakeSupport, fakeId } from "../fake-support";
-import type { TelephonyEvent, TelephonyProvider } from "./types";
+import { ExotelProvider, exotelStreamCodec } from "./exotel";
+import type { CallStatusEvent, FlowDecision, FlowHttpRequest, TelephonyProvider } from "./types";
 
+/**
+ * Fake telephony for development and tests. It speaks the same media-stream and call-flow formats as
+ * Exotel, so the voice service is exercised exactly as in production; nothing is dialled.
+ */
 export class FakeTelephonyProvider implements TelephonyProvider {
   readonly name = "fake-telephony";
-  readonly support: FakeSupport;
-  readonly placedCalls: { providerCallId: string; from: string; to: string; record: boolean }[] = [];
-  readonly transfers: { providerCallId: string; to: string; answered: boolean }[] = [];
-  readonly hungUp: string[] = [];
-  /** Numbers that will answer a warm transfer. Everyone else lets it ring out. */
-  readonly answeringNumbers = new Set<string>();
+  readonly support = new FakeSupport(this.name, "fake-telephony-secret");
+  readonly stream = exotelStreamCodec;
+  readonly placedCalls: { providerCallId: string; to: string; callerId: string; flowId: string }[] = [];
   readonly recordings = new Map<string, { bytes: Uint8Array; mimeType: string }>();
+  private readonly exotel: ExotelProvider;
 
-  constructor(webhookSecret = "fake-telephony-secret") {
-    this.support = new FakeSupport(this.name, webhookSecret);
+  constructor(readonly callbackToken = "fake-telephony-token-0123456789") {
+    this.exotel = new ExotelProvider({ accountSid: "fake", apiKey: "fake", apiToken: "fake", callbackToken });
   }
 
-  async placeCall(input: { from: string; to: string; record: boolean }) {
+  verifyFlowRequest(request: FlowHttpRequest) {
+    const key = request.params.key ?? "";
+    return !!key && safeEqualHex(key, this.callbackToken);
+  }
+
+  parseFlowRequest(request: FlowHttpRequest) {
+    return this.exotel.parseFlowRequest(request);
+  }
+
+  flowResponse(decision: FlowDecision) {
+    return this.exotel.flowResponse(decision);
+  }
+
+  parseStatusCallback(request: FlowHttpRequest): CallStatusEvent | null {
+    return this.exotel.parseStatusCallback(request);
+  }
+
+  async placeCall(input: { to: string; callerId: string; flowId: string }) {
     this.support.throwIfScripted();
     const providerCallId = fakeId("call");
-    this.placedCalls.push({ providerCallId, from: input.from, to: input.to, record: input.record });
+    this.placedCalls.push({ providerCallId, ...input });
     return { providerCallId };
   }
 
-  async transferCall(input: { providerCallId: string; to: string }) {
+  async fetchRecording(url: string) {
     this.support.throwIfScripted();
-    const answered = this.answeringNumbers.has(input.to);
-    this.transfers.push({ providerCallId: input.providerCallId, to: input.to, answered });
-    return { answered };
-  }
-
-  async hangup(providerCallId: string) {
-    this.support.throwIfScripted();
-    this.hungUp.push(providerCallId);
-  }
-
-  async fetchRecording(providerCallId: string) {
-    this.support.throwIfScripted();
-    return this.recordings.get(providerCallId) ?? null;
+    return this.recordings.get(url) ?? null;
   }
 
   healthCheck() {
     return this.support.healthCheck();
-  }
-
-  verifyWebhook(webhook: RawWebhook) {
-    return this.support.verifyWebhook(webhook);
-  }
-
-  parseWebhook(webhook: RawWebhook) {
-    return this.support.parseWebhook<TelephonyEvent>(webhook);
-  }
-
-  eventWebhook(events: TelephonyEvent[]): RawWebhook {
-    return this.support.signWebhook(events);
   }
 }

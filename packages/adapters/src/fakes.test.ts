@@ -8,9 +8,15 @@ import {
   FakeSmsProvider,
   FakeStorageProvider,
   FakeTelephonyProvider,
-  FakeVoiceProvider,
+  FakeSpeechProvider,
 } from "./index";
-import { messagingContract, paymentContract, storageContract, telephonyContract } from "./testing";
+import {
+  messagingContract,
+  paymentContract,
+  speechContract,
+  storageContract,
+  telephonyContract,
+} from "./testing";
 
 messagingContract("fake", () => {
   const provider = new FakeMessagingProvider();
@@ -19,13 +25,10 @@ messagingContract("fake", () => {
 
 telephonyContract("fake", () => {
   const provider = new FakeTelephonyProvider();
-  provider.answeringNumbers.add("+919811111111");
-  return {
-    provider,
-    signedWebhook: (events) => provider.eventWebhook(events),
-    answeringNumber: "+919811111111",
-  };
+  return { provider, callbackToken: provider.callbackToken };
 });
+
+speechContract("fake", () => ({ provider: new FakeSpeechProvider() }));
 
 paymentContract("fake", () => {
   const provider = new FakePaymentProvider();
@@ -51,7 +54,7 @@ describe("fake failure scripting", () => {
   });
 
   it("reports unhealthy when told to", async () => {
-    const voice = new FakeVoiceProvider();
+    const voice = new FakeSpeechProvider();
     voice.support.healthy = false;
     expect((await voice.healthCheck()).ok).toBe(false);
   });
@@ -79,9 +82,23 @@ describe("other fakes", () => {
     expect(res.toolCalls[0]?.name).toBe("get_price_range");
   });
 
-  it("voice fake declares the safety capabilities the call flow requires", () => {
-    const voice = new FakeVoiceProvider();
-    expect(voice.capabilities.responseInterception).toBe(true);
+  it("fake speech carries its text through the audio", async () => {
+    const voice = new FakeSpeechProvider();
+    const { pcm } = await voice.synthesize({
+      text: "mujhe kal appointment chahiye",
+      language: "hi-IN",
+      sampleRate: 8000,
+    });
+    const padded = Buffer.concat([Buffer.alloc(3200), Buffer.from(pcm), Buffer.alloc(1600)]);
+    const heard = await voice.transcribe({
+      format: "pcm16",
+      audio: new Uint8Array(padded),
+      sampleRate: 8000,
+    });
+    expect(heard.text).toBe("mujhe kal appointment chahiye");
+    expect(
+      (await voice.transcribe({ format: "pcm16", audio: new Uint8Array(3200), sampleRate: 8000 })).text,
+    ).toBe("");
   });
 });
 
@@ -117,13 +134,13 @@ describe("createAdapters", () => {
     expect(() =>
       createAdapters({
         messaging: "fake",
-        telephony: "exotel",
+        telephony: "fake",
         voice: "fake",
         llm: "fake",
-        payments: "fake",
+        payments: "razorpay",
         sms: "fake",
         storage: "fake",
       }),
-    ).toThrow(/Phase 3/);
+    ).toThrow(/Phase 5/);
   });
 });

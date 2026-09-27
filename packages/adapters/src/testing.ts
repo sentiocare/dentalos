@@ -8,7 +8,8 @@ import type { RawWebhook } from "./common";
 import type { MessagingChannel, MessagingEvent, MessagingProvider } from "./messaging/types";
 import type { PaymentEvent, PaymentProvider } from "./payments/types";
 import type { StorageProvider } from "./storage/types";
-import type { TelephonyEvent, TelephonyProvider } from "./telephony/types";
+import type { TelephonyProvider } from "./telephony/types";
+import type { SpeechProvider } from "./voice/types";
 
 function tamper(webhook: RawWebhook): RawWebhook {
   return { ...webhook, rawBody: webhook.rawBody.replace(/.$/, " }") };
@@ -100,46 +101,94 @@ export function messagingContract(
 
 export function telephonyContract(
   label: string,
-  setup: () => {
-    provider: TelephonyProvider;
-    signedWebhook: (events: TelephonyEvent[]) => RawWebhook;
-    /** Makes `number` pick up transfers (fake) or points at a sandbox number that answers (live). */
-    answeringNumber: string;
-  },
+  setup: () => { provider: TelephonyProvider; callbackToken: string },
 ) {
   describe(`TelephonyProvider contract: ${label}`, () => {
-    it("places calls and reports warm-transfer outcome", async () => {
-      const { provider, answeringNumber } = setup();
-      const { providerCallId } = await provider.placeCall({
-        from: "+916512345678",
-        to: "+919876543210",
-        connectTo: { kind: "voice_agent", sipUri: "sip:agent@example" },
-        record: true,
-      });
-      expect(providerCallId).toMatch(/\S/);
-      await expect(
-        provider.transferCall({ providerCallId, to: answeringNumber, ringTimeoutSec: 20 }),
-      ).resolves.toEqual({ answered: true });
-      await expect(
-        provider.transferCall({ providerCallId, to: "+919000000001", ringTimeoutSec: 20 }),
-      ).resolves.toEqual({ answered: false });
+    it("accepts call-flow requests only with the secret token", () => {
+      const { provider, callbackToken } = setup();
+      expect(provider.verifyFlowRequest({ params: { key: callbackToken }, headers: {} })).toBe(true);
+      expect(provider.verifyFlowRequest({ params: { key: "wrong" }, headers: {} })).toBe(false);
+      expect(provider.verifyFlowRequest({ params: {}, headers: {} })).toBe(false);
     });
 
-    it("verifies webhook signatures", () => {
-      const { provider, signedWebhook } = setup();
-      const webhook = signedWebhook([
-        {
-          type: "missed",
-          eventId: "e1",
-          providerCallId: "c1",
-          from: "+919876543210",
-          to: "+916512345678",
-          at: new Date("2026-10-01T15:00:00Z"),
+    it("reads calls from call-flow requests and answers branch and connect decisions", () => {
+      const { provider } = setup();
+      const req = provider.parseFlowRequest({
+        params: {
+          CallSid: "c1",
+          CallFrom: "09876543210",
+          CallTo: "08047112233",
+          DialCallStatus: "no-answer",
         },
-      ]);
-      expect(provider.verifyWebhook(webhook)).toBe(true);
-      expect(provider.verifyWebhook(tamper(webhook))).toBe(false);
-      expectStableEventIds(provider.parseWebhook(webhook));
+        headers: {},
+      });
+      expect(req).toMatchObject({ providerCallId: "c1", from: "+919876543210", dialStatus: "no-answer" });
+      expect(provider.flowResponse({ kind: "branch", yes: true }).status).toBe(200);
+      expect(provider.flowResponse({ kind: "branch", yes: false }).status).not.toBe(200);
+      const connect = provider.flowResponse({
+        kind: "connect",
+        numbers: ["+919811111111", "+919822222222"],
+        ringSeconds: 20,
+        record: true,
+      });
+      expect(connect.status).toBe(200);
+      expect(connect.body).toContain("9811111111");
+      expect(connect.body.indexOf("9811111111")).toBeLessThan(connect.body.indexOf("9822222222"));
+    });
+
+    it("round-trips media-stream audio, marks and clear", () => {
+      const { provider } = setup();
+      const codec = provider.stream;
+      const pcm = new Uint8Array(5000).map((_, i) => i % 256);
+      const frames = codec.audio("s1", pcm);
+      const back = frames.map((f) => codec.parse(f.replace('"event":"media"', '"event":"media"')));
+      const joined = Buffer.concat(
+        back.map((e) => (e.type === "audio" ? Buffer.from(e.pcm) : Buffer.alloc(0))),
+      );
+      expect(joined.subarray(0, pcm.length).equals(Buffer.from(pcm))).toBe(true);
+      expect(codec.parse(codec.mark("s1", "m1"))).toEqual({ type: "mark", name: "m1" });
+      expect(JSON.parse(codec.clear("s1"))).toMatchObject({ event: "clear" });
+    });
+
+    it("parses call status callbacks", () => {
+      const { provider } = setup();
+      const e = provider.parseStatusCallback({
+        params: {
+          CallSid: "c1",
+          Status: "completed",
+          ConversationDuration: "95",
+          RecordingUrl: "https://r/1.mp3",
+        },
+        headers: {},
+      });
+      expect(e).toMatchObject({
+        providerCallId: "c1",
+        status: "completed",
+        durationSec: 95,
+        recordingUrl: "https://r/1.mp3",
+      });
+      expect(provider.parseStatusCallback({ params: { foo: "bar" }, headers: {} })).toBeNull();
+    });
+  });
+}
+
+export function speechContract(label: string, setup: () => { provider: SpeechProvider }) {
+  describe(`SpeechProvider contract: ${label}`, () => {
+    it("synthesises PCM at the requested sample rate and transcribes it", async () => {
+      const { provider } = setup();
+      const speech = await provider.synthesize({ text: "कल शाम 5 बजे", language: "hi-IN", sampleRate: 8000 });
+      expect(speech.sampleRate).toBe(8000);
+      expect(speech.pcm.byteLength % 2).toBe(0);
+      expect(speech.pcm.byteLength).toBeGreaterThan(1000);
+      expect(speech.characters).toBeGreaterThan(0);
+      const heard = await provider.transcribe({
+        format: "pcm16",
+        audio: speech.pcm,
+        sampleRate: 8000,
+        language: "auto",
+      });
+      expect(typeof heard.text).toBe("string");
+      expect(heard.audioMs).toBeGreaterThan(0);
     });
   });
 }

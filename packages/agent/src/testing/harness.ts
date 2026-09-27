@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import {
   FakeLLMProvider,
   FakeMessagingProvider,
-  FakeVoiceProvider,
+  FakeSpeechProvider,
   type MessagingEvent,
 } from "@dentalos/adapters";
 import {
@@ -66,7 +66,7 @@ export class PatientSimulator {
   readonly messaging = new FakeMessagingProvider();
   readonly jobs = new MemoryJobQueue();
   readonly llm = new FakeLLMProvider();
-  readonly voice = new FakeVoiceProvider();
+  readonly voice = new FakeSpeechProvider();
   private seq = 0;
 
   constructor(
