@@ -36,6 +36,7 @@ export function AppointmentSheet({
   onStatus,
   onCancel,
   onMove,
+  onCheckout,
 }: {
   appointment: Appointment | null;
   config: ClinicConfig;
@@ -47,6 +48,8 @@ export function AppointmentSheet({
     a: Appointment,
     change: { startsAt: string; endsAt: string; doctorId?: string; chairId?: string },
   ) => Promise<void>;
+  /** Bill and payment for this visit (shown once the visit is done). */
+  onCheckout?: (a: Appointment) => void;
 }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -135,6 +138,11 @@ export function AppointmentSheet({
                 </Button>
               ))}
             </div>
+            {onCheckout && a.status === "completed" ? (
+              <Button className="w-full" onClick={() => onCheckout(a)}>
+                {t("desk.checkout")}
+              </Button>
+            ) : null}
             {["booked", "confirmed", "checked_in"].includes(a.status) ? (
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="secondary" onClick={() => setMode("move")}>

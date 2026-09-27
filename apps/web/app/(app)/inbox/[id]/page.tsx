@@ -60,7 +60,9 @@ export default function ThreadPage() {
     const timer = setInterval(load, 8_000);
     return () => clearInterval(timer);
   }, [load]);
-  useEffect(() => bottom.current?.scrollIntoView({ block: "end" }), [thread?.messages.length]);
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, [thread?.messages.length]);
 
   if (!thread) {
     return (
@@ -92,10 +94,10 @@ export default function ThreadPage() {
     }).format(new Date(iso));
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-7.5rem)] max-w-2xl flex-col md:h-[calc(100dvh-1.5rem)]">
+    <div className="mx-auto flex h-[calc(100dvh-7.5rem)] max-w-2xl flex-col md:h-[calc(100dvh-5rem)] lg:h-full lg:max-w-none">
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 bg-white px-4 py-2">
         <div className="min-w-0">
-          <Link href="/inbox" className="text-xs text-brand-700">
+          <Link href="/inbox" className="text-xs text-brand-700 lg:hidden">
             ‹ {t("title")}
           </Link>
           <p className="truncate font-semibold">

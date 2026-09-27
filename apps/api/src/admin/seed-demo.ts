@@ -5,6 +5,7 @@
  *
  *   DATABASE_URL=... pnpm --filter @dentalos/api seed:demo            # create if missing
  *   DATABASE_URL=... pnpm --filter @dentalos/api seed:demo -- --reset # delete the demo clinic and recreate
+ *   ... seed:demo -- --reset --at=12:10                               # today as it looks at 12:10
  */
 import {
   addCharge,
@@ -19,7 +20,9 @@ import {
   createClinic,
   createPatient,
   linkFamily,
+  addWalkIn,
   localDateOf,
+  localMinutesOf,
   setAppointmentStatus,
   weekdayOf,
   zonedInstant,
@@ -156,6 +159,7 @@ async function reset(pool: Pool) {
       await client.query("delete from patient_ledger where clinic_id = $1", [id]);
       await client.query("delete from invoices where clinic_id = $1", [id]);
       await client.query("delete from payment_links where clinic_id = $1", [id]);
+      await client.query("delete from queue_entries where clinic_id = $1", [id]);
       await client.query("delete from appointments where clinic_id = $1", [id]);
       // Treatment data references patients and procedure types without cascading.
       await client.query("delete from estimates where clinic_id = $1", [id]);
@@ -346,7 +350,8 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
   for (let offset = -60; offset <= 7; offset++) {
     const date = addDays(today, offset);
     const weekday = weekdayOf(date);
-    if (weekday === 0) continue;
+    // Today gets a fixed, realistic day (below) instead of random bookings.
+    if (weekday === 0 || offset === 0) continue;
     const perDay = offset < 0 ? 3 + Math.floor(random() * 3) : 5 + Math.floor(random() * 4);
     const used = new Set<string>();
     for (let n = 0; n < perDay; n++) {
@@ -375,8 +380,6 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
           });
           if (offset < 0)
             await setAppointmentStatus(c, appointment.id, random() < 0.1 ? "no_show" : "completed");
-          else if (offset === 0 && startMin < 12 * 60)
-            await setAppointmentStatus(c, appointment.id, "checked_in");
         });
         booked++;
       } catch {
@@ -384,11 +387,16 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
       }
     }
   }
-  await withClinic(pool, ctx, (c) => seedDemoChats(c, now));
-  await withClinic(pool, ctx, (c) => seedDemoCalls(c, now));
+  const day = await withClinic(pool, ctx, (c) => seedDemoToday(c, { branchId, ids, patients, now }));
+  booked += day.booked;
+  // Chats, calls and leads happen in clinic hours: at night the demo shows them from the evening before.
+  const anchor = clinicMoment(now);
+  await withClinic(pool, ctx, (c) => seedDemoChats(c, anchor));
+  await withClinic(pool, ctx, (c) => seedDemoCalls(c, anchor));
   await withClinic(pool, ctx, (c) => seedDemoPlans(c, now));
-  await withClinic(pool, ctx, (c) => seedDemoMoney(c, now));
-  await withClinic(pool, ctx, (c) => seedDemoLeads(c, now));
+  await withClinic(pool, ctx, (c) => seedDemoMoney(c, now, day.unbilled));
+  await withClinic(pool, ctx, (c) => seedDemoLeads(c, anchor));
+  await withClinic(pool, ctx, (c) => seedBookingDates(c, now));
   await seedDemoWallet(pool, clinicId, now);
   console.log(`Demo clinic ready: ${patients.length} patients, ${booked} appointments.`);
   return clinicId;
@@ -400,7 +408,17 @@ export async function seedDemoCommand(args: string[]) {
   const pool = createPool(url, { max: 4 });
   try {
     if (args.includes("--reset")) await reset(pool);
-    const id = await seedDemo(pool);
+    // --at=12:10 loads today as it would look at 12:10 (for demos given outside clinic hours).
+    const at = args.find((a) => a.startsWith("--at="))?.slice(5);
+    const now =
+      at && /^\d{1,2}:\d{2}$/.test(at)
+        ? zonedInstant(
+            localDateOf(new Date(), TZ),
+            Number(at.split(":")[0]) * 60 + Number(at.split(":")[1]),
+            TZ,
+          )
+        : new Date();
+    const id = await seedDemo(pool, now);
     console.log(`Clinic id: ${id}`);
     console.log(`Owner login: ${DEMO_OWNER_PHONE} · Reception login: ${DEMO_RECEPTION_PHONE}`);
   } finally {
@@ -510,7 +528,7 @@ async function seedDemoCalls(c: PoolClient, now: Date) {
     {
       patient: rows[1],
       outcome: "emergency",
-      summary: "Emergency transfer: urgent: facial_swelling",
+      summary: "Emergency transfer: Urgent: facial swelling",
       minutesAgo: 30,
       duration: 41,
       turns: [
@@ -615,13 +633,14 @@ async function seedDemoPlans(c: PoolClient, now: Date) {
 }
 
 /** Bills for recent visits: most paid in full at the desk, some part-paid (dues), a few by payment link. */
-async function seedDemoMoney(c: PoolClient, now: Date) {
+async function seedDemoMoney(c: PoolClient, now: Date, unbilled: string[] = []) {
   const { rows } = await c.query(
     `select a.id, a.patient_id, a.ends_at, pt.id as procedure_id, pt.name, coalesce(pt.price_min_paise, 50000) as price
      from appointments a join procedure_types pt on pt.id = a.procedure_type_id
      where a.status = 'completed' and a.ends_at > $1::timestamptz - interval '30 days' and a.ends_at < $1
-     order by a.ends_at limit 60`,
-    [now],
+       and not (a.id = any($2::uuid[]))
+     order by a.ends_at desc limit 60`,
+    [now, unbilled],
   );
   const methods = ["cash", "upi", "upi", "card", "cash"] as const;
   for (const [i, a] of rows.entries()) {
@@ -735,4 +754,149 @@ async function seedDemoLeads(c: PoolClient, now: Date) {
     note: "Went to a clinic nearer home",
     now: hours(30),
   });
+}
+
+/** "Now" for things that only happen in clinic hours; at night, 8:30 pm the evening before (or this evening). */
+function clinicMoment(now: Date): Date {
+  const minutes = localMinutesOf(now, TZ);
+  const today = localDateOf(now, TZ);
+  if (minutes >= 9 * 60 + 30 && minutes <= 21 * 60) return now;
+  return zonedInstant(minutes < 9 * 60 + 30 ? addDays(today, -1) : today, 20 * 60 + 30, TZ);
+}
+
+interface DemoIds {
+  sharma: string;
+  verma: string;
+  mehta: string;
+  chair1: string;
+  chair2: string;
+  procs: Record<string, string>;
+}
+
+/**
+ * Today as a real clinic day: two doctors in the morning, one in the evening, the orthodontist on his
+ * visiting days. What has happened depends on the time the demo is loaded: earlier visits are done (and
+ * billed, one left unbilled for the desk to settle), the current one is with the doctor, patients due
+ * soon are waiting with tokens, and walk-ins wait in the queue while the clinic is open.
+ */
+async function seedDemoToday(
+  c: PoolClient,
+  input: { branchId: string; ids: DemoIds; patients: { id: string; name: string }[]; now: Date },
+): Promise<{ booked: number; unbilled: string[] }> {
+  const { ids, now } = input;
+  const today = localDateOf(now, TZ);
+  const weekday = weekdayOf(today);
+  if (weekday === 0) return { booked: 0, unbilled: [] };
+  const plan: [number, "sharma" | "verma" | "mehta", 1 | 2, string, "staff" | "whatsapp" | "voice"][] = [
+    [10 * 60, "sharma", 1, "consultation", "voice"],
+    [10 * 60, "verma", 2, "extraction", "staff"],
+    [10 * 60 + 30, "sharma", 1, "scaling", "whatsapp"],
+    [10 * 60 + 45, "verma", 2, "filling", "staff"],
+    [11 * 60 + 15, "sharma", 1, "filling", "staff"],
+    [11 * 60 + 30, "verma", 2, "consultation", "whatsapp"],
+    [12 * 60, "sharma", 1, "rct_sitting", "staff"],
+    [12 * 60 + 15, "verma", 2, "scaling", "voice"],
+    [13 * 60, "verma", 2, "crown_prep", "staff"],
+    [13 * 60 + 15, "sharma", 1, "xray_iopa", "staff"],
+    [17 * 60, "sharma", 1, "consultation", "whatsapp"],
+    [17 * 60 + 30, "sharma", 1, "filling", "staff"],
+    [18 * 60 + 15, "sharma", 1, "extraction", "voice"],
+    [19 * 60, "sharma", 1, "followup", "staff"],
+    [19 * 60 + 30, "sharma", 1, "scaling", "whatsapp"],
+    [20 * 60, "sharma", 1, "consultation", "staff"],
+  ];
+  if (weekday === 2 || weekday === 6)
+    for (const m of [14 * 60 + 30, 15 * 60 + 15, 16 * 60])
+      plan.push([m, "mehta", 2, "ortho_adjustment", "staff"]);
+  plan.sort((a, b) => a[0] - b[0]);
+
+  // Different people all day (the random names repeat now and then).
+  const seen = new Set<string>();
+  const people = input.patients.slice(0, 70).filter((p) => !seen.has(p.name) && seen.add(p.name));
+  const nowMin = localMinutesOf(now, TZ);
+  const minute = 60_000;
+  let booked = 0;
+  let pastIndex = 0;
+  const unbilled: string[] = [];
+  for (const [i, [startMin, doctor, chair, code, source]] of plan.entries()) {
+    const patient = people[i % people.length]!;
+    let appointment;
+    try {
+      ({ appointment } = await bookDirect(c, {
+        branchId: input.branchId,
+        patientId: patient.id,
+        doctorId: ids[doctor],
+        chairId: chair === 1 ? ids.chair1 : ids.chair2,
+        procedureTypeId: ids.procs[code],
+        startsAt: zonedInstant(today, startMin, TZ),
+        acknowledgeWarnings: true,
+        now: new Date(now.getTime() - 3 * 86_400_000),
+      }));
+    } catch {
+      continue;
+    }
+    booked++;
+    if (source !== "staff")
+      await c.query("update appointments set source = $2 where id = $1", [appointment.id, source]);
+    const endMin = startMin + (appointment.endsAt.getTime() - appointment.startsAt.getTime()) / minute;
+    const steps: ("confirmed" | "checked_in" | "in_chair" | "completed" | "no_show")[] = [];
+    if (endMin <= nowMin) {
+      pastIndex++;
+      if (pastIndex === 4) steps.push("no_show");
+      else steps.push("checked_in", "in_chair", "completed");
+      if (pastIndex === 2) unbilled.push(appointment.id);
+    } else if (startMin <= nowMin) steps.push("checked_in", "in_chair");
+    else if (startMin - 40 <= nowMin) steps.push("confirmed", "checked_in");
+    else if (i % 2 === 0) steps.push("confirmed");
+    for (const step of steps) await setAppointmentStatus(c, appointment.id, step);
+  }
+  // Queue times as they would have been: arrived a few minutes early, called in at the booked time.
+  await c.query(
+    `update queue_entries q set
+       arrived_at = case when q.status = 'waiting' then $1::timestamptz - make_interval(mins => 4 + (q.token * 3) % 11)
+                         else a.starts_at - make_interval(mins => 5 + (q.token * 7) % 10) end,
+       called_at = case when q.status = 'waiting' then null else a.starts_at + make_interval(mins => (q.token * 3) % 6) end,
+       finished_at = case when q.status = 'done' then a.ends_at else null end
+     from appointments a where a.id = q.appointment_id and q.day = $2`,
+    [now, today],
+  );
+  // Walk-ins waiting while the clinic is open.
+  if ((nowMin >= 10 * 60 && nowMin < 14 * 60) || (nowMin >= 17 * 60 && nowMin < 21 * 60)) {
+    const walkIns: [number, string | null, string][] = [
+      [70, ids.sharma, "Tooth pain since last night"],
+      [71, null, "Bleeding gums, wants a check-up"],
+    ];
+    for (const [k, doctorId, note] of walkIns)
+      await addWalkIn(c, { patientId: input.patients[k]!.id, doctorId, note, now });
+    await c.query(
+      "update queue_entries set arrived_at = $1::timestamptz - make_interval(mins => 6 + (token % 3) * 9) where day = $2 and appointment_id is null",
+      [now, today],
+    );
+  }
+  return { booked, unbilled };
+}
+
+/**
+ * Bookings are made days ahead, not all at the moment the demo is loaded. A few of the coming days'
+ * bookings were made by the assistant today, as on a normal day.
+ */
+async function seedBookingDates(c: PoolClient, now: Date) {
+  await c.query(
+    `update appointments set created_at = least(starts_at, $1::timestamptz) - make_interval(days => 1 + abs(hashtext(id::text)) % 6)
+     where source <> 'import'`,
+    [now],
+  );
+  const since = zonedInstant(localDateOf(now, TZ), 9 * 60, TZ);
+  if (now.getTime() - since.getTime() < 60 * 60_000) return;
+  const { rows } = await c.query(
+    `select id from appointments where starts_at > $1::timestamptz + interval '1 day' and status = 'booked'
+     order by starts_at limit 3`,
+    [now],
+  );
+  for (const [i, r] of rows.entries())
+    await c.query("update appointments set source = $2, created_at = $3 where id = $1", [
+      r.id,
+      i === 1 ? "voice" : "whatsapp",
+      new Date(now.getTime() - (20 + i * 70) * 60_000),
+    ]);
 }

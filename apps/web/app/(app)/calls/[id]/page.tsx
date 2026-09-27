@@ -72,7 +72,7 @@ export default function CallPage() {
   }).format(new Date(c.started_at));
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-4">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-4 px-4 py-4">
       <div>
         <Link href="/calls" className="text-xs text-brand-700">
           ‹ {t("title")}

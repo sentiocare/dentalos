@@ -591,11 +591,16 @@ export async function setAppointmentStatus(
   if (!TRANSITIONS[current.status].includes(status)) {
     throw new DomainError("invalid", `Cannot change a ${current.status} appointment to ${status}`);
   }
+  // A visit finished early ends when it actually ended, so the doctor and chair are free for the next
+  // patient (a walk-in can go in straight away) instead of staying blocked until the booked end.
   const updated = await trySavepoint(client, () =>
-    client.query(`update appointments set status = $2 where id = $1 returning ${APPOINTMENT_COLUMNS}`, [
-      id,
-      status,
-    ]),
+    client.query(
+      `update appointments set status = $2,
+         ends_at = case when $2 = 'completed' and now() > starts_at and now() < ends_at
+                        then greatest(date_trunc('minute', now()), starts_at + interval '1 minute') else ends_at end
+       where id = $1 returning ${APPOINTMENT_COLUMNS}`,
+      [id, status],
+    ),
   );
   // Reinstating a cancelled or no-show appointment needs its slot back.
   if (!updated) throw new DomainError("slot_taken", "That time has been given to someone else");

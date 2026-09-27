@@ -24,7 +24,7 @@ import { parseClockPreference } from "../nlu/clock";
 import { detectLanguage } from "../nlu/language";
 import { matchProcedure, understand, type ProcedureOption, type Understanding } from "../nlu/intents";
 import { hasDevanagari, romanize } from "../nlu/romanize";
-import { detectEmergency } from "../safety/emergency";
+import { describeEmergency, detectEmergency } from "../safety/emergency";
 import { checkOutput } from "../safety/output-filter";
 import { spokenRelation, voiceSay, type VoiceCopyKey, type VoiceLang } from "./copy";
 import { spokenClock, spokenList, spokenRupees, spokenWhen } from "./speak";
@@ -818,7 +818,7 @@ export class VoiceDialog {
       "emergency",
       "critical",
       `Emergency call: ${who}`,
-      `${triggers.join(", ")}\n\n"${text}"`,
+      `${describeEmergency(level, triggers)}\n\n"${text}"`,
       `emergency:${this.ctx.callId}`,
       { patientId: patients[0]?.id ?? null },
     );
@@ -857,7 +857,7 @@ export class VoiceDialog {
           .join(" "),
         false,
       );
-    await this.transfer("emergency", `${level}: ${triggers.join(", ")}`);
+    await this.transfer("emergency", describeEmergency(level, triggers));
     this.s.outcome = "emergency";
   }
 

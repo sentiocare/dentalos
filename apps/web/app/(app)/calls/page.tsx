@@ -67,7 +67,7 @@ export default function CallsPage() {
     }).format(new Date(iso));
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3 px-4 py-4">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-3 px-4 py-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       {progress && (progress.passed || progress.failed) ? (
         <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm">{t("testProgress", progress)}</p>

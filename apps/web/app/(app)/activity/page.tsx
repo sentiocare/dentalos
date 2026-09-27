@@ -61,7 +61,7 @@ export default function ActivityPage() {
     timeStyle: "short",
   });
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-4">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-4 px-4 py-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       {entries.length === 0 ? <EmptyState>{t("empty")}</EmptyState> : null}
       <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white text-sm">

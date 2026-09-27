@@ -134,3 +134,9 @@ export function detectEmergency(text: string, extraTriggers: string[] = []): Eme
       : "none";
   return { level, triggers: [...matched.keys()] };
 }
+
+/** The detection in words staff read at a glance ("Urgent: facial swelling"), never internal codes. */
+export function describeEmergency(level: EmergencyLevel, triggers: string[]): string {
+  const what = triggers.map((t) => t.replace(/_/g, " ")).join(", ");
+  return `${level === "life_threatening" ? "Life-threatening" : "Urgent"}: ${what}`;
+}

@@ -36,7 +36,7 @@ export default function PatientsPage() {
   }, [q, api]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-4">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-4 px-4 py-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{t("patients.title")}</h1>
         {can("patients.write") ? (

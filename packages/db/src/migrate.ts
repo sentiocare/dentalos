@@ -55,7 +55,8 @@ export async function loadMigrations(dir: string = MIGRATIONS_DIR): Promise<Migr
   const files = (await readdir(dir)).filter((f) => /^\d{4}_[a-z0-9_]+\.sql$/.test(f)).sort();
   return Promise.all(
     files.map(async (file) => {
-      const sql = await readFile(path.join(dir, file), "utf8");
+      // Line endings don't change a migration: a Windows checkout (CRLF) must match the one applied from Linux.
+      const sql = (await readFile(path.join(dir, file), "utf8")).replace(/\r\n/g, "\n");
       return {
         version: file.replace(/\.sql$/, ""),
         sql,

@@ -28,7 +28,7 @@ import {
   type Patient,
 } from "@dentalos/core";
 import type { PoolClient } from "pg";
-import { detectEmergency } from "../safety/emergency";
+import { describeEmergency, detectEmergency } from "../safety/emergency";
 import { checkOutput } from "../safety/output-filter";
 import { detectLanguage } from "../nlu/language";
 import { romanize } from "../nlu/romanize";
@@ -457,7 +457,7 @@ class Assistant {
       "emergency",
       "critical",
       `Emergency on WhatsApp: ${who}`,
-      `${triggers.join(", ")}\n\n"${text}"`,
+      `${describeEmergency(level, triggers)}\n\n"${text}"`,
       `emergency:${this.ctx.inboundMessageId}`,
     );
     const doctors = (

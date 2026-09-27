@@ -195,7 +195,8 @@ describe.skipIf(!hasTestDatabase)("voice service (media stream, audio pipeline)"
     await call.waitFor(/अपना ध्यान रखिए/);
     expect(await call.closed).toBe(1000);
 
-    await new Promise((r) => setTimeout(r, 100));
+    // The call is saved just after the hang-up; wait for it rather than for a fixed time.
+    await expect.poll(async () => (await record(callId)).status, { timeout: 5000 }).toBe("ended");
     const row = await record(callId);
     expect(row).toMatchObject({ outcome: "booked", status: "ended" });
     expect(row.usage.stt_ms).toBeGreaterThan(0);

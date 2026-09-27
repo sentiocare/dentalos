@@ -71,7 +71,7 @@ export default function CampaignsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-4">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-4 px-4 py-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
         <h2 className="font-semibold">{t("new")}</h2>

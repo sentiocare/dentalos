@@ -81,7 +81,7 @@ function Reports() {
   );
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3 px-4 py-4">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-3 px-4 py-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <div className="flex flex-wrap items-center gap-2">
         {(["day", "week", "month"] as const).map((p) => (

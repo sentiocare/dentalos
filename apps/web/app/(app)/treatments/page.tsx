@@ -49,7 +49,7 @@ export default function IncompleteTreatmentsPage() {
   }
   const showMoney = data.totals.remainingPaise !== null;
   return (
-    <div className="mx-auto max-w-2xl space-y-3 px-4 py-4">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl space-y-3 px-4 py-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <div className="grid grid-cols-2 gap-2" data-testid="treatment-totals">
         <div className="rounded-2xl border border-slate-200 bg-white p-3">

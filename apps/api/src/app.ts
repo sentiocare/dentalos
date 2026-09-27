@@ -24,6 +24,7 @@ import { adminRoutes } from "./routes/admin";
 import { leadRoutes } from "./routes/leads";
 import { reportRoutes } from "./routes/reports";
 import { setupRoutes } from "./routes/setup";
+import { deskRoutes } from "./routes/desk";
 import { callRoutes } from "./routes/calls";
 import { telephonyRoutes } from "./routes/telephony";
 import { webhookRoutes } from "./routes/webhooks";
@@ -115,6 +116,7 @@ export function buildApp(deps: AppDeps) {
     leadRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
     reportRoutes(api, { staff });
     setupRoutes(api, { staff });
+    deskRoutes(api, { staff });
   });
   return app;
 }
