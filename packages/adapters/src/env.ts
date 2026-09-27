@@ -36,6 +36,11 @@ export const adapterEnvSchema = z.object({
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(12).optional(),
+  /** Sentio's own details, printed on its GST invoices to clinics (license and wallet recharges). */
+  SENTIO_LEGAL_NAME: z.string().default("Sentio Care"),
+  SENTIO_GSTIN: z.string().optional(),
+  SENTIO_STATE: z.string().default("Jharkhand"),
+  SENTIO_ADDRESS: z.string().default(""),
   /** 32 random bytes, base64 (openssl rand -base64 32). Encrypts clinics' provider credentials. */
   CHANNEL_SECRET_KEY: z.string().optional(),
 });

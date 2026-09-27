@@ -1,3 +1,4 @@
+import { DEFAULT_SELLER } from "@dentalos/core";
 import { createAdapters, type FakeStorageProvider, type FakeTelephonyProvider } from "@dentalos/adapters";
 import { seedMinimalClinic } from "@dentalos/db/testing";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
@@ -17,7 +18,14 @@ const adapters = createAdapters({
   sms: "fake",
   storage: "fake",
 });
-const deps = (pool: never, version = "t") => ({ pool, version, logger, adapters, channelKey: null });
+const deps = (pool: never, version = "t") => ({
+  pool,
+  version,
+  logger,
+  adapters,
+  channelKey: null,
+  seller: DEFAULT_SELLER,
+});
 
 describe("worker config and schedule", () => {
   it("requires DATABASE_URL", () => {

@@ -1,7 +1,13 @@
 import { ingestMessagingEvents } from "@dentalos/agent";
 import type { Adapters } from "@dentalos/adapters";
-import { getPaymentAccount, ingestClinicPaymentEvent, type JobQueue } from "@dentalos/core";
+import {
+  getPaymentAccount,
+  ingestClinicPaymentEvent,
+  type JobQueue,
+  type SentioSeller,
+} from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
+import { sentioPaymentWebhook } from "./wallet";
 import type { FastifyInstance } from "fastify";
 
 /**
@@ -10,7 +16,7 @@ import type { FastifyInstance } from "fastify";
  */
 export async function webhookRoutes(
   app: FastifyInstance,
-  deps: { pool: Pool; adapters: Adapters; jobs: JobQueue; channelKey: Buffer | null },
+  deps: { pool: Pool; adapters: Adapters; jobs: JobQueue; channelKey: Buffer | null; seller?: SentioSeller },
 ) {
   app.addContentTypeParser(
     "application/json",
@@ -80,4 +86,6 @@ export async function webhookRoutes(
       return reply.send({ ok: true });
     },
   );
+
+  sentioPaymentWebhook(app, deps);
 }

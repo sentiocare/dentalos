@@ -29,6 +29,7 @@ export function meRoutes(
         name: profile?.name ?? null,
         uiLanguage: profile?.ui_language ?? "en",
       },
+      platformAdmin: await deps.staff.isPlatformAdmin(user),
       clinics: memberships.map((m) => ({
         id: m.clinicId,
         name: m.clinicName,

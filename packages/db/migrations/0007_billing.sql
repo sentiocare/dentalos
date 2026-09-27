@@ -195,6 +195,7 @@ create table public.licenses (
   provider_payment_id text unique,
   purchased_at timestamptz,
   -- The product keeps working after this date; only updates and support stop (perpetual license).
+  updates_months int not null default 12 check (updates_months between 0 and 120),
   updates_support_until date,
   invoice_id uuid,
   created_at timestamptz not null default now(),

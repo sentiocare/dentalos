@@ -1,3 +1,4 @@
+import { sellerFromEnv } from "@dentalos/core";
 import { adapterOptions, adapterSelection, createAdapters } from "@dentalos/adapters";
 import { createPool } from "@dentalos/db";
 import { parseSecretKey } from "@dentalos/shared";
@@ -22,6 +23,7 @@ const runner = await run({
     logger,
     adapters: createAdapters(adapterSelection(config), adapterOptions(config)),
     channelKey: config.CHANNEL_SECRET_KEY ? parseSecretKey(config.CHANNEL_SECRET_KEY) : null,
+    seller: sellerFromEnv(config),
   }),
   crontab: CRONTAB,
   logger: graphileLogger(logger),

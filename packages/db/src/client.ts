@@ -96,3 +96,33 @@ export async function withAppRole<T>(
     client.release();
   }
 }
+
+/**
+ * Sentio's own work across clinics: billing (licenses, mandates, recharges, invoices), reconciliation and
+ * the Sentio admin panel. Runs as the login role that owns the tables, so row-level security does not
+ * limit it. Never use it to serve a clinic's request; use withClinic for that.
+ */
+export async function withPlatform<T>(
+  pool: pg.Pool,
+  actor: Actor,
+  fn: (client: pg.PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query("select set_config('app.actor', $1, true)", [actor]);
+    const result = await fn(client);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+/** Inside withPlatform: makes clinic-scoped helpers (which read app.current_clinic_id()) act for one clinic. */
+export async function actAsClinic(client: pg.PoolClient, clinicId: string): Promise<void> {
+  await client.query("select set_config('app.clinic_id', $1, true)", [clinicId]);
+}

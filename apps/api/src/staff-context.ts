@@ -1,5 +1,5 @@
 import { effectivePermissions, isRole, type Permission, type Role } from "@dentalos/core";
-import { withAppRole, withClinic, type Pool, type PoolClient } from "@dentalos/db";
+import { withAppRole, withClinic, withPlatform, type Pool, type PoolClient } from "@dentalos/db";
 import type { FastifyRequest } from "fastify";
 import type { AuthUser } from "./auth";
 import { HttpError } from "./http";
@@ -114,8 +114,27 @@ export function createStaffContext(deps: { pool: Pool; verify: (token: string) =
     );
   }
 
+  async function isPlatformAdmin(user: AuthUser): Promise<boolean> {
+    const { rowCount } = await deps.pool.query("select 1 from platform_admins where user_id = $1", [
+      user.userId,
+    ]);
+    return (rowCount ?? 0) > 0;
+  }
+
+  /** Sentio's own staff only: runs `fn` across clinics (billing, health). */
+  async function inPlatform<T>(
+    request: FastifyRequest,
+    fn: (client: PoolClient, user: AuthUser) => Promise<T>,
+  ) {
+    const user = await authenticate(request);
+    if (!(await isPlatformAdmin(user))) throw new HttpError(403, "forbidden", "Sentio admins only");
+    return withPlatform(deps.pool, `user:${user.userId}`, (client) => fn(client, user));
+  }
+
   return {
     authenticate,
+    isPlatformAdmin,
+    inPlatform,
     memberships,
     resolve,
     inClinic,

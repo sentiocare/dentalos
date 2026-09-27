@@ -1,4 +1,5 @@
 import type { Adapters } from "@dentalos/adapters";
+import type { SentioSeller } from "@dentalos/core";
 import type { Pool } from "@dentalos/db";
 import type { Logger } from "@dentalos/shared/logger";
 import { Logger as GraphileLogger, type TaskList } from "graphile-worker";
@@ -7,7 +8,12 @@ import { makeProcessInboundTask } from "./tasks/inbound";
 import { makePlanMessagesTask } from "./tasks/plan-messages";
 import { makeOutboxSweepTask, makeSendOutboxTask } from "./tasks/outbox";
 import { makePlaceCallTask } from "./tasks/calls";
-import { makeWalletWatchTask } from "./tasks/billing";
+import {
+  makeRechargeDebitTask,
+  makeRechargeForecastTask,
+  makeReconcileTask,
+  makeWalletWatchTask,
+} from "./tasks/billing";
 import { makeFollowupsTask, makeRequestDepositTask, makeSendReceiptTask } from "./tasks/followups";
 import { makeFetchRecordingTask, makePurgeRecordingsTask } from "./tasks/recordings";
 import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling";
@@ -22,6 +28,8 @@ export interface WorkerDeps {
   logger: Logger;
   adapters: Adapters;
   channelKey: Buffer | null;
+  /** Sentio's details for its GST invoices (recharges). */
+  seller: SentioSeller;
 }
 
 export function buildTaskList(deps: WorkerDeps): TaskList {
@@ -40,6 +48,9 @@ export function buildTaskList(deps: WorkerDeps): TaskList {
     send_receipt: makeSendReceiptTask(deps),
     place_call: makePlaceCallTask(deps),
     wallet_watch: makeWalletWatchTask(deps),
+    recharge_forecast: makeRechargeForecastTask(deps),
+    recharge_debit: makeRechargeDebitTask(deps),
+    reconcile: makeReconcileTask(deps),
   };
 }
 
@@ -51,6 +62,10 @@ export const CRONTAB = [
   "* * * * * plan_messages",
   "*/5 * * * * followups",
   "*/5 * * * * wallet_watch",
+  "13 * * * * recharge_forecast",
+  "*/15 * * * * recharge_debit",
+  // 03:30 IST (22:00 UTC): yesterday's usage against provider bills, wallets against their ledgers.
+  "0 22 * * * reconcile",
   // Hourly, and backfilled after downtime so reserves never lapse.
   "7 * * * * emergency_reserves ?fill=6h",
   // 02:30 IST (21:00 UTC), when no clinic is open.

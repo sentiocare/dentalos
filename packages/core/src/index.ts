@@ -27,3 +27,4 @@ export * from "./billing/ledger";
 export * from "./billing/payment-events";
 export * from "./billing/metering";
 export * from "./billing/wallet";
+export * from "./billing/sentio";

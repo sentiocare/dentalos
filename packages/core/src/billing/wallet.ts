@@ -121,7 +121,7 @@ export async function ownerContact(client: PoolClient) {
     await client.query(
       `select m.display_name, coalesce(u.phone, m.invited_phone) as phone, coalesce(u.ui_language, 'en') as language, u.email
        from clinic_memberships m left join users u on u.id = m.user_id
-       where m.role = 'owner' and m.active order by m.created_at limit 1`,
+       where m.clinic_id = app.current_clinic_id() and m.role = 'owner' and m.active order by m.created_at limit 1`,
     )
   ).rows[0];
   return r
@@ -158,7 +158,8 @@ export async function topupLink(
     throw new DomainError("invalid", "The smallest top-up is ₹100");
   const open = (
     await client.query(
-      `select id, link_url from recharges where via = 'link' and status = 'link_sent' and amount_paise = $1
+      `select id, link_url from recharges where clinic_id = app.current_clinic_id() and via = 'link'
+         and status = 'link_sent' and amount_paise = $1
          and created_at > now() - interval '3 days' order by created_at desc limit 1`,
       [input.amountPaise],
     )

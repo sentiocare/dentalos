@@ -1,7 +1,7 @@
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import type { Adapters } from "@dentalos/adapters";
-import type { JobQueue } from "@dentalos/core";
+import { DEFAULT_SELLER, type JobQueue, type SentioSeller } from "@dentalos/core";
 import type { Pool } from "@dentalos/db";
 import { uuidv7 } from "@dentalos/shared";
 import type { Logger } from "@dentalos/shared/logger";
@@ -19,6 +19,8 @@ import { settingsRoutes } from "./routes/settings";
 import { staffRoutes } from "./routes/staff";
 import { revenueRoutes } from "./routes/revenue";
 import { billingRoutes } from "./routes/billing";
+import { walletRoutes } from "./routes/wallet";
+import { adminRoutes } from "./routes/admin";
 import { callRoutes } from "./routes/calls";
 import { telephonyRoutes } from "./routes/telephony";
 import { webhookRoutes } from "./routes/webhooks";
@@ -36,6 +38,8 @@ export interface AppDeps {
   jobs: JobQueue;
   /** Decrypts clinics' provider credentials; null until CHANNEL_SECRET_KEY is set. */
   channelKey: Buffer | null;
+  /** Sentio's details for its GST invoices to clinics. */
+  seller?: SentioSeller;
 }
 
 export function buildApp(deps: AppDeps) {
@@ -81,6 +85,7 @@ export function buildApp(deps: AppDeps) {
     adapters: deps.adapters,
     jobs: deps.jobs,
     channelKey: deps.channelKey,
+    seller: deps.seller ?? DEFAULT_SELLER,
   });
   void app.register(telephonyRoutes, { pool: deps.pool, adapters: deps.adapters, jobs: deps.jobs });
   void app.register(async (api) => {
@@ -101,6 +106,9 @@ export function buildApp(deps: AppDeps) {
       jobs: deps.jobs,
       channelKey: deps.channelKey,
     });
+    const seller = deps.seller ?? DEFAULT_SELLER;
+    walletRoutes(api, { staff, pool: deps.pool, adapters: deps.adapters, seller });
+    adminRoutes(api, { staff, pool: deps.pool, adapters: deps.adapters, seller, jobs: deps.jobs });
   });
   return app;
 }
