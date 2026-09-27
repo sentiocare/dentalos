@@ -1031,6 +1031,8 @@ interface VoiceConfig {
   enabled: boolean;
   answerMode: "all" | "after_hours";
   staffPhones: string[];
+  outboundCalls: boolean;
+  outboundFlowId: string | null;
   virtualNumber: string | null;
   clinicPhone: string | null;
   serviceHealthy: boolean;
@@ -1118,6 +1120,25 @@ function VoiceSettings() {
           </p>
         ) : null}
       </div>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={v.outboundCalls}
+          onChange={(e) => setV({ ...v, outboundCalls: e.target.checked })}
+        />
+        {t("outboundCalls")}
+      </label>
+      <Field label={t("outboundFlowId")} hint={t("outboundFlowHint")}>
+        {(id) => (
+          <Input
+            id={id}
+            inputMode="numeric"
+            value={v.outboundFlowId ?? ""}
+            onChange={(e) => setV({ ...v, outboundFlowId: e.target.value })}
+          />
+        )}
+      </Field>
       <Button
         busy={busy}
         onClick={async () => {
@@ -1130,6 +1151,8 @@ function VoiceSettings() {
                 answerMode: v.answerMode,
                 staffPhones: v.staffPhones.map((p) => p.trim()).filter(Boolean),
                 virtualNumber: v.virtualNumber?.trim() || null,
+                outboundCalls: v.outboundCalls,
+                outboundFlowId: v.outboundFlowId?.trim() || null,
               },
             });
             toast(tc("saved"));

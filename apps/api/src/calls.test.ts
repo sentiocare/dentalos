@@ -96,7 +96,24 @@ describe.skipIf(!hasTestDatabase)("phone calls: call-flow endpoints, calls list,
       staffPhones: ["+919835000099"],
       virtualNumber: VIRTUAL,
       clinicPhone: CLINIC_PHONE,
+      outboundCalls: true,
+      outboundFlowId: null,
     });
+  });
+
+  it("confirmation-call settings: flow ID saved, kept when not sent, rejected when not a number", async () => {
+    const base = { enabled: true, answerMode: "all", staffPhones: [] };
+    expect(
+      (await staffCall("PUT", "/v1/voice", { ...base, outboundCalls: false, outboundFlowId: "123456" }))
+        .statusCode,
+    ).toBe(200);
+    expect((await staffCall("PUT", "/v1/voice", base)).statusCode).toBe(200);
+    expect((await staffCall("GET", "/v1/voice")).json()).toMatchObject({
+      outboundCalls: false,
+      outboundFlowId: "123456",
+    });
+    expect((await staffCall("PUT", "/v1/voice", { ...base, outboundFlowId: "abc" })).statusCode).toBe(400);
+    await staffCall("PUT", "/v1/voice", { ...base, staffPhones: ["98350 00099"], outboundCalls: true });
   });
 
   it("call-flow URLs refuse requests without the secret key", async () => {

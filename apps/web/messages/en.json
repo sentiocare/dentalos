@@ -456,7 +456,10 @@
     "clinicPhoneNote": "If nobody answers, the clinic's own number ({phone}) is tried last.",
     "healthy": "Assistant service: running",
     "unhealthy": "Assistant service: not running (calls go to the clinic phone)",
-    "save": "Save"
+    "save": "Save",
+    "outboundCalls": "Call patients to confirm tomorrow's appointments (9 am to 8 pm)",
+    "outboundFlowId": "Exotel flow ID for calls we place",
+    "outboundFlowHint": "Set by Sentio during setup. Without it, no confirmation calls are made; staff get a task instead."
   },
   "plans": {
     "title": "Treatment plans",

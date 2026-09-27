@@ -359,6 +359,54 @@ Optional voice settings (defaults are fine): `VOICE_NO_INPUT_MS` (7000: silence 
 2. Book an appointment by voice. Check it appears on the dashboard, the WhatsApp confirmation arrives, and the call shows under **More → Phone calls** with its transcript.
 3. **Acceptance (PLAN Phase 3):** 50 test calls by people outside the team. After each one, open it under **Phone calls** and mark **Pass** or **Fail** with a note. The screen shows progress towards 50.
 
+## Part D5: Follow-ups, estimates and confirmation calls (Phase 4)
+
+Phase 4 works with what is already set up. Follow-ups go out on WhatsApp (Part D3), and confirmation calls use the phone setup (Part D4). Two things remain.
+
+### Where estimate PDFs are stored (one time, for Sentio)
+
+Estimates are sent as a PDF link on WhatsApp. The PDFs are kept in Supabase Storage (Mumbai), in a **private** bucket. Each link works for a limited time only.
+
+1. In Supabase, open **Storage → New bucket**. Name it `clinic-files` and leave **Public bucket** off.
+2. In **Project Settings → API**, copy the **service_role** key. Keep it secret: it can read everything.
+3. Add these to the **api** and **worker** services in Railway, then redeploy:
+
+   ```
+   STORAGE_PROVIDER=supabase
+   SUPABASE_URL=https://xxxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=(from step 2)
+   STORAGE_BUCKET=clinic-files
+   ```
+
+   Until this is done (`STORAGE_PROVIDER=fake`), estimates can be made and seen on the dashboard, but the WhatsApp link does not work.
+
+### Confirmation calls (one time per clinic)
+
+The day before a visit, a booked appointment that is still not confirmed gets an AI call between 9 am and 8 pm. If the call can't be made, staff get a "please call" task two hours later.
+
+1. In Exotel, build a second flow, called for example "Sentio outbound". It needs just one step: a **Voicebot** applet with URL `wss://VOICE/media?key=TOKEN` (the same one as in Part D4, step 2), then **Hangup**. Set its status callback to `https://API/telephony/status?key=TOKEN`.
+2. Note the flow's **App ID** (the number in its URL in App Bazaar).
+3. In the dashboard, open **More → Clinic settings → Phone assistant**. Tick **Call patients to confirm tomorrow's appointments** and enter the App ID in **Exotel flow ID for calls we place**. Save.
+
+The call uses the clinic's ExoPhone as caller ID. It is never made to a patient who said "don't call", or less than an hour before the visit.
+
+### What the clinic sets (dashboard)
+
+- **More → Clinic settings → Treatments and prices:** for each treatment:
+  - the **recall** period, e.g. 6 months for scaling (blank means no recall);
+  - whether to send a **next-day check-in**;
+  - the **after-care text** in English and Hindi. It is sent only after the doctor ticks "approved".
+- **More → Clinic settings → Automatic follow-ups** (owner only): the steps of each follow-up ladder. Each step says how many hours to wait, an optional time of day, and what to do: WhatsApp, staff task, or (for unconfirmed appointments only) an AI call. A ladder can be switched off.
+- **Treatment plans** start from ready-made templates (root canal, crown, implant, braces, and 8 more) with sittings and the gaps between them. They are picked when adding a plan on a patient page. Prices come from Treatments and prices.
+- **Campaigns** (More → Campaigns) go out only after the **owner** approves them. They go only to patients who said yes to offers (recorded on the patient page).
+
+### Check it works
+
+1. On a patient page, add a **root canal** plan, book its first sitting from the plan, and mark that appointment **Completed**. Within 5 minutes a WhatsApp about the next sitting arrives (with a button to book it), and **More → Follow-ups** shows the run.
+2. Make an **estimate** from the plan and send it. The patient gets the PDF link with "OK" and "Call me" buttons.
+3. Mark an appointment **No-show**. The patient gets the "we missed you" message within 5 minutes.
+4. **More → Incomplete treatments** shows incomplete treatments with the rupee value still to come.
+
 ---
 
 ## Part E: Updating the app

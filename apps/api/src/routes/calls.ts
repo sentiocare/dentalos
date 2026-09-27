@@ -132,12 +132,27 @@ export function callRoutes(
           answerMode: z.enum(["all", "after_hours"]),
           staffPhones: z.array(phone).max(5),
           virtualNumber: phone.nullable().optional(),
+          outboundCalls: z.boolean().optional(),
+          outboundFlowId: z
+            .string()
+            .trim()
+            .max(40)
+            .regex(/^[0-9]*$/, "The flow ID is a number")
+            .nullable()
+            .optional(),
         }),
         request.body,
       );
+      // Keep settings this request does not mention (e.g. outbound hours).
+      const current =
+        (await c.query("select settings->'voice' as v from clinics where id = app.current_clinic_id()"))
+          .rows[0].v ?? {};
+      const next = { ...current, enabled: b.enabled, answerMode: b.answerMode, staffPhones: b.staffPhones };
+      if (b.outboundCalls !== undefined) next.outboundCalls = b.outboundCalls;
+      if (b.outboundFlowId !== undefined) next.outboundFlowId = b.outboundFlowId || null;
       await c.query(
         "update clinics set settings = jsonb_set(settings, '{voice}', $1::jsonb) where id = app.current_clinic_id()",
-        [JSON.stringify({ enabled: b.enabled, answerMode: b.answerMode, staffPhones: b.staffPhones })],
+        [JSON.stringify(next)],
       );
       if (b.virtualNumber) {
         const taken = (await c.query("select app.clinic_for_channel('voice', $1) as id", [b.virtualNumber]))

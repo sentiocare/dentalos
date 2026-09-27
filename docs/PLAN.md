@@ -449,6 +449,8 @@ Each phase ends only when all of its acceptance tests pass in CI. Relative size:
 - Estimates (PDF on WhatsApp) with a follow-up ladder. No-show recovery. Unconfirmed → AI confirmation call. Recall (6-month, configurable per procedure). Reactivation campaigns that need owner approval. After-care templates plus a next-day check-in with doctor-defined triggers. AI outbound calls under the §6.9 rules. Optional deposit rules.
 - **Accept when:** a **simulated 30-day clinic** (fake clock, about 300 patients, scripted replies including opt-outs) produces exactly the expected follow-up schedule (golden file), sends nothing to opted-out patients or outside allowed hours, and the incomplete-treatments totals match a hand-computed fixture.
 
+**Update (27 Sep 2026, Phase 4 done):** Built as planned. Accepted by the 30-day clinic simulation (golden file checked by reading; totals computed by hand), unit and API tests, and dashboard e2e tests. Choices made along the way: advances are requested by payment link, but marking them paid waits for Phase 5; recalls older than 30 days go through campaigns instead (ASSUMPTIONS A-38 to A-43). Not yet tried against the live services: Exotel outbound calls, Supabase Storage, and Meta approval of the 9 new WhatsApp templates.
+
 ### Phase 5: Money and billing (L)
 
 - Patient ledger, cash/UPI/card entry, Razorpay payment links with webhook auto-marking, receipts and invoices (PDF, GST per procedure, FY numbering), dues ladder, collections summary, Excel export.

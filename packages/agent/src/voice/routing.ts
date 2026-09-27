@@ -18,6 +18,10 @@ export interface VoiceSettings {
   answerMode: "all" | "after_hours";
   /** Numbers staff transfers ring, in order; the clinic phone is always tried last. */
   staffPhones: string[];
+  /** AI calls to confirm appointments (Phase 4); off when false. */
+  outboundCalls: boolean;
+  /** The Exotel flow (app id) that runs our assistant for calls we place; no calls without it. */
+  outboundFlowId: string | null;
 }
 
 export function voiceSettings(settings: Record<string, unknown> | null | undefined): VoiceSettings {
@@ -26,6 +30,8 @@ export function voiceSettings(settings: Record<string, unknown> | null | undefin
     enabled: v.enabled ?? true,
     answerMode: v.answerMode === "after_hours" ? "after_hours" : "all",
     staffPhones: Array.isArray(v.staffPhones) ? v.staffPhones.filter((x) => typeof x === "string") : [],
+    outboundCalls: v.outboundCalls !== false,
+    outboundFlowId: typeof v.outboundFlowId === "string" && v.outboundFlowId ? v.outboundFlowId : null,
   };
 }
 

@@ -56,6 +56,18 @@ The automatic behaviours are built in the phase shown. Until then, the "what a p
 | Replies feel slow                                       | Slow speech provider or model                                                                | Each call shows reply times (typical and slowest). Above ~1.5 s typical, check Sarvam latency and `VOICE_LLM_TIMEOUT_MS`. |
 | No recording on a call                                  | Recording off in the flow, or download failed                                                | Recordings are copied a few minutes after the call. Check the worker logs for `fetch_recording`.                          |
 
+## Follow-ups: common problems
+
+| What you see                                           | Likely cause                                                                                | What to do                                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No follow-up messages at all                           | Worker stopped, or WhatsApp not connected                                                   | `/health/ready` → `components.worker`. More → Follow-ups lists runs and their next time.                                                          |
+| A patient got no message but the run shows a step done | Patient opted out, or outside allowed hours (the outbox waits)                              | Messages wait in the outbox until allowed hours, or are refused for an opt-out. The reason is kept on the message's outbox record (`last_error`). |
+| Follow-ups continue after the patient booked           | The booking was not linked to the plan's sitting                                            | Book sittings from the patient's plan (the **Book** button next to the sitting). Or stop the run under More → Follow-ups.                         |
+| No confirmation calls, only staff tasks                | Calls switched off, no Exotel flow ID, outside 9 am–8 pm, or the patient opted out of calls | Settings → Phone assistant. Worker logs say `confirmation call not placed` with the reason.                                                       |
+| Estimate link on WhatsApp doesn't open                 | Storage not set up (`STORAGE_PROVIDER=fake`), or the link expired                           | SETUP Part D5. Re-send the estimate from the patient page for a fresh link.                                                                       |
+| Campaign sent to fewer patients than expected          | Only patients with marketing consent and no opt-out are included                            | Before sending, the campaign page shows how many patients are left out for no consent and for opt-out.                                            |
+| After-care message not sent                            | The after-care text is not marked "approved"                                                | Settings → Treatments and prices → the treatment → after-care.                                                                                    |
+
 ## Adding production failures to the eval suite
 
 Every real conversation that went wrong becomes a new test case in `evals/cases/` (Phase 3 onwards):
