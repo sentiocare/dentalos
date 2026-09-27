@@ -4,6 +4,8 @@ import type { JobQueue } from "../jobs";
 import { ensureConversation, logMessage } from "./conversations";
 import { decideContact, DEFAULT_HOURS, type Category, type ContactFacts } from "./policy";
 import { appointmentStillMatches } from "./reminders";
+import { meter } from "../billing/metering";
+import { walletAllows, walletStatus, type Capability } from "../billing/wallet";
 import { renderTemplate, TEMPLATES, type TemplatePurpose } from "./templates";
 
 export type OutboundPayload =
@@ -123,6 +125,19 @@ export async function processOutbox(
     return { status: "skipped", reason: "appointment_changed" };
   }
 
+  // The usage wallet (PLAN §5.6): reminders wait while it is suspended, promotions while it is not paid up.
+  // Safety messages, replies inside the chat window and notices to the owner always go.
+  const needs: Capability | null =
+    row.category === "promotional"
+      ? "promotional_message"
+      : row.category === "transactional"
+        ? "transactional_message"
+        : null;
+  if (needs && !walletAllows(await walletStatus(client, now), needs)) {
+    await client.query("update outbox set attempts = attempts - 1 where id = $1", [outboxId]);
+    return retry(new Date(now.getTime() + 30 * 60_000), "wallet_paused");
+  }
+
   const clinic = (
     await client.query("select name, timezone, settings from clinics where id = app.current_clinic_id()")
   ).rows[0];
@@ -212,6 +227,18 @@ export async function processOutbox(
       status: "sent",
     });
     await settle("sent", { messageId });
+    // Meta charges for business-initiated templates, not for replies inside the chat window. Notices
+    // about Sentio's own billing are on Sentio.
+    if (templateName && payload.kind === "template" && !row.purpose.startsWith("billing_")) {
+      const category = TEMPLATES[payload.purpose]?.category ?? "utility";
+      await meter(client, {
+        kind: category === "marketing" ? "wa_marketing" : "wa_utility",
+        quantity: 1,
+        refType: "outbox",
+        ref: outboxId,
+        at: now,
+      });
+    }
     return { status: "sent", providerMessageId: result.providerMessageId };
   } catch (error) {
     const retryable = error instanceof ProviderError ? error.retryable : true;

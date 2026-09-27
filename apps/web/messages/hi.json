@@ -406,6 +406,7 @@
       "forwarded_hours": "क्लिनिक को (खुले समय में)",
       "forwarded_disabled": "क्लिनिक को (असिस्टेंट बंद)",
       "forwarded_unhealthy": "क्लिनिक को (असिस्टेंट उपलब्ध नहीं)",
+      "forwarded_wallet": "क्लिनिक को (उपयोग बैलेंस रुका)",
       "forwarded_busy": "क्लिनिक को"
     },
     "outcomes": {

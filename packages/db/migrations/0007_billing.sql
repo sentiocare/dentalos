@@ -212,8 +212,13 @@ create table public.wallets (
   grace_paise bigint not null default 20000 check (grace_paise >= 0),
   monthly_cap_paise bigint check (monthly_cap_paise > 0),
   auto_recharge boolean not null default true,
+  -- Off until Sentio switches billing on for the clinic (license paid, or by hand for a pilot). While off,
+  -- usage is still metered and shown, but nothing is paused.
+  enforced boolean not null default false,
   state text not null default 'active' check (state in ('active', 'low', 'grace', 'suspended')),
   state_since timestamptz not null default now(),
+  -- The last state the owner was told about (low / paused), so each change is announced once.
+  notified_state text,
   updated_at timestamptz not null default now()
 );
 
@@ -479,6 +484,28 @@ end
 $$;
 
 grant execute on function app.next_doc_number(text, text) to app_user;
+
+-- A top-up link for the clinic in context (clinics cannot write recharges directly).
+create or replace function app.record_topup_link(p_id uuid, p_clinic uuid, p_amount bigint, p_url text, p_link text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if p_clinic is distinct from app.current_clinic_id() then
+    raise exception 'wrong clinic' using errcode = '42501';
+  end if;
+  insert into public.recharges (id, clinic_id, via, amount_paise, status, link_url, provider_link_id)
+  values (p_id, p_clinic, 'link', p_amount, 'link_sent', p_url, p_link);
+end
+$$;
+revoke all on function app.record_topup_link(uuid, uuid, bigint, text, text) from public;
+grant execute on function app.record_topup_link(uuid, uuid, bigint, text, text) to app_user;
+
+create or replace function app.set_wallet_notified(p_state text) returns void
+language sql security definer set search_path = public
+as $$ update public.wallets set notified_state = p_state where clinic_id = app.current_clinic_id() $$;
+revoke all on function app.set_wallet_notified(text) from public;
+grant execute on function app.set_wallet_notified(text) to app_user;
 grant execute on function app.wallet_state(bigint, bigint, bigint) to app_user;
 
 do $$

@@ -1,4 +1,4 @@
-import { localDateOf, localMinutesOf, weekdayOf } from "@dentalos/core";
+import { canUse, localDateOf, localMinutesOf, weekdayOf } from "@dentalos/core";
 import { withAppRole, withClinic, type Pool } from "@dentalos/db";
 
 /**
@@ -7,9 +7,11 @@ import { withAppRole, withClinic, type Pool } from "@dentalos/db";
  * anything unusual, so a patient's call is never lost:
  * - the assistant is switched off for the clinic;
  * - "after hours only" mode while the clinic is open;
- * - the voice service has not reported healthy in the last minute.
+ * - the voice service has not reported healthy in the last minute;
+ * - the usage wallet is paused (PLAN §5.6): the clinic's phone rings, so emergencies still reach people.
  */
-export type CallRoute = "assistant" | "forwarded_hours" | "forwarded_disabled" | "forwarded_unhealthy";
+export type CallRoute =
+  "assistant" | "forwarded_hours" | "forwarded_disabled" | "forwarded_unhealthy" | "forwarded_wallet";
 
 export interface VoiceSettings {
   enabled: boolean;
@@ -84,6 +86,7 @@ export async function routeInboundCall(
     const settings = voiceSettings(clinic.settings);
     let route: CallRoute = "assistant";
     if (!settings.enabled) route = "forwarded_disabled";
+    else if (!(await canUse(c, "ai_inbound_call", now))) route = "forwarded_wallet";
     else if (!options.voiceHealthy) route = "forwarded_unhealthy";
     else if (settings.answerMode === "after_hours" && (await clinicOpen(c, clinic.timezone, now)))
       route = "forwarded_hours";

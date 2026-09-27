@@ -133,6 +133,8 @@ export async function runAssistant(ctx: AssistantContext, input: AssistantInput)
 
 class Assistant {
   private replies: Reply[] = [];
+  /** Emergency alerts to doctors, sent straight after this turn commits (not left for the sweeper). */
+  private alerts: string[] = [];
   private emergency = false;
   private state: AssistantState;
 
@@ -368,7 +370,7 @@ class Assistant {
         });
         if (id) outboxIds.push(id);
       }
-      return { outboxIds, emergency: this.emergency, replies: this.replies };
+      return { outboxIds: [...outboxIds, ...this.alerts], emergency: this.emergency, replies: this.replies };
     })();
   }
 
@@ -449,7 +451,7 @@ class Assistant {
       )
     ).rows;
     for (const d of doctors) {
-      await enqueueMessage(this.q, {
+      const alertId = await enqueueMessage(this.q, {
         to: d.phone,
         category: "critical",
         purpose: "staff_emergency_alert",
@@ -465,6 +467,7 @@ class Assistant {
         },
         dedupeKey: `emergency:${this.ctx.inboundMessageId}:${d.id}`,
       });
+      if (alertId) this.alerts.push(alertId);
     }
     if (this.ctx.conversation.mode === "human") return;
     this.resetFlow();

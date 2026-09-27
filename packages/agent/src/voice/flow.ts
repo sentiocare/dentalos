@@ -1,4 +1,4 @@
-import { enqueueMessage } from "@dentalos/core";
+import { enqueueMessage, meterCall } from "@dentalos/core";
 import { withAppRole, withClinic, type Pool } from "@dentalos/db";
 import { isIndianMobile, type E164 } from "@dentalos/shared";
 
@@ -113,6 +113,7 @@ export async function recordCallStatus(
     );
     const row = rows[0];
     if (!row) return null;
+    await meterCall(c, row.id, event.at);
     // A forwarded call nobody picked up is a missed call, even if the flow had no "missed" step.
     const unanswered =
       row.route !== "assistant" && row.transfer_status === null && event.status !== "completed";

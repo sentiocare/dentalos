@@ -1,5 +1,5 @@
 import type { LLMProvider } from "@dentalos/adapters";
-import { releaseHolds } from "@dentalos/core";
+import { meterCall, releaseHolds } from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
 import {
   initialVoiceState,
@@ -147,5 +147,7 @@ export async function endCall(
         JSON.stringify(lat.turns ? { p50: lat.p50, p95: lat.p95, max: lat.max, turns: lat.turns } : {}),
       ],
     );
+    // Speech and model usage now; telephone minutes when the provider reports the duration.
+    await meterCall(c, call.callId);
   });
 }

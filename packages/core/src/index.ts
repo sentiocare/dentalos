@@ -25,3 +25,5 @@ export * from "./revenue/followups";
 export * from "./revenue/campaigns";
 export * from "./billing/ledger";
 export * from "./billing/payment-events";
+export * from "./billing/metering";
+export * from "./billing/wallet";

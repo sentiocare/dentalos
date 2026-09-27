@@ -406,6 +406,7 @@
       "forwarded_hours": "Forwarded (clinic hours)",
       "forwarded_disabled": "Forwarded (assistant off)",
       "forwarded_unhealthy": "Forwarded (assistant unavailable)",
+      "forwarded_wallet": "Forwarded (usage balance paused)",
       "forwarded_busy": "Forwarded"
     },
     "outcomes": {

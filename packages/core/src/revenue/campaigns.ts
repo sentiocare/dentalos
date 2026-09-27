@@ -1,4 +1,5 @@
 import type { PoolClient } from "pg";
+import { canUse } from "../billing/wallet";
 import { enqueueMessage } from "../comms/outbox";
 import { DomainError } from "../errors";
 
@@ -140,6 +141,11 @@ export async function cancelCampaign(client: PoolClient, id: string) {
 export async function runCampaign(client: PoolClient, id: string, now: Date = new Date()) {
   const c = await load(client, id);
   if (c.status !== "approved") throw new DomainError("invalid", "The owner must approve the campaign first");
+  if (!(await canUse(client, "campaign", now)))
+    throw new DomainError(
+      "conflict",
+      "Campaigns are paused: the Sentio usage balance is low or this month's spending limit is reached",
+    );
   const clinic = (await client.query("select name from clinics where id = app.current_clinic_id()")).rows[0];
   const audience = await campaignAudience(client, Number(c.audience?.inactiveMonths ?? 12), now);
   let queued = 0;

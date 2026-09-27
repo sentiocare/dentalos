@@ -1,4 +1,4 @@
-import { localMinutesOf } from "@dentalos/core";
+import { canUse, localMinutesOf } from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
 import { voiceSettings } from "./routing";
 
@@ -19,7 +19,8 @@ export type OutboundCheck =
         | "outside_hours"
         | "no_number"
         | "no_flow"
-        | "calls_off";
+        | "calls_off"
+        | "wallet_paused";
     };
 
 const toMin = (t: string) => {
@@ -51,6 +52,7 @@ export async function checkConfirmationCall(
     };
     if (!voiceSettings(a.settings).enabled || raw.outboundCalls === false)
       return { ok: false, reason: "calls_off" };
+    if (!(await canUse(c, "ai_outbound_call", now))) return { ok: false, reason: "wallet_paused" };
     const opted = await c.query(
       "select 1 from opt_outs where phone = $1 and revoked_at is null and channel in ('voice', 'all') and category in ('transactional', 'all')",
       [a.phone],

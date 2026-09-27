@@ -1,5 +1,6 @@
 import { formatINR, type Paise } from "@dentalos/shared";
 import type { PoolClient } from "pg";
+import { walletAllows, walletStatus } from "../billing/wallet";
 import { enqueueMessage } from "../comms/outbox";
 import type { TemplatePurpose } from "../comms/templates";
 import { dayInWords } from "../i18n/when";
@@ -441,6 +442,7 @@ export async function advanceFollowups(
     clinic.settings.voice?.outboundCalls !== false &&
     ((await client.query("select 1 from clinic_channels where kind = 'voice' and active")).rowCount ?? 0) > 0;
   const result: StepResult = { stopped: 0, messages: 0, calls: [], tasks: 0, links: [] };
+  const wallet = await walletStatus(client, now);
 
   const { rows } = await client.query<RunRow>(
     `select r.id, r.kind, r.subject_id, r.patient_id, r.phone, r.step, r.next_at, p.name as patient_name, p.language_pref
@@ -482,6 +484,14 @@ export async function advanceFollowups(
       await stop("exhausted");
       continue;
     }
+    // Recalls are optional spend: they wait while the usage wallet is paused (PLAN §5.6).
+    if (run.kind === "recall" && !walletAllows(wallet, "recall")) {
+      await client.query("update followup_runs set next_at = $2 where id = $1", [
+        run.id,
+        new Date(now.getTime() + 6 * 3600_000),
+      ]);
+      continue;
+    }
 
     const record = (
       action: string,
@@ -504,7 +514,8 @@ export async function advanceFollowups(
       );
 
     let action = step.action;
-    if (action === "ai_call" && (!canCall || !run.phone)) action = "staff_task";
+    if (action === "ai_call" && (!canCall || !run.phone || !walletAllows(wallet, "ai_outbound_call")))
+      action = "staff_task";
     if (action === "ai_call" && !inHours(now, tz, callHours)) {
       // Calls wait for calling hours; if that is too late to be useful, a person follows up instead.
       const opening = nextOpening(now, tz, callHours);

@@ -1,5 +1,5 @@
 import type { LLMProvider, MessagingChannel, MessagingProvider, SpeechProvider } from "@dentalos/adapters";
-import { getConversation, type JobQueue, scheduleSend } from "@dentalos/core";
+import { canUse, countingLLM, getConversation, meter, type JobQueue, scheduleSend } from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
 import { runAssistant, type AssistantInput } from "./assistant";
 
@@ -33,7 +33,11 @@ export async function processInboundMessage(
       (await c.query("select kind, body, payload from messages where id = $1", [messageId])).rows[0],
   );
   if (!pre) return { replies: 0, skipped: "not found" };
+  // While the usage wallet is paused, the assistant works by rules only: no speech-to-text, no model
+  // (PLAN §5.6). Emergency detection is rules-based and keeps working.
+  const aiAllowed = await withClinic(deps.pool, ctx, (c) => canUse(c, "ai_chat"));
   if (
+    aiAllowed &&
     pre.kind === "audio" &&
     !pre.body &&
     !pre.payload?.transcribeFailed &&
@@ -42,30 +46,36 @@ export async function processInboundMessage(
     deps.channel
   ) {
     let transcript: string | null = null;
+    let audioMs = 0;
     try {
       const channel = await deps.channel(clinicId);
       if (channel) {
         const media = await deps.messaging.downloadMedia(channel, String(pre.payload.mediaId));
-        transcript =
-          (
-            await deps.voice.transcribe({
-              format: "file",
-              audio: media.bytes,
-              mimeType: media.mimeType,
-              language: "auto",
-            })
-          ).text.trim() || null;
+        const heard = await deps.voice.transcribe({
+          format: "file",
+          audio: media.bytes,
+          mimeType: media.mimeType,
+          language: "auto",
+        });
+        audioMs = heard.audioMs;
+        transcript = heard.text.trim() || null;
       }
     } catch {
       transcript = null;
     }
-    await withClinic(deps.pool, ctx, (c) =>
-      c.query("update messages set body = $2, payload = payload || $3 where id = $1", [
+    await withClinic(deps.pool, ctx, async (c) => {
+      await c.query("update messages set body = $2, payload = payload || $3 where id = $1", [
         messageId,
         transcript,
         transcript ? { transcribed: true } : { transcribeFailed: true },
-      ]),
-    );
+      ]);
+      await meter(c, {
+        kind: "stt_sec",
+        quantity: Math.round(audioMs / 100) / 10,
+        refType: "message",
+        ref: messageId,
+      });
+    });
   }
 
   const outcome = await withClinic(deps.pool, ctx, async (c) => {
@@ -92,16 +102,32 @@ export async function processInboundMessage(
           : m.kind === "image" || m.kind === "document"
             ? { kind: "media", mediaKind: m.kind }
             : { kind: "text", text: m.body ?? "" };
-    return runAssistant(
+    const counted = deps.llm && aiAllowed ? countingLLM(deps.llm) : null;
+    const result = await runAssistant(
       {
         client: c,
         conversation,
         inboundMessageId: messageId,
-        llm: deps.llm,
+        llm: counted?.llm,
         now: deps.now?.() ?? new Date(),
       },
       input,
     );
+    if (counted) {
+      await meter(c, {
+        kind: "llm_input_token",
+        quantity: counted.usage.input,
+        refType: "message",
+        ref: messageId,
+      });
+      await meter(c, {
+        kind: "llm_output_token",
+        quantity: counted.usage.output,
+        refType: "message",
+        ref: messageId,
+      });
+    }
+    return result;
   });
   if (!outcome) return { replies: 0, skipped: "already processed" };
   for (const id of outcome.outboxIds) await scheduleSend(deps.jobs, clinicId, id);
