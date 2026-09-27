@@ -141,7 +141,8 @@ export function DayGrid({
     const start = localMinutesOf(new Date(a.startsAt), timezone);
     const end = localMinutesOf(new Date(a.endsAt), timezone);
     if (!d.active || (d.deltaMin === 0 && d.columnId === columnOf(a))) {
-      if (!d.active || d.mode === "move") onTapAppointment(a);
+      // A tap without movement opens the appointment, even on the resize edge of a short visit.
+      onTapAppointment(a);
       return;
     }
     if (d.mode === "move")

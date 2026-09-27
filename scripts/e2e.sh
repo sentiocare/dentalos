@@ -33,4 +33,4 @@ for _ in $(seq 1 60); do
 done
 
 cd apps/web
-E2E_BASE_URL="http://localhost:$WEB_PORT" E2E_API_URL="http://localhost:$API_PORT" npx playwright test
+E2E_BASE_URL="http://localhost:$WEB_PORT" E2E_API_URL="http://localhost:$API_PORT" npx playwright test "$@"

@@ -8,6 +8,8 @@
  */
 import {
   addDays,
+  createTreatmentPlan,
+  estimateFromPlan,
   bookDirect,
   createClinic,
   createPatient,
@@ -131,6 +133,10 @@ async function reset(pool: Pool) {
     // Order matters: appointments reference patients, doctors and chairs without cascading.
     await pool.query("delete from slot_holds where clinic_id = $1", [id]);
     await pool.query("delete from appointments where clinic_id = $1", [id]);
+    // Treatment data references patients and procedure types without cascading.
+    await pool.query("delete from estimates where clinic_id = $1", [id]);
+    await pool.query("delete from treatment_steps where clinic_id = $1", [id]);
+    await pool.query("delete from treatment_plans where clinic_id = $1", [id]);
     await pool.query("delete from clinics where id = $1", [id]);
   }
   await pool.query("delete from resource_occupancy where clinic_id = any($1)", [rows.map((r) => r.id)]);
@@ -347,6 +353,7 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
   }
   await withClinic(pool, ctx, (c) => seedDemoChats(c, now));
   await withClinic(pool, ctx, (c) => seedDemoCalls(c, now));
+  await withClinic(pool, ctx, (c) => seedDemoPlans(c, now));
   console.log(`Demo clinic ready: ${patients.length} patients, ${booked} appointments.`);
   return clinicId;
 }
@@ -518,5 +525,55 @@ async function seedDemoCalls(c: PoolClient, now: Date) {
           call.outcome === "emergency" && speaker === "assistant" && seq > 0 ? ["emergency"] : [],
         ],
       );
+  }
+}
+
+/** Treatment plans in different states, so "Incomplete treatments" shows real rupee values. */
+async function seedDemoPlans(c: PoolClient, now: Date) {
+  const prices: Record<string, number> = {
+    rct_sitting: 350000,
+    crown_prep: 450000,
+    crown_fitting: 450000,
+    implant_surgery: 2500000,
+    implant_followup: 100000,
+    extraction: 120000,
+    followup: 30000,
+  };
+  for (const [code, paise] of Object.entries(prices))
+    await c.query(
+      "update procedure_types set price_min_paise = coalesce(price_min_paise, $2), price_max_paise = coalesce(price_max_paise, $2) where code = $1",
+      [code, paise],
+    );
+  const templates = new Map(
+    (await c.query("select id, code from treatment_templates")).rows.map((r) => [
+      r.code as string,
+      r.id as string,
+    ]),
+  );
+  const { rows: patients } = await c.query("select id from patients order by created_at offset 10 limit 5");
+  const today = localDateOf(now, TZ);
+  const plans: [string, number, "accepted" | "proposed"][] = [
+    ["rct_crown", -20, "accepted"],
+    ["implant", -40, "accepted"],
+    ["rct", -3, "accepted"],
+    ["extraction", 2, "accepted"],
+    ["rct_crown", 5, "proposed"],
+  ];
+  for (const [i, [code, offset, status]] of plans.entries()) {
+    const patient = patients[i];
+    const templateId = templates.get(code);
+    if (!patient || !templateId) continue;
+    await createTreatmentPlan(c, {
+      patientId: patient.id,
+      templateId,
+      startDate: addDays(today, offset),
+      status,
+      now,
+    });
+  }
+  if (patients[4]) {
+    const plan = (await c.query("select id from treatment_plans where patient_id = $1", [patients[4].id]))
+      .rows[0];
+    if (plan) await estimateFromPlan(c, plan.id, { now });
   }
 }
