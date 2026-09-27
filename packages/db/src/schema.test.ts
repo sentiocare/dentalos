@@ -301,6 +301,8 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       "consents",
       "opt_outs",
       "tasks",
+      "calls",
+      "call_turns",
     ];
 
     beforeAll(async () => {
@@ -377,6 +379,14 @@ describe.skipIf(!hasTestDatabase)("clinic core schema", () => {
       await q(
         "insert into tasks (clinic_id, kind, title, created_by) values ($1,'callback','Call back','bot')",
         [b.clinicId],
+      );
+      const call = await q(
+        "insert into calls (clinic_id, provider, provider_call_id, from_phone) values ($1,'fake','call-b','+919876543210') returning id",
+        [b.clinicId],
+      );
+      await q(
+        "insert into call_turns (clinic_id, call_id, seq, speaker, text) values ($1,$2,1,'caller','hello')",
+        [b.clinicId, call.rows[0].id],
       );
     });
 

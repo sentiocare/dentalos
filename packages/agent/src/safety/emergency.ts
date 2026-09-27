@@ -1,3 +1,5 @@
+import { hasDevanagari, romanize } from "../nlu/romanize";
+
 /**
  * Emergency detection on every patient message (Build Prompt §6.6). Deterministic keyword rules in English,
  * Hinglish and Hindi; an LLM classifier can only add detections, never remove them (ASSUMPTIONS A-15:
@@ -110,9 +112,11 @@ const RULES: Rule[] = [
 
 export function detectEmergency(text: string, extraTriggers: string[] = []): EmergencyResult {
   const matched = new Map<string, Rule["level"]>();
+  // Hindi-script text is also checked in Roman letters, so every Hinglish rule applies to it too.
+  const variants = hasDevanagari(text) ? [text, romanize(text)] : [text];
   for (const rule of RULES)
-    if (rule.patterns.some((p) => p.test(text))) matched.set(rule.trigger, rule.level);
-  const lower = text.toLowerCase();
+    if (rule.patterns.some((p) => variants.some((v) => p.test(v)))) matched.set(rule.trigger, rule.level);
+  const lower = variants.join(" ").toLowerCase();
   for (const phrase of extraTriggers)
     if (phrase.trim() && lower.includes(phrase.trim().toLowerCase()))
       matched.set(`clinic:${phrase}`, "urgent");

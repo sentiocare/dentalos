@@ -170,6 +170,12 @@ const T = {
     hinglish:
       "{procedure} ka kharcha usually {min} se {max} ke beech hota hai. Exact amount doctor check karke batayenge.",
   },
+  medical_question: {
+    en: "I can't give medical advice; only the doctor can, after seeing you. If the pain is severe or there is swelling, please call the clinic now. Shall I book a consultation?",
+    hi: "मैं इलाज के बारे में सलाह नहीं दे सकती; यह डॉक्टर ही देखकर बता सकते हैं। अगर दर्द बहुत ज़्यादा है या सूजन है, तो अभी क्लिनिक को फ़ोन करें। क्या परामर्श बुक करें?",
+    hinglish:
+      "Main ilaaj ke baare mein salah nahi de sakti; ye doctor hi dekh kar bata sakte hain. Agar dard bahut zyada hai ya sujan hai, to abhi clinic ko call karein. Kya consultation book karein?",
+  },
   price_unknown: {
     en: "The doctor will give you an exact estimate at a consultation. Would you like to book one?",
     hi: "सही अनुमान डॉक्टर परामर्श में बताएँगे। क्या परामर्श बुक करें?",

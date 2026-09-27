@@ -57,6 +57,30 @@ describe("intent rules", () => {
     expect(rules("safai kal").intent).toBe("book");
   });
 
+  it("understands Hindi-script speech transcripts", () => {
+    const u = rules("मुझे कल शाम को अपॉइंटमेंट चाहिए");
+    expect(u.intent).toBe("book");
+    expect(u.date?.fromDate).toBe("2026-10-14");
+    expect(u.partsOfDay).toEqual(["evening"]);
+    expect(rules("समय बदलना है").intent).toBe("reschedule");
+    expect(rules("दूसरा वाला").choice).toBe(2);
+    expect(rules("हाँ जी").intent).toBe("yes");
+    expect(rules("kal 2 baje").choice).toBeNull();
+    expect(rules("2").choice).toBe(2);
+    expect(rules("pehle wala theek hai").choice).toBe(1);
+  });
+
+  it("finds treatments named in Hindi script", () => {
+    expect(rules("सफ़ाई करानी है").procedureId).toBe(rules("safai karani hai").procedureId);
+    expect(rules("सफ़ाई करानी है").procedureId).not.toBeNull();
+  });
+
+  it("medicine questions are recognised (and never answered)", () => {
+    expect(rules("dard ke liye kaunsi dawai lu").intent).toBe("medical");
+    expect(rules("which painkiller should I take").intent).toBe("medical");
+    expect(rules("दर्द के लिए कौन सी दवा लूं").intent).toBe("medical");
+  });
+
   it("numbered choices", () => {
     expect(rules("2").choice).toBe(2);
     expect(rules("doosra").choice).toBe(2);

@@ -85,6 +85,21 @@ describe.skipIf(!hasTestDatabase)("scheduling service", () => {
     );
   });
 
+  it("offers the time closest to what the caller asked for first", async () => {
+    const holds = await run((cl) =>
+      offerSlots(cl, {
+        procedureId: c.procedureId,
+        fromDate: "2030-01-09",
+        toDate: "2030-01-09",
+        nearMinutes: 17 * 60 + 30,
+        now: NOW,
+        count: 2,
+        holder: "call:near",
+      }),
+    );
+    expect(holds.map((h) => hhmm(h.start))).toContain("17:30");
+  });
+
   it("books from a hold, releases the caller's other holds, and is idempotent on retry", async () => {
     const holds = await run((cl) =>
       offerSlots(cl, {

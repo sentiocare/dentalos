@@ -454,6 +454,7 @@ class Assistant {
     // Steps that expect a free-text answer, unless the patient clearly changed the subject.
     const u = await understand(text, { today: this.today(), procedures: this.procedures, llm: this.ctx.llm });
     const changedSubject = [
+      "medical",
       "cancel",
       "reschedule",
       "human",
@@ -510,6 +511,11 @@ class Assistant {
         return this.human(text);
       case "bot_question":
         return this.reply(this.t("bot_disclosure"), [{ id: "staff", title: this.t("btn_staff") }]);
+      case "medical":
+        return this.reply(this.t("medical_question"), [
+          { id: "consult", title: this.t("btn_consultation") },
+          { id: "staff", title: this.t("btn_staff") },
+        ]);
       case "greeting":
         return this.welcome();
       case "thanks":

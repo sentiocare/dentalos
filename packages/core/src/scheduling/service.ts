@@ -1,6 +1,6 @@
 import type { PoolClient } from "pg";
 import { DomainError, pgErrorCode, sequential } from "../errors";
-import { addDays, localDateOf, zonedInstant, type LocalDate } from "../time";
+import { addDays, localDateOf, localMinutesOf, zonedInstant, type LocalDate } from "../time";
 import { checkPlacement, findAvailableSlots, pickOptions, type PlacementWarning } from "./availability";
 import type { BusyInterval, PartOfDay, ProcedureSpec, ScheduleConfig, SlotCandidate } from "./types";
 
@@ -133,6 +133,8 @@ export interface SlotSearch {
   toDate?: LocalDate;
   doctorId?: string;
   partsOfDay?: PartOfDay[];
+  /** Preferred clinic-local time of day ("shaam 5 baje" = 1020): the closest times are offered first. */
+  nearMinutes?: number;
   now?: Date;
 }
 
@@ -198,6 +200,15 @@ export async function offerSlots(
   const procedure = await loadProcedure(client, search.procedureId);
   const branchId = search.branchId ?? (await defaultBranchId(client));
   let candidates = await findSlots(client, { ...search, branchId });
+  if (search.nearMinutes !== undefined) {
+    // Earliest day first; within a day, closest to the time asked for.
+    const near = search.nearMinutes;
+    const distance = (c: (typeof candidates)[number]) =>
+      Math.abs(localMinutesOf(c.start, settings.timezone) - near);
+    candidates = [...candidates].sort((a, b) =>
+      a.date === b.date ? distance(a) - distance(b) : a.date < b.date ? -1 : 1,
+    );
+  }
   const holds: Hold[] = [];
 
   while (holds.length < search.count && candidates.length > 0) {
@@ -243,6 +254,14 @@ export async function offerSlots(
             c.start < h.occupiedUntil &&
             (h.doctorId === c.doctorId || h.chairId === c.chairId),
         ),
+    );
+  }
+  if (search.nearMinutes !== undefined) {
+    // The time asked for comes first ("5 baje? I have 5 PM, or 3:30 PM").
+    const near = search.nearMinutes;
+    const distance = (h: Hold) => Math.abs(localMinutesOf(h.start, settings.timezone) - near);
+    return holds.sort((a, b) =>
+      a.date === b.date ? distance(a) - distance(b) : a.start.getTime() - b.start.getTime(),
     );
   }
   return holds.sort((a, b) => a.start.getTime() - b.start.getTime());
