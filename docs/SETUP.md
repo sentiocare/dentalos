@@ -69,7 +69,7 @@ Staff sign in with their mobile number and an SMS code.
 
 ---
 
-## Part C: Deploy the three services (Railway)
+## Part C: Deploy the services (Railway)
 
 ### C1. Create the project
 
@@ -273,6 +273,91 @@ Until this part is done, the system uses a pretend WhatsApp: nothing reaches rea
 ### Check it works
 
 Send "Hi" from your own phone to the clinic's number. Within a few seconds you should get the welcome message with the privacy notice, and the chat appears in the dashboard under **WhatsApp**.
+
+---
+
+## Part D4: Connect phone calls (Phase 3)
+
+The phone assistant is built by us: the phone company (Exotel) carries the call and streams its audio to our **voice** service; Sarvam turns speech into text and text into speech; everything the assistant decides and says comes from our own code. Until this part is done, calls are not answered by the assistant.
+
+### One time, for Sentio
+
+1. **Sarvam (speech).** Sign up at [dashboard.sarvam.ai](https://dashboard.sarvam.ai), add billing, and create an **API key**.
+2. **Exotel (phone numbers).** Open an account at [exotel.com](https://exotel.com) and finish the KYC. Ask Exotel support to **enable the Voicebot (bidirectional streaming) applet** on your account. From **Settings → API**, copy the **Account SID**, **API key** and **API token**. Note which cluster your account is on: Singapore (`api.exotel.com`) or Mumbai (`api.in.exotel.com`).
+3. Make up a long random **call-flow token**, for example with `openssl rand -hex 24`. It protects every URL Exotel calls.
+4. **Add the `voice` service in Railway** (same way as the worker in Part C3):
+   - Config file path: `deploy/railway/voice.json`
+   - Variables:
+
+     ```
+     APP_ENV=staging
+     LOG_LEVEL=info
+     DATABASE_URL=(the same value as the api)
+     CHANNEL_SECRET_KEY=(the same value as the api)
+     TELEPHONY_PROVIDER=exotel
+     VOICE_PROVIDER=sarvam
+     SARVAM_API_KEY=(from step 1)
+     EXOTEL_ACCOUNT_SID=(from step 2)
+     EXOTEL_API_KEY=(from step 2)
+     EXOTEL_API_TOKEN=(from step 2)
+     EXOTEL_API_HOST=api.exotel.com
+     EXOTEL_CALLBACK_TOKEN=(the token from step 3)
+     LLM_PROVIDER=anthropic
+     ANTHROPIC_API_KEY=(same as the api)
+     ```
+
+   - **Settings → Networking → Generate Domain.** Save the address, e.g. `voice-staging-xxxx.up.railway.app`.
+
+5. Add these to the **api** and **worker** services too, then redeploy all three:
+
+   ```
+   TELEPHONY_PROVIDER=exotel
+   VOICE_PROVIDER=sarvam
+   SARVAM_API_KEY=...
+   EXOTEL_ACCOUNT_SID=...
+   EXOTEL_API_KEY=...
+   EXOTEL_API_TOKEN=...
+   EXOTEL_API_HOST=api.exotel.com
+   EXOTEL_CALLBACK_TOKEN=...
+   ```
+
+6. Open `https://YOUR-VOICE-DOMAIN/health`. You should see `{"ok":true,...}`.
+
+Optional voice settings (defaults are fine): `VOICE_NO_INPUT_MS` (7000: silence before "are you there?"), `VOICE_FILLER_AFTER_MS` (1200: when to say "one moment"), `VOICE_MAX_CALL_MIN` (15), `VOICE_LLM_TIMEOUT_MS` (3500), `SARVAM_TTS_SPEAKER` (voice name, default `anushka`), `SARVAM_STT_MODEL`, `SARVAM_TTS_MODEL`.
+
+### For each clinic (about 30 minutes)
+
+1. **Buy a number** in Exotel (an "ExoPhone", ideally with the clinic's city code).
+2. **Build the call flow** in Exotel (**App Bazaar → Create**). Replace `API` with your api domain, `VOICE` with your voice domain and `TOKEN` with the call-flow token:
+
+   | #   | Applet   | Setting                                                              | Next step                                                                      |
+   | --- | -------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+   | 1   | Passthru | URL `https://API/telephony/route?key=TOKEN`                          | Success (200) → 2. Otherwise → 5                                               |
+   | 2   | Voicebot | URL `wss://VOICE/media?key=TOKEN` (bidirectional, 8 kHz)             | → 3                                                                            |
+   | 3   | Passthru | URL `https://API/telephony/after-assistant?key=TOKEN`                | Success (200) → 4. Otherwise → Hangup                                          |
+   | 4   | Connect  | **Dynamic URL** `https://API/telephony/connect?key=TOKEN`, record on | If nobody answers → Passthru `https://API/telephony/missed?key=TOKEN` → Hangup |
+   | 5   | Connect  | The clinic's own phone number (fixed, not dynamic), record on        | If nobody answers → Passthru `https://API/telephony/missed?key=TOKEN` → Hangup |
+
+   In the flow's settings, set the **status callback** to `https://API/telephony/status?key=TOKEN`. Step 5 is the safety net: if our servers are down, Exotel still rings the clinic's own phone.
+
+3. Assign the ExoPhone to this flow.
+4. The clinic owner opens **More → Clinic settings → Phone assistant** and enters:
+   - the **assistant's phone number** (the ExoPhone),
+   - **staff numbers** to ring when a caller wants a person (in order; the clinic's own number is always tried last),
+   - **when** to answer: every call, or only outside clinic hours.
+     Doctors ring first for emergencies, in the order set by "Emergency order" under Doctors.
+5. **Point the clinic's phone at the assistant.** On the clinic's mobile, set call forwarding to the ExoPhone. The usual codes (most Indian operators) are:
+   - forward when **not answered**: `**61*<ExoPhone>#`
+   - forward when **busy**: `**67*<ExoPhone>#`
+   - forward when **unreachable**: `**62*<ExoPhone>#`
+   - forward **every** call: `**21*<ExoPhone>#`
+     "Not answered + busy + unreachable" gives "the assistant picks up after a few rings". Landlines: ask the operator. (Operator-by-operator guides come in Phase 6.)
+
+### Check it works
+
+1. From your own phone, call the clinic. Let it ring through to the assistant. You should hear the greeting with the recording notice.
+2. Book an appointment by voice. Check it appears on the dashboard, the WhatsApp confirmation arrives, and the call shows under **More → Phone calls** with its transcript.
+3. **Acceptance (PLAN Phase 3):** 50 test calls by people outside the team. After each one, open it under **Phone calls** and mark **Pass** or **Fail** with a note. The screen shows progress towards 50.
 
 ---
 

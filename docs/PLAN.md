@@ -24,6 +24,8 @@ These choices are hard to undo later. Each one has a recommendation. Reply with 
 
 Until you answer, I assume the recommendation for each. Every assumption is also recorded in `docs/ASSUMPTIONS.md`.
 
+**Update (27 Sep 2026, Phase 3):** D4 is decided: the founder chose **our own voice pipeline** (no hosted voice agent). Exotel streams the call audio to our `voice` service; Sarvam is used only for speech-to-text and text-to-speech; turn-taking, understanding, every sentence, the safety filter and all actions are our code. This gives the medical-safety guarantee (§7.8) by construction.
+
 **Update (27 Sep 2026):** the founder approved every recommendation and decided against a legal review. Where the table says "lawyer", the safest default recorded in `docs/COMPLIANCE.md` → "Decisions taken without a legal review" applies instead.
 
 ---
