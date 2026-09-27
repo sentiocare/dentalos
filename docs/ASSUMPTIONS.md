@@ -1,0 +1,21 @@
+# Assumptions
+
+Where the build prompt is ambiguous, we pick the safest reasonable option, record it here, and carry on (Build Prompt §0.8). Each entry says what was assumed, why, and how to change it.
+
+| ID | Assumption | Reason | How to change |
+|---|---|---|---|
+| A-1 | TypeScript (Node 22) for the backend, worker and frontend | One language, shared validation schemas, good libraries (see PLAN §2.1) | Founder decision D2 |
+| A-2 | All stored data (database, files, recordings, backups) lives in Supabase Mumbai. The API and worker compute store nothing. | §3.9 data localisation. Railway's India availability is unconfirmed. | Founder decision D1 |
+| A-3 | Clinic time zone is `Asia/Kolkata`. All times are stored as `timestamptz`. | India-only product | Clinic setting |
+| A-4 | Money is stored as integer paise | Avoids rounding errors | n/a |
+| A-5 | Every clinic gets a default branch from day one | Avoids a migration when multi-branch (P2) is built | n/a |
+| A-6 | Slot holds last 3 minutes | Example in §5.3 | Clinic setting |
+| A-7 | Allowed outbound contact hours are 09:00–20:00 IST. A clinic can narrow them but never widen them past the legal limit. | §5.9, §6.9 | Clinic setting (clamped) |
+| A-8 | GST mode for every procedure defaults to `exempt` | §5.11 says the clinic's accountant decides | Per-procedure setting |
+| A-9 | Default auto-recharge amount is capped at ₹15,000. Pre-debit notification goes out at least 24 hours before each debit, so the recharge is scheduled from a forecast of how fast the balance is being used. | RBI e-mandate rules: additional authentication (AFA) above ₹15,000 for this category, and pre-debit notice | Admin setting; needs lawyer and Razorpay confirmation |
+| A-10 | Promotional AI voice calls stay off until the TRAI/DLT registration route is confirmed | §7.5, avoid guessing the law | Founder decision D6 |
+| A-11 | Text is anonymised (PII removed) before it goes to any LLM hosted outside India | DPDP cross-border caution | Founder decision D5 |
+| A-12 | "Rupees recovered" = the value of treatment steps, estimates, no-show rebookings and recalls that were **completed or paid after** a Sentio follow-up touched them, within a 30-day attribution window. The breakdown is shown so it can be checked. | §3.10 needs a formula that can be audited | Admin setting (window); formula documented in reports |
+| A-13 | Staff sign in with a phone OTP; owners can also use email | Staff use cheap Android phones | n/a |
+| A-14 | The regional language in the eval suite is decided before Phase 3, based on the pilot clinic (candidates: Bengali, Nagpuri/Sadri) | Ranchi market | Founder input |
+| A-15 | The emergency detector escalates if **either** the keyword list **or** the LLM classifier fires. A false alarm costs much less than a missed emergency. | §3.3, §6.6 | Doctor-editable trigger list |
