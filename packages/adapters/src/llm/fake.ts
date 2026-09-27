@@ -1,5 +1,5 @@
 import { FakeSupport } from "../fake-support";
-import type { LLMProvider, LLMRequest, LLMResponse } from "./types";
+import type { ExtractRequest, ExtractResult, LLMProvider, LLMRequest, LLMResponse } from "./types";
 
 export type ScriptedResponder = (request: LLMRequest) => Partial<LLMResponse> & { text?: string };
 
@@ -32,6 +32,25 @@ export class FakeLLMProvider implements LLMProvider {
         outputTokens: Math.ceil((partial.text ?? "").length / 4),
       },
     };
+  }
+
+  /** Scripted structured answers for extract(), by purpose. Unscripted purposes return null data. */
+  readonly extractions = new Map<string, (input: string) => unknown>();
+  readonly extractRequests: ExtractRequest<unknown>[] = [];
+
+  async extract<T>(request: ExtractRequest<T>): Promise<ExtractResult<T>> {
+    this.support.throwIfScripted();
+    this.extractRequests.push(request as ExtractRequest<unknown>);
+    const script = this.extractions.get(request.purpose);
+    const usage = {
+      inputTokens: Math.ceil((request.system.length + request.input.length) / 4),
+      outputTokens: 20,
+    };
+    if (!script) return { data: null, model: "fake-model", usage, failure: "invalid_output" };
+    const parsed = request.schema.safeParse(script(request.input));
+    return parsed.success
+      ? { data: parsed.data, model: "fake-model", usage }
+      : { data: null, model: "fake-model", usage, failure: "invalid_output" };
   }
 
   healthCheck() {

@@ -6,7 +6,10 @@ export const adapterEnvSchema = z.object({
   MESSAGING_PROVIDER: z.enum(["fake", "whatsapp_cloud"]).default("fake"),
   TELEPHONY_PROVIDER: z.enum(["fake", "exotel", "plivo"]).default("fake"),
   VOICE_PROVIDER: z.enum(["fake", "sarvam"]).default("fake"),
-  LLM_PROVIDER: z.enum(["fake", "configured"]).default("fake"),
+  LLM_PROVIDER: z.enum(["fake", "anthropic"]).default("fake"),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  LLM_MODEL: z.string().default("claude-opus-5"),
+  LLM_EFFORT: z.enum(["low", "medium", "high", "xhigh", "max"]).default("low"),
   PAYMENT_PROVIDER: z.enum(["fake", "razorpay"]).default("fake"),
   SMS_PROVIDER: z.enum(["fake", "dlt"]).default("fake"),
   STORAGE_PROVIDER: z.enum(["fake", "supabase"]).default("fake"),
@@ -44,6 +47,9 @@ export function adapterOptions(env: AdapterEnv): AdapterOptions {
             graphVersion: env.WHATSAPP_GRAPH_VERSION,
           }
         : undefined,
+    anthropic: env.ANTHROPIC_API_KEY
+      ? { apiKey: env.ANTHROPIC_API_KEY, model: env.LLM_MODEL, effort: env.LLM_EFFORT }
+      : undefined,
   };
 }
 
@@ -65,6 +71,13 @@ export function checkAdapterEnv(env: AdapterEnv, appEnv: string, ctx: z.Refineme
       ctx.addIssue({ code: "custom", path: ["WHATSAPP_APP_SECRET"], message: "required for WhatsApp" });
     if (!env.WHATSAPP_VERIFY_TOKEN)
       ctx.addIssue({ code: "custom", path: ["WHATSAPP_VERIFY_TOKEN"], message: "required for WhatsApp" });
+  }
+  if (env.LLM_PROVIDER === "anthropic" && !env.ANTHROPIC_API_KEY) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["ANTHROPIC_API_KEY"],
+      message: "required for the anthropic LLM provider",
+    });
   }
   if (appEnv === "production" || appEnv === "staging" || env.MESSAGING_PROVIDER !== "fake") {
     if (!env.CHANNEL_SECRET_KEY)

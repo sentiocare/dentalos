@@ -1,27 +1,24 @@
 {
-  "name": "@dentalos/worker",
+  "name": "@dentalos/agent",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "dev": "tsx watch src/main.ts",
-    "build": "node ../../scripts/build-node.mjs src/main.ts",
-    "start": "node --enable-source-maps dist/index.js",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
   "dependencies": {
     "@dentalos/adapters": "workspace:*",
-    "@dentalos/agent": "workspace:*",
     "@dentalos/core": "workspace:*",
     "@dentalos/db": "workspace:*",
     "@dentalos/shared": "workspace:*",
-    "graphile-worker": "^0.18.0",
     "pg": "^8.23.0",
-    "pino": "^10.3.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "tsx": "^4.23.15"
+    "@types/pg": "^8.23.1"
   }
 }

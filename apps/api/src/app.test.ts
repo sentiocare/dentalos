@@ -3,6 +3,7 @@ import { createPool } from "@dentalos/db";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import { createLogger } from "@dentalos/shared/logger";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { MemoryJobQueue } from "@dentalos/core";
 import { buildApp } from "./app";
 import { loadConfig } from "./config";
 
@@ -58,7 +59,16 @@ describe("config", () => {
 describe("rate limiting", () => {
   it("refuses a flood of requests from one caller with 429", async () => {
     const pool = createPool("postgres://nobody:nothing@127.0.0.1:1/none");
-    const app = buildApp({ pool, adapters: fakes(), logger, version: "test", auth, rateLimitPerMinute: 5 });
+    const app = buildApp({
+      pool,
+      adapters: fakes(),
+      logger,
+      version: "test",
+      auth,
+      rateLimitPerMinute: 5,
+      jobs: new MemoryJobQueue(),
+      channelKey: null,
+    });
     const codes = [];
     for (let i = 0; i < 7; i++)
       codes.push((await app.inject({ url: "/v1/me", headers: { authorization: "Bearer abc" } })).statusCode);
@@ -73,7 +83,15 @@ describe("rate limiting", () => {
 describe("health without a database", () => {
   it("liveness is up, readiness is 503 when the database is unreachable", async () => {
     const pool = createPool("postgres://nobody:nothing@127.0.0.1:1/none");
-    const app = buildApp({ pool, adapters: fakes(), logger, version: "test", auth });
+    const app = buildApp({
+      pool,
+      adapters: fakes(),
+      logger,
+      version: "test",
+      auth,
+      jobs: new MemoryJobQueue(),
+      channelKey: null,
+    });
     expect((await app.inject("/health")).json()).toEqual({ ok: true, version: "test" });
     const ready = await app.inject("/health/ready");
     expect(ready.statusCode).toBe(503);
@@ -95,7 +113,15 @@ describe.skipIf(!hasTestDatabase)("health with a database", () => {
   it("is ready, reports a missing worker and unhealthy providers without failing readiness", async () => {
     const adapters = fakes();
     (adapters.voice as unknown as { support: { healthy: boolean } }).support.healthy = false;
-    const app = buildApp({ pool: db.pool, adapters, logger, version: "test", auth });
+    const app = buildApp({
+      pool: db.pool,
+      adapters,
+      logger,
+      version: "test",
+      auth,
+      jobs: new MemoryJobQueue(),
+      channelKey: null,
+    });
     const res = await app.inject("/health/ready");
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -108,14 +134,30 @@ describe.skipIf(!hasTestDatabase)("health with a database", () => {
 
   it("sees a fresh worker heartbeat", async () => {
     await db.pool.query("insert into service_heartbeats (service) values ('worker')");
-    const app = buildApp({ pool: db.pool, adapters: fakes(), logger, version: "test", auth });
+    const app = buildApp({
+      pool: db.pool,
+      adapters: fakes(),
+      logger,
+      version: "test",
+      auth,
+      jobs: new MemoryJobQueue(),
+      channelKey: null,
+    });
     const res = await app.inject("/health/ready");
     expect(res.json().components.worker.ok).toBe(true);
     await app.close();
   });
 
   it("does not leak internal errors", async () => {
-    const app = buildApp({ pool: db.pool, adapters: fakes(), logger, version: "test", auth });
+    const app = buildApp({
+      pool: db.pool,
+      adapters: fakes(),
+      logger,
+      version: "test",
+      auth,
+      jobs: new MemoryJobQueue(),
+      channelKey: null,
+    });
     app.get("/boom", async () => {
       throw new Error("patient 9876543210 exploded");
     });

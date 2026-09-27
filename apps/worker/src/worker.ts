@@ -3,6 +3,7 @@ import type { Pool } from "@dentalos/db";
 import type { Logger } from "@dentalos/shared/logger";
 import { Logger as GraphileLogger, type TaskList } from "graphile-worker";
 import { makeHeartbeatTask } from "./tasks/heartbeat";
+import { makeProcessInboundTask } from "./tasks/inbound";
 import { makeOutboxSweepTask, makeSendOutboxTask } from "./tasks/outbox";
 import { makeEmergencyReservesTask, makeSweepHoldsTask } from "./tasks/scheduling";
 
@@ -25,6 +26,7 @@ export function buildTaskList(deps: WorkerDeps): TaskList {
     emergency_reserves: makeEmergencyReservesTask(deps),
     send_outbox: makeSendOutboxTask(deps),
     outbox_sweep: makeOutboxSweepTask(deps),
+    process_inbound: makeProcessInboundTask(deps),
   };
 }
 

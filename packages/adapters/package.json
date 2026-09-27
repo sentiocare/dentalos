@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@dentalos/shared": "workspace:*",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "@anthropic-ai/sdk": "^0.128.0"
   },
   "peerDependencies": {
     "vitest": "^5.0.2"

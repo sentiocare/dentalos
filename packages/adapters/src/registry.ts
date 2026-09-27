@@ -5,6 +5,7 @@ import type { SmsProvider } from "./sms/types";
 import type { StorageProvider } from "./storage/types";
 import type { TelephonyProvider } from "./telephony/types";
 import type { VoiceProvider } from "./voice/types";
+import { AnthropicLLMProvider, type AnthropicConfig } from "./llm/anthropic";
 import { FakeLLMProvider } from "./llm/fake";
 import { FakeMessagingProvider } from "./messaging/fake";
 import { FakePaymentProvider } from "./payments/fake";
@@ -32,7 +33,7 @@ export interface AdapterSelection {
   messaging: "fake" | "whatsapp_cloud";
   telephony: "fake" | "exotel" | "plivo";
   voice: "fake" | "sarvam";
-  llm: "fake" | "configured";
+  llm: "fake" | "anthropic";
   payments: "fake" | "razorpay";
   sms: "fake" | "dlt";
   storage: "fake" | "supabase";
@@ -43,7 +44,6 @@ const PLANNED: Record<string, string> = {
   exotel: "Phase 3",
   plivo: "Phase 3",
   sarvam: "Phase 3",
-  configured: "Phase 2",
   razorpay: "Phase 5",
   dlt: "Phase 2",
   supabase: "Phase 1",
@@ -58,6 +58,7 @@ function notYet(kind: string, choice: string): never {
 /** Provider settings from the environment; each real adapter checks that its part is present. */
 export interface AdapterOptions {
   whatsapp?: WhatsAppCloudConfig;
+  anthropic?: AnthropicConfig;
 }
 
 function required<T>(value: T | undefined, what: string): T {
@@ -76,7 +77,10 @@ export function createAdapters(selection: AdapterSelection, options: AdapterOpti
     telephony:
       selection.telephony === "fake" ? new FakeTelephonyProvider() : notYet("Telephony", selection.telephony),
     voice: selection.voice === "fake" ? new FakeVoiceProvider() : notYet("Voice", selection.voice),
-    llm: selection.llm === "fake" ? new FakeLLMProvider() : notYet("LLM", selection.llm),
+    llm:
+      selection.llm === "fake"
+        ? new FakeLLMProvider()
+        : new AnthropicLLMProvider(required(options.anthropic, "LLM (ANTHROPIC_API_KEY)")),
     payments:
       selection.payments === "fake" ? new FakePaymentProvider() : notYet("Payment", selection.payments),
     sms: selection.sms === "fake" ? new FakeSmsProvider() : notYet("SMS", selection.sms),

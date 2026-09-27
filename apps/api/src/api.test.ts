@@ -3,6 +3,7 @@ import { createClinic } from "@dentalos/core";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import { createLogger } from "@dentalos/shared/logger";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { MemoryJobQueue } from "@dentalos/core";
 import { buildApp } from "./app";
 
 const logger = createLogger({ service: "api-test", level: "silent" });
@@ -63,7 +64,15 @@ describe.skipIf(!hasTestDatabase)("staff API", () => {
     } finally {
       client.release();
     }
-    app = buildApp({ pool: db.pool, adapters: fakes(), logger, version: "test", auth });
+    app = buildApp({
+      pool: db.pool,
+      adapters: fakes(),
+      logger,
+      version: "test",
+      auth,
+      jobs: new MemoryJobQueue(),
+      channelKey: null,
+    });
     owner = await login("9835000001");
     ownerB = await login("9835000009");
     reception = await login("9835000002");
