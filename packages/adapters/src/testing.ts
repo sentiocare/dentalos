@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { RawWebhook } from "./common";
-import type { MessagingEvent, MessagingProvider } from "./messaging/types";
+import type { MessagingChannel, MessagingEvent, MessagingProvider } from "./messaging/types";
 import type { PaymentEvent, PaymentProvider } from "./payments/types";
 import type { StorageProvider } from "./storage/types";
 import type { TelephonyEvent, TelephonyProvider } from "./telephony/types";
@@ -26,6 +26,7 @@ export function messagingContract(
     provider: MessagingProvider;
     signedWebhook: (events: MessagingEvent[]) => RawWebhook;
   },
+  // Contract runs against real adapters use a mocked HTTP layer; nothing leaves the machine.
 ) {
   describe(`MessagingProvider contract: ${label}`, () => {
     const inbound: MessagingEvent = {
@@ -33,17 +34,21 @@ export function messagingContract(
       eventId: "evt-1",
       providerMessageId: "m-1",
       from: "+919876543210",
-      to: "+916512345678",
+      channelId: "1234567890",
       at: new Date("2026-10-01T04:30:00Z"),
       content: { kind: "text", text: "RCT kitna ka hai?" },
     };
+    const channel: MessagingChannel = { channelId: "1234567890", accessToken: "token" };
 
     it("accepts a correctly signed webhook and normalises events", () => {
       const { provider, signedWebhook } = setup();
       const webhook = signedWebhook([inbound]);
       expect(provider.verifyWebhook(webhook)).toBe(true);
       const events = provider.parseWebhook(webhook);
-      expect(events).toEqual([inbound]);
+      // Event ids are provider-specific; they only need to exist and be stable.
+      const { eventId: _id, ...expected } = inbound;
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject(expected);
       expectStableEventIds(events);
     });
 
@@ -58,14 +63,14 @@ export function messagingContract(
     it("returns a provider message id for every send", async () => {
       const { provider } = setup();
       const results = await Promise.all([
-        provider.sendText({ to: "+919876543210", text: "Namaste" }),
-        provider.sendTemplate({
+        provider.sendText(channel, { to: "+919876543210", text: "Namaste" }),
+        provider.sendTemplate(channel, {
           to: "+919876543210",
           templateName: "appointment_reminder",
           language: "hi",
           bodyParams: ["Ramesh ji", "kal shaam 5 baje"],
         }),
-        provider.sendButtons({
+        provider.sendButtons(channel, {
           to: "+919876543210",
           body: "Kaunsa samay theek rahega?",
           buttons: [
@@ -81,7 +86,9 @@ export function messagingContract(
     it("refuses more than 3 reply buttons", async () => {
       const { provider } = setup();
       const buttons = ["a", "b", "c", "d"].map((id) => ({ id, title: id }));
-      await expect(provider.sendButtons({ to: "+919876543210", body: "x", buttons })).rejects.toThrow();
+      await expect(
+        provider.sendButtons(channel, { to: "+919876543210", body: "x", buttons }),
+      ).rejects.toThrow();
     });
 
     it("reports health", async () => {

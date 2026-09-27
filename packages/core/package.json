@@ -15,6 +15,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dentalos/adapters": "workspace:*",
     "@dentalos/db": "workspace:*",
     "@dentalos/shared": "workspace:*",
     "pg": "^8.23.0"

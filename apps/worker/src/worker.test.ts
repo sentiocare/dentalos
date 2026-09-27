@@ -1,3 +1,4 @@
+import { createAdapters } from "@dentalos/adapters";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import { createLogger } from "@dentalos/shared/logger";
 import { makeWorkerUtils, parseCrontab, runOnce } from "graphile-worker";
@@ -6,6 +7,16 @@ import { loadConfig } from "./config";
 import { buildTaskList, CRONTAB, graphileLogger } from "./worker";
 
 const logger = createLogger({ service: "worker-test", level: "silent" });
+const adapters = createAdapters({
+  messaging: "fake",
+  telephony: "fake",
+  voice: "fake",
+  llm: "fake",
+  payments: "fake",
+  sms: "fake",
+  storage: "fake",
+});
+const deps = (pool: never, version = "t") => ({ pool, version, logger, adapters, channelKey: null });
 
 describe("worker config and schedule", () => {
   it("requires DATABASE_URL", () => {
@@ -13,7 +24,7 @@ describe("worker config and schedule", () => {
   });
 
   it("crontab parses and only names known tasks", () => {
-    const tasks = Object.keys(buildTaskList({ pool: undefined as never, version: "t", logger }));
+    const tasks = Object.keys(buildTaskList(deps(undefined as never)));
     for (const item of parseCrontab(CRONTAB)) expect(tasks).toContain(item.task);
   });
 });
@@ -33,7 +44,7 @@ describe.skipIf(!hasTestDatabase)("worker with a database", () => {
     await utils.addJob("heartbeat", {});
     await runOnce({
       pgPool: db.pool,
-      taskList: buildTaskList({ pool: db.pool, version: "abc123", logger }),
+      taskList: buildTaskList(deps(db.pool as never, "abc123")),
       logger: graphileLogger(logger),
     });
     const { rows } = await db.pool.query("select detail from service_heartbeats where service = 'worker'");
@@ -45,13 +56,14 @@ describe.skipIf(!hasTestDatabase)("worker with a database", () => {
     const utils = await makeWorkerUtils({ pgPool: db.pool, logger: graphileLogger(logger) });
     await utils.addJob("sweep_holds", {});
     await utils.addJob("emergency_reserves", {});
+    await utils.addJob("outbox_sweep", {});
     await runOnce({
       pgPool: db.pool,
-      taskList: buildTaskList({ pool: db.pool, version: "t", logger }),
+      taskList: buildTaskList(deps(db.pool as never)),
       logger: graphileLogger(logger),
     });
     const { rows } = await db.pool.query(
-      "select count(*)::int as n from graphile_worker.jobs where task_identifier in ('sweep_holds','emergency_reserves')",
+      "select count(*)::int as n from graphile_worker.jobs where task_identifier in ('sweep_holds','emergency_reserves','outbox_sweep')",
     );
     expect(rows[0].n).toBe(0);
     await utils.release();

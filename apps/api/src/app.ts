@@ -1,4 +1,5 @@
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import type { Adapters } from "@dentalos/adapters";
 import type { Pool } from "@dentalos/db";
 import { uuidv7 } from "@dentalos/shared";
@@ -23,6 +24,7 @@ export interface AppDeps {
   version: string;
   auth: AuthConfig & { devLogin?: boolean };
   webOrigins?: string[];
+  rateLimitPerMinute?: number;
 }
 
 export function buildApp(deps: AppDeps) {
@@ -37,6 +39,15 @@ export function buildApp(deps: AppDeps) {
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     allowedHeaders: ["authorization", "content-type", "x-clinic-id"],
     maxAge: 86_400,
+  });
+
+  // Per signed-in person (or per IP before sign-in). Generous for a busy front desk; webhooks from
+  // providers get a separate, higher allowance on their own routes.
+  void app.register(rateLimit, {
+    max: deps.rateLimitPerMinute ?? 600,
+    timeWindow: "1 minute",
+    keyGenerator: (request) => request.headers.authorization?.slice(-32) ?? request.ip,
+    allowList: (request) => request.url.startsWith("/health"),
   });
 
   app.addHook("onSend", async (_request, reply) => {

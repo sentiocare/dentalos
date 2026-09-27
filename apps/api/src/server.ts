@@ -1,8 +1,8 @@
-import { createAdapters } from "@dentalos/adapters";
+import { adapterOptions, adapterSelection, createAdapters } from "@dentalos/adapters";
 import { createPool } from "@dentalos/db";
 import { createLogger } from "@dentalos/shared/logger";
 import { buildApp } from "./app";
-import { adapterSelection, loadConfig } from "./config";
+import { loadConfig } from "./config";
 import { initErrorTracking } from "./observability";
 
 const config = loadConfig();
@@ -14,7 +14,7 @@ const pool = createPool(config.DATABASE_URL, {
 });
 const app = buildApp({
   pool,
-  adapters: createAdapters(adapterSelection(config)),
+  adapters: createAdapters(adapterSelection(config), adapterOptions(config)),
   logger,
   version: config.GIT_SHA,
   auth: {

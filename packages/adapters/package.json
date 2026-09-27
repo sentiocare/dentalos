@@ -12,7 +12,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@dentalos/shared": "workspace:*"
+    "@dentalos/shared": "workspace:*",
+    "zod": "^4.6.5"
   },
   "peerDependencies": {
     "vitest": "^5.0.2"

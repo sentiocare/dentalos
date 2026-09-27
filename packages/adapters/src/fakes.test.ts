@@ -42,10 +42,11 @@ describe("fake failure scripting", () => {
   it("throws a scripted ProviderError once, with the retryable flag", async () => {
     const provider = new FakeMessagingProvider();
     provider.support.failNext("rate_limited", true);
-    const error = await provider.sendText({ to: "+919876543210", text: "hi" }).catch((e: unknown) => e);
+    const ch = { channelId: "1", accessToken: "t" };
+    const error = await provider.sendText(ch, { to: "+919876543210", text: "hi" }).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ProviderError);
     expect((error as ProviderError).retryable).toBe(true);
-    await expect(provider.sendText({ to: "+919876543210", text: "hi" })).resolves.toBeTruthy();
+    await expect(provider.sendText(ch, { to: "+919876543210", text: "hi" })).resolves.toBeTruthy();
     expect(provider.sent).toHaveLength(1);
   });
 
@@ -98,7 +99,7 @@ describe("createAdapters", () => {
     expect(Object.keys(adapters)).toHaveLength(7);
   });
 
-  it("fails fast, naming the phase, for adapters not built yet", () => {
+  it("fails fast when a real adapter is chosen without its settings", () => {
     expect(() =>
       createAdapters({
         messaging: "whatsapp_cloud",
@@ -109,6 +110,20 @@ describe("createAdapters", () => {
         sms: "fake",
         storage: "fake",
       }),
-    ).toThrow(/Phase 2/);
+    ).toThrow(/WHATSAPP_APP_SECRET/);
+  });
+
+  it("fails fast, naming the phase, for adapters not built yet", () => {
+    expect(() =>
+      createAdapters({
+        messaging: "fake",
+        telephony: "exotel",
+        voice: "fake",
+        llm: "fake",
+        payments: "fake",
+        sms: "fake",
+        storage: "fake",
+      }),
+    ).toThrow(/Phase 3/);
   });
 });

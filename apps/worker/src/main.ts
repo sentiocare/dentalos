@@ -1,4 +1,6 @@
+import { adapterOptions, adapterSelection, createAdapters } from "@dentalos/adapters";
 import { createPool } from "@dentalos/db";
+import { parseSecretKey } from "@dentalos/shared";
 import { createLogger } from "@dentalos/shared/logger";
 import { run } from "graphile-worker";
 import { loadConfig } from "./config";
@@ -14,7 +16,13 @@ const pool = createPool(config.DATABASE_URL, {
 const runner = await run({
   pgPool: pool,
   concurrency: config.WORKER_CONCURRENCY,
-  taskList: buildTaskList({ pool, version: config.GIT_SHA, logger }),
+  taskList: buildTaskList({
+    pool,
+    version: config.GIT_SHA,
+    logger,
+    adapters: createAdapters(adapterSelection(config), adapterOptions(config)),
+    channelKey: config.CHANNEL_SECRET_KEY ? parseSecretKey(config.CHANNEL_SECRET_KEY) : null,
+  }),
   crontab: CRONTAB,
   logger: graphileLogger(logger),
   noHandleSignals: false,

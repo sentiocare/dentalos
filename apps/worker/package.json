@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dentalos/adapters": "workspace:*",
     "@dentalos/core": "workspace:*",
     "@dentalos/db": "workspace:*",
     "@dentalos/shared": "workspace:*",

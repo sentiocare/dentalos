@@ -55,6 +55,21 @@ describe("config", () => {
   });
 });
 
+describe("rate limiting", () => {
+  it("refuses a flood of requests from one caller with 429", async () => {
+    const pool = createPool("postgres://nobody:nothing@127.0.0.1:1/none");
+    const app = buildApp({ pool, adapters: fakes(), logger, version: "test", auth, rateLimitPerMinute: 5 });
+    const codes = [];
+    for (let i = 0; i < 7; i++)
+      codes.push((await app.inject({ url: "/v1/me", headers: { authorization: "Bearer abc" } })).statusCode);
+    expect(codes.slice(0, 5).every((c) => c === 401)).toBe(true);
+    expect(codes.slice(5)).toEqual([429, 429]);
+    expect((await app.inject("/health")).statusCode).toBe(200);
+    await app.close();
+    await pool.end();
+  });
+});
+
 describe("health without a database", () => {
   it("liveness is up, readiness is 503 when the database is unreachable", async () => {
     const pool = createPool("postgres://nobody:nothing@127.0.0.1:1/none");

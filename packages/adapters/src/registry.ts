@@ -12,6 +12,7 @@ import { FakeSmsProvider } from "./sms/fake";
 import { FakeStorageProvider } from "./storage/fake";
 import { FakeTelephonyProvider } from "./telephony/fake";
 import { FakeVoiceProvider } from "./voice/fake";
+import { WhatsAppCloudProvider, type WhatsAppCloudConfig } from "./messaging/whatsapp-cloud";
 
 export interface Adapters {
   messaging: MessagingProvider;
@@ -39,7 +40,6 @@ export interface AdapterSelection {
 
 /** When each real adapter is built (PLAN §7). Until then, selecting it fails at startup, not mid-call. */
 const PLANNED: Record<string, string> = {
-  whatsapp_cloud: "Phase 2",
   exotel: "Phase 3",
   plivo: "Phase 3",
   sarvam: "Phase 3",
@@ -55,10 +55,24 @@ function notYet(kind: string, choice: string): never {
   );
 }
 
-export function createAdapters(selection: AdapterSelection): Adapters {
+/** Provider settings from the environment; each real adapter checks that its part is present. */
+export interface AdapterOptions {
+  whatsapp?: WhatsAppCloudConfig;
+}
+
+function required<T>(value: T | undefined, what: string): T {
+  if (!value) throw new Error(`${what} is not configured (see docs/SETUP.md)`);
+  return value;
+}
+
+export function createAdapters(selection: AdapterSelection, options: AdapterOptions = {}): Adapters {
   return {
     messaging:
-      selection.messaging === "fake" ? new FakeMessagingProvider() : notYet("Messaging", selection.messaging),
+      selection.messaging === "fake"
+        ? new FakeMessagingProvider()
+        : new WhatsAppCloudProvider(
+            required(options.whatsapp, "WhatsApp (WHATSAPP_APP_SECRET, WHATSAPP_VERIFY_TOKEN)"),
+          ),
     telephony:
       selection.telephony === "fake" ? new FakeTelephonyProvider() : notYet("Telephony", selection.telephony),
     voice: selection.voice === "fake" ? new FakeVoiceProvider() : notYet("Voice", selection.voice),
