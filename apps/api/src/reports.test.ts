@@ -103,4 +103,30 @@ describe.skipIf(!hasTestDatabase)("reports API", () => {
     expect((await call(owner, "GET", "/v1/setup")).json().testMode.on).toBe(true);
     expect((await call(reception, "PUT", "/v1/test-mode", { on: false })).statusCode).toBe(403);
   });
+
+  it("Google reviews: the owner saves the link and switches asking on; the report counts answers", async () => {
+    expect((await call(owner, "GET", "/v1/reviews/settings")).json()).toEqual({ enabled: false, link: null });
+    expect(
+      (await call(owner, "PUT", "/v1/reviews/settings", { enabled: true, link: "https://example.com/x" }))
+        .statusCode,
+    ).toBe(400);
+    const saved = await call(owner, "PUT", "/v1/reviews/settings", {
+      enabled: true,
+      link: "https://g.page/r/CabcDEF/review",
+    });
+    expect(saved.json()).toEqual({ enabled: true, link: "https://g.page/r/CabcDEF/review" });
+    expect(
+      (await call(reception, "PUT", "/v1/reviews/settings", { enabled: false, link: null })).statusCode,
+    ).toBe(403);
+    expect((await call(owner, "GET", "/v1/reports?period=month&date=2030-03-12")).json().reviews).toEqual({
+      asked: 0,
+      good: 0,
+      bad: 0,
+    });
+    const setup = (await call(owner, "GET", "/v1/setup")).json();
+    expect(setup.steps.find((s: { key: string }) => s.key === "reviews")).toMatchObject({
+      done: true,
+      required: false,
+    });
+  });
 });

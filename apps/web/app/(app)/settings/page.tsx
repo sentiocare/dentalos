@@ -132,6 +132,11 @@ export default function SettingsPage() {
         </Section>
       ) : null}
       {manage ? (
+        <Section id="reviews" title={t("reviews.title")}>
+          <GoogleReviews />
+        </Section>
+      ) : null}
+      {manage ? (
         <Section id="payments" title={tpay("title")}>
           <PaymentsAccount />
         </Section>
@@ -1614,6 +1619,69 @@ function LeadAds() {
         {(id) => <Input id={id} type="tel" value={alert} onChange={(e) => setAlert(e.target.value)} />}
       </Field>
       <Button variant="secondary" busy={busy} onClick={() => void save({ alertPhone: alert.trim() || null })}>
+        {tc("save")}
+      </Button>
+    </div>
+  );
+}
+
+/** Google reviews: after each visit, "how was it?"; happy patients get the clinic's review link. */
+function GoogleReviews() {
+  const t = useTranslations("settings.reviews");
+  const tc = useTranslations("common");
+  const { api } = useSession();
+  const toast = useToast();
+  const [v, setV] = useState<{ enabled: boolean; link: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void api<{ enabled: boolean; link: string | null }>("/v1/reviews/settings")
+      .then((r) => setV({ enabled: r.enabled, link: r.link ?? "" }))
+      .catch(() => {});
+  }, [api]);
+  if (!v) return <Spinner />;
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">{t("help")}</p>
+      <Field label={t("link")} hint={t("linkHint")}>
+        {(id) => (
+          <Input
+            id={id}
+            type="url"
+            inputMode="url"
+            placeholder="https://g.page/r/…/review"
+            value={v.link}
+            onChange={(e) => setV({ ...v, link: e.target.value })}
+          />
+        )}
+      </Field>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={v.enabled}
+          onChange={(e) => setV({ ...v, enabled: e.target.checked })}
+        />
+        {t("enabled")}
+      </label>
+      <p className="text-xs text-slate-500">{t("policy")}</p>
+      <Button
+        busy={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            const r = await api<{ enabled: boolean; link: string | null }>("/v1/reviews/settings", {
+              method: "PUT",
+              body: { enabled: v.enabled, link: v.link.trim() || null },
+            });
+            setV({ enabled: r.enabled, link: r.link ?? "" });
+            toast(tc("saved"));
+          } catch (e) {
+            toast(e instanceof ApiError ? e.message : tc("error"), "error");
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
         {tc("save")}
       </Button>
     </div>

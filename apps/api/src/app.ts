@@ -23,6 +23,7 @@ import { walletRoutes } from "./routes/wallet";
 import { adminRoutes } from "./routes/admin";
 import { leadRoutes } from "./routes/leads";
 import { reportRoutes } from "./routes/reports";
+import { reviewRoutes } from "./routes/reviews";
 import { setupRoutes } from "./routes/setup";
 import { clinicalRoutes } from "./routes/clinical";
 import { deskRoutes } from "./routes/desk";
@@ -116,6 +117,7 @@ export function buildApp(deps: AppDeps) {
     adminRoutes(api, { staff, pool: deps.pool, adapters: deps.adapters, seller, jobs: deps.jobs });
     leadRoutes(api, { staff, jobs: deps.jobs, channelKey: deps.channelKey });
     reportRoutes(api, { staff });
+    reviewRoutes(api, { staff });
     setupRoutes(api, { staff });
     deskRoutes(api, { staff });
     clinicalRoutes(api, { staff, storage: deps.adapters.storage, jobs: deps.jobs });

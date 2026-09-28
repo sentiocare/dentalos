@@ -140,4 +140,56 @@ describe.skipIf(!hasTestDatabase)("WhatsApp: answering follow-up messages (Phase
         .rows,
     ).toEqual([{ priority: "high" }]);
   });
+
+  it("after-visit question: happy gets the Google link; not happy reaches the doctor and still sees the link", async () => {
+    await run((c) =>
+      c.query(
+        `update clinics set settings = settings || '{"reviews": {"enabled": true, "link": "https://g.page/r/Cabc/review"}}'`,
+      ),
+    );
+    const visit = async (patientId: string, day: string) =>
+      run(async (c) => {
+        const chair = (await c.query("select id from chairs limit 1")).rows[0].id;
+        const doctor = (await c.query("select id from doctors limit 1")).rows[0].id;
+        return (
+          await c.query(
+            `insert into appointments (clinic_id, branch_id, patient_id, doctor_id, chair_id, starts_at, ends_at, status)
+             values (app.current_clinic_id(), (select id from branches limit 1), $1, $2, $3, $4, $5, 'completed') returning id`,
+            [patientId, doctor, chair, `${day}T12:00:00+05:30`, `${day}T12:30:00+05:30`],
+          )
+        ).rows[0].id as string;
+      });
+
+    const happy = await existing("Sita Devi");
+    const a1 = await visit(happy.patient.id, "2030-01-05");
+    const thanks = text((await happy.sim.tap(`review:${a1}:good`, "Very good 👍")).at(-1)!);
+    expect(thanks).toMatch(/Google review/);
+    expect(thanks).toContain("https://g.page/r/Cabc/review");
+
+    const unhappy = await existing("Mohan Lal");
+    const a2 = await visit(unhappy.patient.id, "2030-01-04");
+    const sorry = text((await unhappy.sim.tap(`review:${a2}:bad`, "Could be better")).at(-1)!);
+    expect(sorry).toMatch(/told the doctor/);
+    expect(sorry).toContain("https://g.page/r/Cabc/review");
+    const tasks = (
+      await db.pool.query("select kind, priority, title from tasks where appointment_id = $1", [a2])
+    ).rows;
+    expect(tasks).toEqual([
+      { kind: "complaint", priority: "high", title: "Not happy after visit: Mohan Lal" },
+    ]);
+    const feedback = (
+      await db.pool.query(
+        "select rating from visit_feedback where appointment_id in ($1, $2) order by rating",
+        [a1, a2],
+      )
+    ).rows;
+    expect(feedback.map((f) => f.rating)).toEqual(["bad", "good"]);
+
+    // Someone else's visit can't be rated from this number.
+    await happy.sim.tap(`review:${a2}:good`, "Very good 👍");
+    expect(
+      (await db.pool.query("select rating from visit_feedback where appointment_id = $1", [a2])).rows[0]
+        .rating,
+    ).toBe("bad");
+  });
 });

@@ -27,6 +27,7 @@ export * from "./revenue/treatments";
 export * from "./revenue/estimates";
 export * from "./revenue/followups";
 export * from "./revenue/campaigns";
+export * from "./revenue/reviews";
 export * from "./billing/ledger";
 export * from "./billing/payment-events";
 export * from "./billing/metering";

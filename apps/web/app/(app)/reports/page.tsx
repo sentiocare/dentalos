@@ -19,6 +19,7 @@ interface Report {
   collectedPaise: number;
   duesPaise: number;
   leads: { new: number; booked: number; won: number };
+  reviews: { asked: number; good: number; bad: number };
   recovered: {
     totalPaise: number;
     byKind: Record<string, number>;
@@ -124,6 +125,11 @@ function Reports() {
             {tile(t("chats"), r.chats)}
             {tile(t("collected"), rupees(r.collectedPaise), t("dues", { amount: rupees(r.duesPaise) }))}
             {tile(t("leads"), r.leads.new, t("leadsBooked", { booked: r.leads.booked, won: r.leads.won }))}
+            {tile(
+              t("reviews"),
+              r.reviews.asked,
+              t("reviewsSub", { good: r.reviews.good, bad: r.reviews.bad }),
+            )}
           </div>
           {r.tomorrow ? (
             <p className="text-sm text-slate-600">

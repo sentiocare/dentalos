@@ -207,6 +207,29 @@ const T = {
     hinglish:
       "Yeh sunkar dukh hua. Maine doctor ko bata diya hai, clinic aapse sampark karega. Agar dard bahut zyada hai, ya sujan hai ya khoon nahi ruk raha, to abhi clinic ko call karein.",
   },
+  review_thanks: {
+    en: "Thank you, that means a lot to us! If you have a minute, a Google review helps other families find a good dentist: {link}",
+    hi: "धन्यवाद, यह हमारे लिए बहुत मायने रखता है! अगर एक मिनट हो, तो Google पर review देने से दूसरे परिवारों को अच्छा डेंटिस्ट ढूँढने में मदद मिलती है: {link}",
+    hinglish:
+      "Dhanyavaad, yeh humare liye bahut maayne rakhta hai! Agar ek minute ho, to Google par review dene se doosre parivaron ko achha dentist dhoondhne mein madad milti hai: {link}",
+  },
+  review_thanks_nolink: {
+    en: "Thank you, that means a lot to us! See you at your next visit.",
+    hi: "धन्यवाद, यह हमारे लिए बहुत मायने रखता है! अगली विज़िट पर मिलते हैं।",
+    hinglish: "Dhanyavaad, yeh humare liye bahut maayne rakhta hai! Agli visit par milte hain.",
+  },
+  review_sorry: {
+    en: "We're sorry your visit wasn't as good as it should have been. I've told the doctor, and the clinic will call you today to make it right. You're also welcome to share your experience on Google: {link}",
+    hi: "हमें अफ़सोस है कि आपकी विज़िट उतनी अच्छी नहीं रही जितनी होनी चाहिए थी। मैंने डॉक्टर को बता दिया है, क्लिनिक आज ही आपको फ़ोन करेगा। आप चाहें तो Google पर भी अपना अनुभव लिख सकते हैं: {link}",
+    hinglish:
+      "Humein afsos hai ki aapki visit utni achhi nahi rahi jitni honi chahiye thi. Maine doctor ko bata diya hai, clinic aaj hi aapko phone karega. Aap chahein to Google par bhi apna anubhav likh sakte hain: {link}",
+  },
+  review_sorry_nolink: {
+    en: "We're sorry your visit wasn't as good as it should have been. I've told the doctor, and the clinic will call you today to make it right.",
+    hi: "हमें अफ़सोस है कि आपकी विज़िट उतनी अच्छी नहीं रही जितनी होनी चाहिए थी। मैंने डॉक्टर को बता दिया है, क्लिनिक आज ही आपको फ़ोन करेगा।",
+    hinglish:
+      "Humein afsos hai ki aapki visit utni achhi nahi rahi jitni honi chahiye thi. Maine doctor ko bata diya hai, clinic aaj hi aapko phone karega.",
+  },
   human_ack: {
     en: "I've asked the clinic team to get back to you. They will reply here or call you soon.",
     hi: "मैंने क्लिनिक टीम से कहा है। वे जल्द यहीं जवाब देंगे या आपको कॉल करेंगे।",

@@ -333,7 +333,15 @@
     "qualification": "Qualification",
     "registrationNo": "Registration no. (Dental Council)",
     "staffEmail": "Email (to sign in)",
-    "staffPhone": "Mobile (optional, for WhatsApp alerts)"
+    "staffPhone": "Mobile (optional, for WhatsApp alerts)",
+    "reviews": {
+      "title": "Google reviews",
+      "help": "After each visit, the patient gets one WhatsApp: “How was your visit?”. A happy patient gets your Google review link. A patient who is not happy gets an apology, and you get an urgent task to call them the same day. Nobody is asked more than once in 6 months.",
+      "link": "Google review link",
+      "linkHint": "Google Business Profile → Ask for reviews (or Get more reviews) → copy the link.",
+      "enabled": "Ask patients after their visit",
+      "policy": "Everyone who answers sees the link, including unhappy patients. Google does not allow asking only happy customers, and can remove reviews collected that way."
+    }
   },
   "activity": {
     "title": "Activity log",
@@ -1022,7 +1030,9 @@
       "dues": "Payment due",
       "lead": "Lead"
     },
-    "nightly": "Send me this report on WhatsApp every night at 9 pm"
+    "nightly": "Send me this report on WhatsApp every night at 9 pm",
+    "reviews": "Asked for a review",
+    "reviewsSub": "{good} happy · {bad} not happy"
   },
   "setup": {
     "title": "Setup checklist",
@@ -1082,6 +1092,10 @@
       "license": {
         "title": "License",
         "help": "Pay the one-time license. Usage is paid from the prepaid wallet."
+      },
+      "reviews": {
+        "title": "Google reviews",
+        "help": "Ask happy patients for a Google review after their visit; unhappy ones reach you first."
       }
     },
     "testMode": {

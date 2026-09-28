@@ -511,6 +511,13 @@ There are two kinds of money, kept apart on purpose:
    - Make the ad offer concrete ("Implant consultation this week, know your cost before you decide"), not "chat with us".
 7. **The lead form.** Ask the clinic's ad agency to add two short questions to the Meta lead form: "What do you need help with?" and "When would you like to come?". The assistant reads the answers (English or Hindi) and asks only what is missing.
 
+### Google reviews (each clinic, 5 minutes)
+
+1. The owner opens their **Google Business Profile** (search the clinic's name on Google while signed in, or business.google.com) and taps **Ask for reviews** (sometimes **Get more reviews**). Copy the link it shows (it looks like `https://g.page/r/…/review`).
+2. In the dashboard: **Settings → Google reviews**, paste the link, tick **Ask patients after their visit**, and save.
+3. From then on, about 2 hours after each completed visit (2 days after, for treatments with an after-care check-in), the patient gets one WhatsApp: "How was your visit?" with **Very good 👍** and **Could be better**. Nobody is asked more than once in 6 months.
+4. Meta must approve the template `sentio_review_request` first (Settings → WhatsApp shows its status).
+
 ### Onboarding a new clinic (the owner does this, with Sentio on the phone)
 
 Before doctors write prescriptions, add each doctor's **qualification** and **Dental Council registration number** under Settings → Doctors. They are printed on every prescription.

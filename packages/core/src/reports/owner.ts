@@ -1,4 +1,5 @@
 import { formatINR, type Paise } from "@dentalos/shared";
+import { reviewStats } from "../revenue/reviews";
 import type { PoolClient } from "pg";
 import { enqueueMessage } from "../comms/outbox";
 import { ownerContact } from "../billing/wallet";
@@ -126,6 +127,7 @@ export async function ownerReport(client: PoolClient, input: { period: Period; d
             count(*) filter (where stage = 'won')::int as won
      from leads where created_at >= $1 and created_at < $2`,
   );
+  const reviews = await reviewStats(client, { from: r.from, to: r.to });
   const recovered = await recoveredPayments(client, { from: r.from, to: r.to });
   const byKind: Record<string, number> = {};
   for (const p of recovered) byKind[p.kind] = (byKind[p.kind] ?? 0) + p.amountPaise;
@@ -146,6 +148,7 @@ export async function ownerReport(client: PoolClient, input: { period: Period; d
     collectedPaise: Number(money.received) - Number(money.refunded),
     duesPaise: Number(dues.total),
     leads,
+    reviews,
     recovered: {
       totalPaise: recovered.reduce((s, p) => s + p.amountPaise, 0),
       byKind,

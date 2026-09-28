@@ -19,6 +19,7 @@ export const SETUP_STEPS = [
   { key: "testCall", required: true, href: "/calls" },
   { key: "payments", required: false, href: "/settings#payments" },
   { key: "leadAds", required: false, href: "/settings#leadAds" },
+  { key: "reviews", required: false, href: "/settings#reviews" },
   { key: "license", required: true, href: "/wallet" },
 ] as const;
 export type SetupKey = (typeof SETUP_STEPS)[number]["key"];
@@ -49,6 +50,7 @@ export async function setupChecklist(client: PoolClient) {
     testCall: row.test_call,
     payments: row.payments,
     leadAds: row.lead_ads,
+    reviews: row.settings?.reviews?.enabled === true && Boolean(row.settings?.reviews?.link),
     license: row.license,
   };
   const steps = SETUP_STEPS.map((s) => ({

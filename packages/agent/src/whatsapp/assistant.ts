@@ -11,6 +11,7 @@ import {
   leadBookedInChat,
   leadCallTask,
   leadReplied,
+  recordVisitFeedback,
   qualifyLead,
   linkFamily,
   localDateOf,
@@ -104,6 +105,8 @@ interface ClinicInfo {
   emergencyTriggers: string[];
   /** Words in a reply to the next-day check-in that the doctor wants to hear about. */
   checkinTriggers: string[];
+  /** The clinic's Google review link (Settings → Google reviews). */
+  reviewLink: string | null;
 }
 
 const DEFAULT_CHECKIN_TRIGGERS = [
@@ -183,6 +186,7 @@ class Assistant {
         defaultLanguage: c.default_language,
         emergencyTriggers: c.settings?.emergency?.extraTriggers ?? [],
         checkinTriggers: c.settings?.aftercare?.triggers ?? DEFAULT_CHECKIN_TRIGGERS,
+        reviewLink: c.settings?.reviews?.link ?? null,
       },
       procs.map((p) => ({
         id: p.id,
@@ -310,7 +314,7 @@ class Assistant {
     }
     if (
       input.kind === "button" &&
-      /^(book_step|estimate_ok|estimate_call|callme|rebook|recall_book|checkin):/.test(input.payload)
+      /^(book_step|estimate_ok|estimate_call|callme|rebook|recall_book|checkin|review):/.test(input.payload)
     ) {
       await this.existingPatientConsent();
       return this.followupButton(input.payload);
@@ -780,6 +784,25 @@ class Assistant {
           { patientId: a.patient_id, appointmentId: a.id },
         );
         return this.reply(this.t(answer === "help" ? "human_ack" : "checkin_pain"));
+      }
+      case "review": {
+        // "How was your visit?" Happy → the Google link. Not happy → the doctor is told and will call; the
+        // link is still offered, because only asking happy patients breaks Google's review policy.
+        const a = await this.ownAppointment(id);
+        if (!a || (answer !== "good" && answer !== "bad")) return this.welcome();
+        await recordVisitFeedback(this.q, { appointmentId: a.id, patientId: a.patient_id, rating: answer });
+        const link = this.clinic.reviewLink;
+        if (answer === "good")
+          return this.reply(link ? this.t("review_thanks", { link }) : this.t("review_thanks_nolink"));
+        await this.task(
+          "complaint",
+          "high",
+          `Not happy after visit: ${a.patient}`,
+          "Tapped 'Could be better' on the after-visit message. Please call today.",
+          `review:${a.id}:bad`,
+          { patientId: a.patient_id, appointmentId: a.id },
+        );
+        return this.reply(link ? this.t("review_sorry", { link }) : this.t("review_sorry_nolink"));
       }
       default:
         return this.welcome();

@@ -164,6 +164,10 @@ The proven pattern for ad leads is **speed plus a human close**: reply within mi
 
 A payment counts when it was made within 30 days **after** a Sentio follow-up reached that patient (next sitting, estimate, missed visit, recall, dues or lead). Each payment counts once, for the latest follow-up before it; reversed payments don't count. The report lists every counted payment with the follow-up behind it, so anyone can check each rupee. It shows money that came in after follow-ups, not proof that the follow-up alone caused it.
 
+## Google reviews
+
+A follow-up of kind `review` starts for each completed visit when the clinic has switched reviews on (at most once per patient in 180 days). Its single step sends the `review_request` template with two buttons. The WhatsApp assistant handles the tap: "very good" records the answer and replies with the clinic's Google review link; "could be better" records it, creates a high-priority complaint task, apologises and still offers the link (Google forbids review gating). Answers are in `visit_feedback` and counted on the Reports page (`core/revenue/reviews.ts`).
+
 ## Test mode
 
 While test mode is on, the outbox and the confirmation-call check allow only staff numbers and listed test numbers. Everything else is recorded as blocked with the reason `test_mode`, so the owner can test end to end without messaging a real patient.

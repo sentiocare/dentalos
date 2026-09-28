@@ -1,4 +1,5 @@
 import { formatINR, type Paise } from "@dentalos/shared";
+import { REVIEW_DEFAULTS, reviewSettingsOf } from "./reviews";
 import type { PoolClient } from "pg";
 import { walletAllows, walletStatus } from "../billing/wallet";
 import { leadCallTask, leadContacted } from "../leads/leads";
@@ -22,7 +23,8 @@ export type FollowupKind =
   | "recall"
   | "aftercare_checkin"
   | "dues"
-  | "lead";
+  | "lead"
+  | "review";
 
 export interface LadderStep {
   /** Hours after the previous step (for the first step: after the run's start). */
@@ -77,6 +79,8 @@ export const DEFAULT_LADDERS: Record<FollowupKind, LadderStep[]> = {
     { afterHours: 168, atLocalTime: "11:00", action: "whatsapp", template: "lead_checkin" },
     { afterHours: 336, atLocalTime: "11:00", action: "whatsapp", template: "lead_checkin" },
   ],
+  // One question after a visit: how was it? (Google reviews; see revenue/reviews.ts.)
+  review: [{ afterHours: 0, action: "whatsapp", template: "review_request" }],
   dues: [
     { afterHours: 0, action: "whatsapp", template: "dues_reminder" },
     { afterHours: 168, atLocalTime: "11:00", action: "whatsapp", template: "dues_reminder" },
@@ -116,6 +120,7 @@ interface ClinicInfo {
   defaultLanguage: string;
   settings: {
     voice?: { outboundHours?: [string, string]; outboundCalls?: boolean; leadCalls?: boolean };
+    reviews?: { enabled?: boolean; link?: string | null };
     billing?: { duesMinPaise?: number; duesAfterDays?: number };
   };
 }
@@ -175,6 +180,7 @@ export async function planFollowups(
     aftercare_checkin: 0,
     dues: 0,
     lead: 0,
+    review: 0,
     deposits: 0,
   };
   const add = async (r: NewRun) => {
@@ -293,6 +299,36 @@ export async function planFollowups(
       });
   }
 
+  // Google reviews: every completed visit, once per patient in 6 months, a couple of hours after the visit
+  // (two days after, when the visit has an after-care check-in, so the patient isn't asked while sore).
+  const reviews = reviewSettingsOf(clinic.settings);
+  if (reviews.enabled) {
+    const visits = await client.query(
+      `select distinct on (a.patient_id) a.id, a.ends_at, a.patient_id, p.phone,
+              (pt.checkin or coalesce((pt.aftercare->>'approved')::boolean, false)) as aftercare
+       from appointments a join patients p on p.id = a.patient_id
+       left join procedure_types pt on pt.id = a.procedure_type_id
+       where a.status = 'completed' and a.ends_at <= $1 and a.ends_at > $1::timestamptz - interval '2 days'
+         and p.deleted_at is null and p.phone is not null
+         and not exists (select 1 from followup_runs r where r.kind = 'review' and r.patient_id = a.patient_id
+                         and r.next_at > $1::timestamptz - make_interval(days => $2))
+       order by a.patient_id, a.ends_at desc`,
+      [now, REVIEW_DEFAULTS.everyDays],
+    );
+    for (const v of visits.rows) {
+      const hours = v.aftercare ? REVIEW_DEFAULTS.afterCareHours : REVIEW_DEFAULTS.afterHours;
+      const start = new Date(v.ends_at.getTime() + hours * 3600_000);
+      await add({
+        kind: "review",
+        subjectType: "appointment",
+        subjectId: v.id,
+        patientId: v.patient_id,
+        phone: v.phone,
+        startAt: start > now ? start : now,
+      });
+    }
+  }
+
   // Dues: a patient who has owed money for a few days, with no reminder running. The subject is their latest
   // charge, so a later bill starts a fresh reminder once the earlier one is settled.
   const minDues = clinic.settings.billing?.duesMinPaise ?? DUES_DEFAULTS.minPaise;
@@ -396,6 +432,7 @@ async function goal(client: PoolClient, run: RunRow, now: Date): Promise<Outcome
       return r.returned ? "stopped_success" : null;
     }
     case "aftercare_checkin":
+    case "review":
       return null;
     case "lead": {
       const r = await q(`select stage from leads where id = $1`);
@@ -656,7 +693,7 @@ export async function advanceFollowups(
         [run.id, now],
       );
       // A ladder that ran out without reaching its goal leaves the patient with a person (PLAN §5.3).
-      if (action !== "staff_task" && run.kind !== "aftercare_checkin" && run.kind !== "lead") {
+      if (action !== "staff_task" && !["aftercare_checkin", "lead", "review"].includes(run.kind)) {
         await staffTask(client, { ...run, step: run.step + 1 }, now);
         result.tasks++;
       }
@@ -826,6 +863,21 @@ async function buildMessage(
         appointmentId: run.subject_id,
       };
     }
+    case "review_request": {
+      const a = (
+        await client.query(
+          "select p.name from appointments a join patients p on p.id = a.patient_id where a.id = $1",
+          [run.subject_id],
+        )
+      ).rows[0];
+      if (!a) return null;
+      return {
+        language,
+        params: [String(a.name).split(" ")[0] ?? "", clinic.name],
+        buttons: [`review:${run.subject_id}:good`, `review:${run.subject_id}:bad`],
+        appointmentId: run.subject_id,
+      };
+    }
     case "lead_welcome":
     case "lead_nudge":
     case "lead_checkin": {
@@ -901,6 +953,7 @@ const TASK_TITLES: Record<FollowupKind, [kind: string, title: string]> = {
   aftercare_checkin: ["followup", "After-care check"],
   dues: ["followup", "Payment due, not received"],
   lead: ["lead", "Lead to call"],
+  review: ["followup", "Review request"],
 };
 
 async function staffTask(client: PoolClient, run: RunRow, now: Date): Promise<string | null> {

@@ -33,6 +33,7 @@ export type TemplatePurpose =
   | "lead_welcome"
   | "lead_nudge"
   | "lead_checkin"
+  | "review_request"
   | "owner_daily_report"
   | "prescription";
 
@@ -363,6 +364,21 @@ export const TEMPLATES: Record<TemplatePurpose, TemplateDefinition> = {
       { en: "Book a visit", hi: "विज़िट बुक करें" },
       { en: "Ask a question", hi: "सवाल पूछें" },
       { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
+  },
+  // After a visit: one question. The answer decides the next message (Google link, or the doctor calls).
+  review_request: {
+    purpose: "review_request",
+    name: "sentio_review_request",
+    category: "marketing",
+    params: ["first name", "clinic name"],
+    body: {
+      en: "Namaste {{1}}, thank you for visiting {{2}} today. How was your visit? Your answer helps us improve. Reply STOP to stop messages.",
+      hi: "नमस्ते {{1}}, आज {{2}} आने के लिए धन्यवाद। आपकी विज़िट कैसी रही? आपका जवाब हमें बेहतर बनने में मदद करता है। मैसेज बंद करने के लिए STOP लिखें।",
+    },
+    buttons: [
+      { en: "Very good 👍", hi: "बहुत अच्छी 👍" },
+      { en: "Could be better", hi: "और बेहतर हो सकती थी" },
     ],
   },
   // The owner's 9 pm summary (Phase 6).
