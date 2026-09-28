@@ -24,7 +24,13 @@ export interface ClinicSummary {
 }
 
 interface MeResponse {
-  user: { id: string; phone: string | null; name: string | null; uiLanguage: "en" | "hi" };
+  user: {
+    id: string;
+    phone: string | null;
+    email: string | null;
+    name: string | null;
+    uiLanguage: "en" | "hi";
+  };
   clinics: ClinicSummary[];
   /** Sentio staff: can open the Sentio admin panel. */
   platformAdmin?: boolean;

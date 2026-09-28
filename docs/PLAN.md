@@ -88,20 +88,20 @@ Python would only be clearly better for ML training work, which is out of scope 
 
 ### 2.2 Components
 
-| Concern       | Choice                                                                                                                                           |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Monorepo      | pnpm workspaces + Turborepo                                                                                                                      |
-| Database      | Supabase Postgres 15+, Mumbai (`ap-south-1`), extensions `btree_gist`, `pgcrypto`, `pg_trgm`                                                     |
-| Migrations    | Plain SQL files in `packages/db/migrations`, applied with the Supabase CLI. Destructive migrations need explicit approval (§0.5).                |
-| Query layer   | Kysely, with types generated from the live schema (`kysely-codegen`)                                                                             |
-| Auth          | Supabase Auth. Staff sign in with phone OTP; owners can also use email. Clinic membership and role live in our own tables and are read by RLS.   |
-| API           | Fastify + Zod                                                                                                                                    |
-| Jobs          | Graphile Worker (Postgres-backed). Every job has a `job_key`, so re-queuing the same job does nothing. Jobs survive restarts.                    |
-| Frontend      | Next.js (App Router) PWA, Tailwind, `next-intl` (English and Hindi), IndexedDB for offline use through Dexie                                     |
-| PDFs          | `@react-pdf/renderer` on the server, with Noto Sans Devanagari embedded for Hindi                                                                |
-| Observability | Pino structured logs with PII redaction, Sentry (with `beforeSend` scrubbing), an uptime monitor, per-clinic health checks                       |
-| Tests         | Vitest (unit and integration), Testcontainers Postgres (real constraints, real RLS), Playwright (dashboard end-to-end tests)                     |
-| CI            | GitHub Actions: lint, typecheck, unit tests, database integration tests, eval "safety" subset on every PR; full eval nightly and before releases |
+| Concern       | Choice                                                                                                                                                                |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Monorepo      | pnpm workspaces + Turborepo                                                                                                                                           |
+| Database      | Supabase Postgres 15+, Mumbai (`ap-south-1`), extensions `btree_gist`, `pgcrypto`, `pg_trgm`                                                                          |
+| Migrations    | Plain SQL files in `packages/db/migrations`, applied with the Supabase CLI. Destructive migrations need explicit approval (§0.5).                                     |
+| Query layer   | Kysely, with types generated from the live schema (`kysely-codegen`)                                                                                                  |
+| Auth          | Supabase Auth. Staff sign in with a code sent to their email (founder decision: no SMS login). Clinic membership and role live in our own tables and are read by RLS. |
+| API           | Fastify + Zod                                                                                                                                                         |
+| Jobs          | Graphile Worker (Postgres-backed). Every job has a `job_key`, so re-queuing the same job does nothing. Jobs survive restarts.                                         |
+| Frontend      | Next.js (App Router) PWA, Tailwind, `next-intl` (English and Hindi), IndexedDB for offline use through Dexie                                                          |
+| PDFs          | `@react-pdf/renderer` on the server, with Noto Sans Devanagari embedded for Hindi                                                                                     |
+| Observability | Pino structured logs with PII redaction, Sentry (with `beforeSend` scrubbing), an uptime monitor, per-clinic health checks                                            |
+| Tests         | Vitest (unit and integration), Testcontainers Postgres (real constraints, real RLS), Playwright (dashboard end-to-end tests)                                          |
+| CI            | GitHub Actions: lint, typecheck, unit tests, database integration tests, eval "safety" subset on every PR; full eval nightly and before releases                      |
 
 ---
 

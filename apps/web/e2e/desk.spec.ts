@@ -8,11 +8,11 @@ const API = process.env.E2E_API_URL ?? "http://localhost:8080";
 
 test.use({ viewport: { width: 1366, height: 800 } });
 
-async function signIn(page: Page, phone: string) {
+async function signIn(page: Page, email: string) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(phone);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(email);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }
@@ -24,7 +24,7 @@ test("walk-in to receipt: token, send in, done, bill, pay", async ({ page }) => 
       await fetch(`${API}/v1/dev/login`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone: "90000 00001" }),
+        body: JSON.stringify({ email: "owner@demo.sentio" }),
       })
     ).json()) as { token: string }
   ).token;
@@ -34,7 +34,7 @@ test("walk-in to receipt: token, send in, done, bill, pay", async ({ page }) => 
     body: JSON.stringify({ name: "Chair E2E", equipment: [] }),
   });
 
-  await signIn(page, "90000 00002");
+  await signIn(page, "reception@demo.sentio");
   await expect(
     page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "Leads" }),
   ).toBeVisible();

@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /** Phase 6: the owner's setup checklist, test mode, call forwarding and the report. */
-async function signIn(page: Page, phone: string) {
+async function signIn(page: Page, email: string) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(phone);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(email);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }
@@ -13,7 +13,7 @@ async function signIn(page: Page, phone: string) {
 test("the owner works through setup, uses test mode, reads forwarding codes and the report", async ({
   page,
 }) => {
-  await signIn(page, "90000 00001");
+  await signIn(page, "owner@demo.sentio");
   await page.getByTestId("setup-banner").click();
   await expect(page.getByRole("heading", { name: "Setup checklist" })).toBeVisible();
 

@@ -32,6 +32,7 @@ export type TemplatePurpose =
   | "billing_link"
   | "lead_welcome"
   | "lead_nudge"
+  | "lead_checkin"
   | "owner_daily_report"
   | "prescription";
 
@@ -340,6 +341,23 @@ export const TEMPLATES: Record<TemplatePurpose, TemplateDefinition> = {
     body: {
       en: "{{1}}, this is {{2}} again about {{3}}. A short consultation lets the doctor tell you exactly what you need and what it will cost. Would you like to book one? Reply STOP to stop messages.",
       hi: "{{1}}, {{2}} से फिर से {{3}} के बारे में। एक छोटे परामर्श में डॉक्टर बता सकते हैं कि आपको ठीक-ठीक क्या चाहिए और खर्च कितना होगा। क्या आप परामर्श बुक करना चाहेंगे? मैसेज बंद करने के लिए STOP लिखें।",
+    },
+    buttons: [
+      { en: "Book a visit", hi: "विज़िट बुक करें" },
+      { en: "Ask a question", hi: "सवाल पूछें" },
+      { en: "Call me", hi: "मुझे कॉल करें" },
+    ],
+  },
+  // For leads who went quiet: a week and three weeks later, one gentle check-in each. Answers the usual
+  // doubts (cost, pain, time) instead of repeating the offer; many ad leads book weeks after the ad.
+  lead_checkin: {
+    purpose: "lead_checkin",
+    name: "sentio_lead_checkin",
+    category: "marketing",
+    params: ["first name", "clinic name", "what they asked about"],
+    body: {
+      en: "Hello {{1}}, {{2}} here. Still thinking about {{3}}? Most people want to know the cost, whether it hurts and how many visits it takes. The doctor can answer all three in a short consultation, with no obligation to go ahead. Reply with your question or tap below. Reply STOP to stop messages.",
+      hi: "नमस्ते {{1}}, {{2}} से। क्या आप अभी भी {{3}} के बारे में सोच रहे हैं? ज़्यादातर लोग जानना चाहते हैं कि खर्च कितना होगा, दर्द होगा या नहीं, और कितनी बार आना होगा। डॉक्टर एक छोटे परामर्श में तीनों का जवाब दे सकते हैं, इलाज कराने की कोई बाध्यता नहीं। अपना सवाल लिखें या नीचे दबाएँ। मैसेज बंद करने के लिए STOP लिखें।",
     },
     buttons: [
       { en: "Book a visit", hi: "विज़िट बुक करें" },

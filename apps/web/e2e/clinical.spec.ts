@@ -6,24 +6,23 @@ import { expect, test, type Page } from "@playwright/test";
  */
 test.use({ viewport: { width: 1366, height: 800 } });
 
-async function signIn(page: Page, phone: string) {
+async function signIn(page: Page, email: string) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(phone);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(email);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }
 
 async function openPatient(page: Page, fileNo: string) {
-  await page.keyboard.press("/");
-  await page.keyboard.type(fileNo);
+  await page.getByRole("searchbox", { name: "Find a patient" }).fill(fileNo);
   await page.getByRole("listbox", { name: "Patients found" }).getByRole("option").first().click();
   await page.waitForURL("**/patients/**");
 }
 
 test("the doctor writes a note, charts a tooth and prescribes from a template", async ({ page }) => {
-  await signIn(page, "90000 00001");
+  await signIn(page, "owner@demo.sentio");
   await openPatient(page, "SDC-1040");
   const record = page.getByTestId("clinical-record");
   await expect(page.getByRole("tab", { name: "Doctor's notes" })).toHaveAttribute("aria-selected", "true");
@@ -54,7 +53,7 @@ test("the doctor writes a note, charts a tooth and prescribes from a template", 
 });
 
 test("reception sees the bill and plans, not the doctor's notes", async ({ page }) => {
-  await signIn(page, "90000 00002");
+  await signIn(page, "reception@demo.sentio");
   await openPatient(page, "SDC-1040");
   await expect(page.getByRole("tab", { name: "Bill" })).toBeVisible();
   await expect(page.getByRole("tab", { name: "Doctor's notes" })).toHaveCount(0);

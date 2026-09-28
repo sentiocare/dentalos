@@ -72,16 +72,17 @@
   },
   "login": {
     "title": "Sign in",
-    "phoneLabel": "Your mobile number",
-    "sendOtp": "Send OTP",
-    "otpLabel": "Enter the 6-digit OTP sent by SMS",
+    "emailLabel": "Your email",
+    "sendOtp": "Send code",
+    "otpLabel": "Enter the 6-digit code sent to your email",
     "verify": "Verify and sign in",
     "devNote": "Development mode: any code works.",
-    "invalidPhone": "Please enter a valid mobile number",
+    "invalidEmail": "Please enter a valid email",
     "wrongCode": "That code did not work. Please check and try again.",
-    "notAdded": "This number is not added to a clinic yet. Ask the clinic owner to add you in Settings → Staff.",
-    "changeNumber": "Change number",
-    "chooseClinic": "Choose clinic"
+    "notAdded": "This email is not added to a clinic yet. Ask the clinic owner to add you in Settings → Staff.",
+    "changeEmail": "Change email",
+    "chooseClinic": "Choose clinic",
+    "invalidPhone": "Please enter a valid mobile number"
   },
   "status": {
     "booked": "Booked",
@@ -330,7 +331,9 @@
     "weekdays": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
     "canAdjustBills": "Can give discounts, refunds and corrections",
     "qualification": "Qualification",
-    "registrationNo": "Registration no. (Dental Council)"
+    "registrationNo": "Registration no. (Dental Council)",
+    "staffEmail": "Email (to sign in)",
+    "staffPhone": "Mobile (optional, for WhatsApp alerts)"
   },
   "activity": {
     "title": "Activity log",
@@ -961,7 +964,9 @@
       "lost": "Closed",
       "note": "Note",
       "reopened": "Reopened"
-    }
+    },
+    "replied": "Replied",
+    "showRate": "Came in"
   },
   "leadAds": {
     "title": "Lead ads (Facebook & Instagram)",
@@ -973,7 +978,15 @@
     "tokenHint": "Sentio subscribes the Page to lead webhooks at {url}. See SETUP Part D7.",
     "connect": "Connect Page",
     "alertPhone": "Staff phone for hot-lead alerts",
-    "alertHint": "Gets a WhatsApp when a hot lead comes in or a lead asks for a call, so someone calls within minutes."
+    "alertHint": "Gets a WhatsApp when a hot lead comes in or a lead asks for a call, so someone calls within minutes.",
+    "datasetTitle": "Tell Meta which leads became patients",
+    "datasetHelp": "Meta's ads learn from what you send back. Sentio reports each ad lead that is qualified, books, comes in and pays, so your ads find more people like them instead of more form fills. Only the stage, the time and a scrambled phone number are sent; nothing about treatment.",
+    "datasetConnected": "Sending to dataset {id}. {sent} updates sent so far.",
+    "datasetNotConnected": "Not connected yet.",
+    "datasetError": "Meta refused the last update: {error}",
+    "datasetId": "Dataset ID (Events Manager)",
+    "datasetToken": "Conversions API access token",
+    "datasetConnect": "Connect dataset"
   },
   "reports": {
     "title": "Reports",

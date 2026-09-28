@@ -34,4 +34,5 @@ export * from "./billing/wallet";
 export * from "./billing/sentio";
 export * from "./leads/leads";
 export * from "./leads/channels";
+export * from "./leads/signals";
 export * from "./reports/owner";

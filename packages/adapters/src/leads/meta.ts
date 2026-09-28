@@ -1,5 +1,5 @@
 import { hmacSha256Hex, ProviderError, safeEqualHex, type RawWebhook } from "../common";
-import type { LeadAdsProvider, LeadDetails, LeadgenEvent } from "./types";
+import type { ConversionEvent, LeadAdsProvider, LeadDetails, LeadgenEvent } from "./types";
 
 export interface MetaLeadAdsConfig {
   /** The same Meta app as WhatsApp: its secret signs the Page webhooks too. */
@@ -117,6 +117,55 @@ export class MetaLeadAdsProvider implements LeadAdsProvider {
       platform: data.platform,
       isOrganic: data.is_organic,
     };
+  }
+
+  async sendConversions(input: { datasetId: string; accessToken: string; events: ConversionEvent[] }) {
+    if (!input.events.length) return;
+    const data = input.events.map((e) => ({
+      event_name: e.eventName,
+      event_time: Math.floor(e.eventTime.getTime() / 1000),
+      event_id: e.eventId,
+      ...(e.kind === "crm"
+        ? {
+            action_source: "system_generated",
+            user_data: { lead_id: e.leadId, ...(e.hashedPhone ? { ph: [e.hashedPhone] } : {}) },
+            custom_data: {
+              event_source: "crm",
+              lead_event_source: "Sentio Dental OS",
+              ...(e.valuePaise ? { value: e.valuePaise / 100, currency: "INR" } : {}),
+            },
+          }
+        : {
+            action_source: "business_messaging",
+            messaging_channel: "whatsapp",
+            user_data: {
+              ctwa_clid: e.ctwaClid,
+              page_id: e.pageId,
+              ...(e.hashedPhone ? { ph: [e.hashedPhone] } : {}),
+            },
+            ...(e.valuePaise ? { custom_data: { value: e.valuePaise / 100, currency: "INR" } } : {}),
+          }),
+    }));
+    let res: Response;
+    try {
+      res = await this.fetch(`${this.base}/${encodeURIComponent(input.datasetId)}/events`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${input.accessToken}` },
+        body: JSON.stringify({ data }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (error) {
+      throw new ProviderError(this.name, "network", String(error), true);
+    }
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: { code?: number; message?: string } };
+      throw new ProviderError(
+        this.name,
+        body.error?.code === 190 ? "token_invalid" : `http_${res.status}`,
+        body.error?.message ?? "Meta did not accept the lead events",
+        res.status >= 500 || res.status === 429,
+      );
+    }
   }
 
   async healthCheck() {

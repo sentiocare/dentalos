@@ -861,6 +861,8 @@ interface StaffRow {
   active: boolean;
   joined: boolean;
   invited_phone: string | null;
+  invited_email: string | null;
+  email: string | null;
 }
 
 function Staff({ save }: { save: Save }) {
@@ -870,6 +872,7 @@ function Staff({ save }: { save: Save }) {
   const { api } = useSession();
   const [staff, setStaff] = useState<StaffRow[]>([]);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState("receptionist");
   const load = () =>
@@ -889,7 +892,7 @@ function Staff({ save }: { save: Save }) {
               <div>
                 <p className={s.active ? "font-medium" : "text-slate-400"}>{s.display_name}</p>
                 <p className="text-xs text-slate-500">
-                  {t(`roles.${s.role}`)} · {displayPhone(s.invited_phone)}{" "}
+                  {t(`roles.${s.role}`)} · {s.email ?? s.invited_email ?? displayPhone(s.invited_phone)}{" "}
                   {!s.joined ? `· ${t("notJoined")}` : ""}
                 </p>
               </div>
@@ -936,10 +939,23 @@ function Staff({ save }: { save: Save }) {
         ))}
       </ul>
       <div className="grid grid-cols-2 gap-2">
-        <Input placeholder={tp("name")} value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          aria-label={tp("name")}
+          placeholder={tp("name")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <Input
+          type="email"
+          aria-label={t("staffEmail")}
+          placeholder={t("staffEmail")}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <Input
           type="tel"
-          placeholder="98765 43210"
+          aria-label={t("staffPhone")}
+          placeholder={t("staffPhone")}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
@@ -952,10 +968,12 @@ function Staff({ save }: { save: Save }) {
         </Select>
         <Button
           variant="secondary"
-          disabled={!name.trim() || !phone.trim()}
+          className="col-span-2"
+          disabled={!name.trim() || !email.trim()}
           onClick={async () => {
-            if (await save("POST", "/v1/staff", { name, phone, role })) {
+            if (await save("POST", "/v1/staff", { name, email, phone: phone || undefined, role })) {
               setName("");
+              setEmail("");
               setPhone("");
               await load();
             }
@@ -1460,23 +1478,26 @@ function PaymentsAccount() {
 }
 
 /** Facebook/Instagram lead forms: the clinic's Page, and a staff phone that gets hot-lead alerts. */
+interface LeadSettings {
+  page: { pageId: string; name: string } | null;
+  datasetId: string | null;
+  signals: { sent: number; failed: number; lastSentAt: string | null; lastError: string | null };
+  alertPhone: string | null;
+}
+
 function LeadAds() {
   const t = useTranslations("leadAds");
   const tc = useTranslations("common");
   const { api } = useSession();
   const config = useRuntimeConfig();
   const toast = useToast();
-  const [s, setS] = useState<{
-    page: { pageId: string; name: string } | null;
-    alertPhone: string | null;
-  } | null>(null);
+  const [s, setS] = useState<LeadSettings | null>(null);
   const [page, setPage] = useState({ pageId: "", pageName: "", pageAccessToken: "" });
   const [alert, setAlert] = useState("");
+  const [dataset, setDataset] = useState({ datasetId: "", accessToken: "" });
   const [busy, setBusy] = useState(false);
   useEffect(() => {
-    void api<{ page: { pageId: string; name: string } | null; alertPhone: string | null }>(
-      "/v1/lead-settings",
-    )
+    void api<LeadSettings>("/v1/lead-settings")
       .then((r) => {
         setS(r);
         setAlert(r.alertPhone ? displayPhone(r.alertPhone) : "");
@@ -1489,6 +1510,7 @@ function LeadAds() {
     try {
       setS(await api("/v1/lead-settings", { method: "PUT", body }));
       setPage({ pageId: "", pageName: "", pageAccessToken: "" });
+      setDataset({ datasetId: "", accessToken: "" });
       toast(tc("saved"));
     } catch (e) {
       toast(e instanceof ApiError ? e.message : tc("error"), "error");
@@ -1532,6 +1554,51 @@ function LeadAds() {
       <Button busy={busy} onClick={() => void save({ page })}>
         {t("connect")}
       </Button>
+      {s.page ? (
+        <div className="space-y-3 rounded-xl bg-slate-50 p-3" data-testid="lead-dataset">
+          <p className="text-sm font-medium">{t("datasetTitle")}</p>
+          <p className="text-xs text-slate-600">{t("datasetHelp")}</p>
+          <p className="text-sm">
+            {s.datasetId
+              ? t("datasetConnected", { id: s.datasetId, sent: s.signals.sent })
+              : t("datasetNotConnected")}
+          </p>
+          {s.signals.lastError ? (
+            <p className="text-xs text-red-700">{t("datasetError", { error: s.signals.lastError })}</p>
+          ) : null}
+          <Field label={t("datasetId")}>
+            {(id) => (
+              <Input
+                id={id}
+                inputMode="numeric"
+                value={dataset.datasetId}
+                onChange={(e) => setDataset({ ...dataset, datasetId: e.target.value })}
+              />
+            )}
+          </Field>
+          <Field label={t("datasetToken")}>
+            {(id) => (
+              <Input
+                id={id}
+                type="password"
+                autoComplete="off"
+                value={dataset.accessToken}
+                onChange={(e) => setDataset({ ...dataset, accessToken: e.target.value })}
+              />
+            )}
+          </Field>
+          <div className="flex gap-2">
+            <Button variant="secondary" busy={busy} onClick={() => void save({ dataset })}>
+              {t("datasetConnect")}
+            </Button>
+            {s.datasetId ? (
+              <Button variant="ghost" busy={busy} onClick={() => void save({ dataset: null })}>
+                {tc("remove")}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
       <Field label={t("alertPhone")} hint={t("alertHint")}>
         {(id) => <Input id={id} type="tel" value={alert} onChange={(e) => setAlert(e.target.value)} />}
       </Field>

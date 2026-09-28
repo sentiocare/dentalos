@@ -156,8 +156,9 @@ The proven pattern for ad leads is **speed plus a human close**: reply within mi
 2. **First contact within a minute**, on WhatsApp, in the language the person wrote in. It asks at most two tap-questions: what they need, then when they want to come (skipping any the form already answered).
 3. **Score.** Pain, "this week" or high-value work (implants, braces, cosmetic or smile work) is **hot**. A hot lead, or anyone who taps "Call me", gets a staff call task due within 15 minutes of clinic hours, and a WhatsApp alert to the chosen staff phone.
 4. **Book.** The assistant offers consultation slots in the same chat; the booking is the normal one (the database commits it).
-5. **Follow up.** No reply: a nudge the next morning, a staff call task, another nudge, a last call task. It stops the moment the lead books, says STOP, or staff mark it lost.
+5. **Follow up.** No reply: a nudge the next morning, a staff call task, another nudge, a last call task, then two check-ins a week apart that answer the usual doubts. If WhatsApp can't deliver to the number at all, a person is asked to call at once. It stops the moment the lead books, says STOP, or staff mark it lost.
 6. **People close.** The AI never calls a lead. Staff calls are logged with outcomes (booked, call back, not interested, wrong number), and the lead's stage then follows the clinic's own records: booked → visited → won (with the rupee value from the ledger). The funnel shows each campaign's leads, bookings, visits and revenue.
+7. **Teach the ads.** Every 15 minutes, the stages reached by leads from Meta (qualified, booked, visited, won with the amount) are sent back to the clinic's Meta dataset through the Conversions API, so Meta finds more people like those who became patients (`core/leads/signals.ts`).
 
 ## How the owner report counts "rupees recovered"
 
@@ -176,7 +177,7 @@ While test mode is on, the outbox and the confirmation-call check allow only sta
 
 ## Security model
 
-- **Sign-in.** Staff sign in with a phone OTP (Supabase Auth). The API verifies the token and then looks up the person's clinic and role in `clinic_memberships`. Nothing about clinic or role is trusted from the token.
+- **Sign-in.** Staff sign in with a code sent to their email (Supabase Auth); they are invited by email. The API verifies the token and then looks up the person's clinic and role in `clinic_memberships`. Nothing about clinic or role is trusted from the token.
 - **Row-level security.** Every request runs inside `withClinic(...)`: one transaction, switched to the restricted `app_user` role, with the clinic set for that transaction only. Every tenant table has a policy for `app_user`, and child rows point to parents by `(clinic_id, id)`, so a row can never reference another clinic's data. Supabase's public `anon`/`authenticated` roles have no access to our tables at all.
 - **Permissions.** One matrix (`core/access/permissions.ts`) is used by both the API and the dashboard. The owner can switch individual permissions off, for example revenue for a receptionist. The clinic can never lose its last owner.
 - **Audit.** A database trigger records every change to clinic data in `audit_log`: who, what, before and after. The table cannot be edited or deleted.

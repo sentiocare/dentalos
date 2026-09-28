@@ -1,11 +1,12 @@
 /* eslint-disable no-console -- command-line tool output */
 /**
- * Sentio admin: create a new clinic and invite its owner by phone number.
+ * Sentio admin: create a new clinic and invite its owner by email.
  *
  *   DATABASE_URL=... pnpm --filter @dentalos/api clinic:create -- --name "Sharma Dental Clinic" \
- *       --city Ranchi --owner-name "Dr. Rakesh Sharma" --owner-phone 9835012345
+ *       --city Ranchi --owner-name "Dr. Rakesh Sharma" --owner-email rakesh@example.com --owner-phone 9835012345
  *
- * The owner then opens the dashboard, signs in with that number, and the clinic appears.
+ * The owner then opens the dashboard, signs in with a code sent to that email, and the clinic appears.
+ * The owner phone gets the WhatsApp reports and billing notices.
  */
 import { parseArgs } from "node:util";
 import { createClinic } from "@dentalos/core";
@@ -19,12 +20,13 @@ export async function createClinicCommand(args: string[]) {
       city: { type: "string" },
       phone: { type: "string" },
       "owner-name": { type: "string" },
+      "owner-email": { type: "string" },
       "owner-phone": { type: "string" },
     },
   });
-  if (!values.name || !values["owner-name"] || !values["owner-phone"]) {
+  if (!values.name || !values["owner-name"] || !values["owner-email"] || !values["owner-phone"]) {
     console.error(
-      'Usage: --name "Clinic name" --owner-name "Dr. Name" --owner-phone 98xxxxxxxx [--city Ranchi] [--phone clinic-phone]',
+      'Usage: --name "Clinic name" --owner-name "Dr. Name" --owner-email owner@example.com --owner-phone 98xxxxxxxx [--city Ranchi] [--phone clinic-phone]',
     );
     process.exit(1);
   }
@@ -38,11 +40,11 @@ export async function createClinicCommand(args: string[]) {
       name: values.name,
       city: values.city,
       phone: values.phone,
-      owner: { name: values["owner-name"], phone: values["owner-phone"] },
+      owner: { name: values["owner-name"], phone: values["owner-phone"], email: values["owner-email"] },
     });
     await client.query("commit");
     console.log(`Created clinic ${values.name} (${clinicId}).`);
-    console.log(`The owner can now sign in with ${values["owner-phone"]}.`);
+    console.log(`The owner can now sign in with ${values["owner-email"]}.`);
   } catch (error) {
     await client.query("rollback");
     throw error;

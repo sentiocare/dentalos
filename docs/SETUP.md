@@ -52,20 +52,28 @@ Do this twice: once named `dentalos-staging`, once named `dentalos-production`.
       https://abcdefghijkl.supabase.co/auth/v1/.well-known/jwks.json
       ```
 
-### B2. Turn on sign-in with phone OTP
+### B2. Turn on sign-in with an email code
 
-Staff sign in with their mobile number and an SMS code.
+Staff sign in with their email and a 6-digit code sent to it. There are no passwords, and no SMS provider is needed.
 
-1. In Supabase, open **Authentication**, then **Sign In / Providers** (or **Providers**), then **Phone**, and switch it **on**.
-2. **SMS provider:** choose **Twilio Verify**. It handles India's DLT rules for OTP messages. Create a Twilio account at https://www.twilio.com, create a **Verify service**, and paste the three values Supabase asks for (Account SID, Auth Token, Verify Service SID).
-3. **Staging only: skip real SMS while testing.** On the same Phone page, find **Test phone numbers / Test OTPs** and add:
+1. In Supabase, open **Authentication → Sign In / Providers**. Check that **Email** is **on** (it is by default). Switch **Phone** off.
+2. **Send a code, not a link.** Open **Authentication → Emails → Templates**. In both the **Magic Link** and the **Confirm signup** templates, replace the body with:
 
    ```
-   919000000001=123456
-   919000000002=123456
+   <p>Your Sentio sign-in code is <strong>{{ .Token }}</strong></p>
+   <p>It works for 1 hour. If you didn't ask for it, ignore this email.</p>
    ```
 
-   These two numbers can then sign in with code `123456` without any SMS being sent. Never add test numbers in production.
+   Set both subjects to `Your Sentio sign-in code`, and save.
+
+3. **Send the emails from your own address.** Supabase's built-in sender is only for trying things out: it sends very few emails an hour and only to your own Supabase team. For real clinics:
+   - Create a free account at [resend.com](https://resend.com), add your domain (for example `sentio.care`) and follow its steps to verify the domain.
+   - In Resend, create an **API key**.
+   - In Supabase, open **Authentication → Emails → SMTP Settings**, switch **Enable custom SMTP** on, and enter: host `smtp.resend.com`, port `465`, user `resend`, password = the API key, sender email `login@sentio.care`, sender name `Sentio`.
+
+   Resend's free plan covers 3,000 emails a month, far more than staff sign-ins need.
+
+4. **Who can sign in:** anyone can ask for a code, but the dashboard only opens a clinic for emails that clinic has added (the owner when the clinic is created, staff under **Settings → Staff**). Everyone else sees "This email is not added to a clinic yet".
 
 ---
 
@@ -211,10 +219,10 @@ New clinics are created by Sentio, not by the clinics themselves. You need the R
    railway ssh
    ```
 
-4. **To create a real clinic**, run this with the clinic's details. The owner's phone is the number they will sign in with.
+4. **To create a real clinic**, run this with the clinic's details. The owner signs in with the email. The phone is where the owner gets the nightly report and billing messages on WhatsApp.
 
    ```
-   node admin.js create-clinic --name "Sharma Dental Clinic" --city "Ranchi" --owner-name "Dr. Rakesh Sharma" --owner-phone 9835012345
+   node admin.js create-clinic --name "Sharma Dental Clinic" --city "Ranchi" --owner-name "Dr. Rakesh Sharma" --owner-email rakesh@gmail.com --owner-phone 9835012345
    ```
 
    The clinic starts with opening hours Monday–Saturday, 10:00–14:00 and 17:00–21:00, one chair, and a starter list of 21 treatments with Hindi names. Prices start empty; the owner fills them in under **More → Clinic settings → Treatments and prices**.
@@ -222,12 +230,12 @@ New clinics are created by Sentio, not by the clinics themselves. You need the R
    **For a sales demo instead**, run:
 
    ```
-   node admin.js seed-demo
+   node admin.js seed-demo --owner-email=you@gmail.com --reception-email=your.other@gmail.com
    ```
 
-   This creates "Sharma Dental Clinic (Demo)" with about 80 patients and this week's appointments. The owner logs in with `90000 00001` and the receptionist with `90000 00002`. Use code `123456` if you added the test numbers in Part B2 step 3.
+   This creates "Sharma Dental Clinic (Demo)" with about 80 patients and this week's appointments. Use two email inboxes you can open: sign in with the first to show the owner's view, and with the second for the receptionist's.
 
-5. Type `exit` to leave. The owner can now open the dashboard, sign in with their number, and add staff under **More → Clinic settings → Staff**.
+5. Type `exit` to leave. The owner can now open the dashboard, sign in with their email, and add staff under **More → Clinic settings → Staff** (name, email, and optionally a mobile number for WhatsApp alerts).
 
 ---
 
@@ -437,10 +445,10 @@ There are two kinds of money, kept apart on purpose:
 
    The `SENTIO_*` values are printed on Sentio's GST invoices to clinics. Make sure `CHANNEL_SECRET_KEY` is set too (Part D3): it encrypts each clinic's Razorpay keys.
 
-5. **Make yourself a Sentio admin.** Sign in to the dashboard once with your phone number. Then, in the Railway **api** service shell, run:
+5. **Make yourself a Sentio admin.** Sign in to the dashboard once with your email. Then, in the Railway **api** service shell, run:
 
    ```
-   node admin.js make-admin --phone 98xxxxxxxx
+   node admin.js make-admin --email you@sentio.care
    ```
 
    Reload the dashboard: **More → Sentio admin** appears. Only Sentio staff should be admins, because the admin panel shows every clinic's billing.
@@ -490,7 +498,17 @@ There are two kinds of money, kept apart on purpose:
 
 2. **Alert phone.** In the same section, enter the staff mobile that should get a WhatsApp alert for every hot lead (the person who calls leads back).
 3. **Click-to-WhatsApp ads** need nothing extra: people who tap the ad land in the clinic's WhatsApp chat, and the assistant records them as leads with the ad's name. In Ads Manager, keep the ad's destination as the clinic's WhatsApp number.
-4. **The lead form.** Ask the clinic's ad agency to add two short questions to the Meta lead form: "What do you need help with?" and "When would you like to come?". The assistant reads the answers (English or Hindi) and asks only what is missing.
+4. **Tell Meta which leads became patients (strongly recommended).** Without this, Meta's ads learn only from form fills and keep finding people who fill forms but never come. With it, they learn from the leads who booked, came in and paid.
+   - In [Meta Events Manager](https://business.facebook.com/events_manager2), open the clinic's **dataset** (create one if there is none: **Connect data sources → CRM**). Copy its **Dataset ID** (a long number).
+   - In the dataset's **Settings**, under **Conversions API**, click **Generate access token** and copy it.
+   - In the dashboard: **Settings → Lead ads (Facebook & Instagram) → Tell Meta which leads became patients**, paste both and press **Connect dataset**. Within 15 minutes the line under it shows how many updates were sent.
+   - Sentio sends, for each lead from a Meta form or a Click-to-WhatsApp ad: **qualified**, **booked**, **visited** and **won** (with the amount paid). Only the stage, its time and a scrambled (hashed) phone number go to Meta.
+   - Once the clinic gets about **200 form leads a month**, ask the ad agency to switch the form campaign's performance goal to **Maximise number of conversion leads** and pick **booked** as the stage to optimise for (Meta wants a stage that 1 to 40 out of 100 leads reach within 28 days). For Click-to-WhatsApp ads, Meta receives the standard events **Lead**, **Schedule** and **Purchase**.
+5. **How to run the ads (share this with the clinic's agency):**
+   - Prefer **Click-to-WhatsApp** ads: the person is already in the chat, so the assistant answers in seconds. Indian healthcare advertisers report these convert 2 to 3 times better than forms.
+   - For lead forms, choose the **Higher intent** form type (it adds a review step, so fewer accidental submits) and keep the form short: name, phone, and the two questions below.
+   - Make the ad offer concrete ("Implant consultation this week, know your cost before you decide"), not "chat with us".
+6. **The lead form.** Ask the clinic's ad agency to add two short questions to the Meta lead form: "What do you need help with?" and "When would you like to come?". The assistant reads the answers (English or Hindi) and asks only what is missing.
 
 ### Onboarding a new clinic (the owner does this, with Sentio on the phone)
 
@@ -539,12 +557,12 @@ pnpm check                        # format, lint, typecheck, all tests
 pnpm --filter @dentalos/api dev    # API on http://localhost:8080
 pnpm --filter @dentalos/worker dev # background worker
 pnpm --filter @dentalos/web dev    # dashboard on http://localhost:3000
-pnpm --filter @dentalos/api seed:demo  # demo clinic: sign in as 90000 00001 (owner) or 90000 00002 (reception), any code
+pnpm --filter @dentalos/api seed:demo  # demo clinic: sign in as owner@demo.sentio or reception@demo.sentio, any code
 pnpm --filter @dentalos/api seed:demo -- --reset --at=12:10  # today as it looks at 12:10 (demos outside clinic hours)
 pnpm e2e                          # browser tests at phone size (resets the demo clinic in DATABASE_URL)
 ```
 
-For local sign-in without SMS, set `AUTH_JWT_SECRET` (any 32+ characters) and `DEV_LOGIN=on` for the API, and `DEV_LOGIN=on` and `API_URL=http://localhost:8080` for the dashboard. Dev login is refused on staging and production.
+For local sign-in without sending emails, set `AUTH_JWT_SECRET` (any 32+ characters) and `DEV_LOGIN=on` for the API, and `DEV_LOGIN=on` and `API_URL=http://localhost:8080` for the dashboard. Dev login is refused on staging and production.
 
 **Rules that CI enforces:**
 

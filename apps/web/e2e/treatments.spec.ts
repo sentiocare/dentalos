@@ -4,17 +4,17 @@ import { expect, test, type Page } from "@playwright/test";
  * Phase 4 (dashboard side): treatment plans on the patient page and the Incomplete treatments list with
  * rupee values. Uses the demo clinic's sample plans (pnpm seed:demo); see scripts/e2e.sh.
  */
-async function signIn(page: Page, phone: string) {
+async function signIn(page: Page, email: string) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(phone);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(email);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }
 
 test("owner sees incomplete treatments with values and opens a plan", async ({ page }) => {
-  await signIn(page, "90000 00001");
+  await signIn(page, "owner@demo.sentio");
   await page.goto("/treatments");
   await expect(page.getByRole("heading", { name: "Incomplete treatments" })).toBeVisible();
   const totals = page.getByTestId("treatment-totals");
@@ -31,7 +31,7 @@ test("owner sees incomplete treatments with values and opens a plan", async ({ p
 });
 
 test("a new plan can be created from a template on the patient page", async ({ page }) => {
-  await signIn(page, "90000 00001");
+  await signIn(page, "owner@demo.sentio");
   await page.getByRole("link", { name: "Patients" }).click();
   await page.locator('a[href^="/patients/"]').nth(2).click();
   await page.getByRole("tab", { name: "Treatment plans" }).click();

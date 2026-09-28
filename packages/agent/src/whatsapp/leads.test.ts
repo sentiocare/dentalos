@@ -1,4 +1,11 @@
-import { advanceFollowups, createLead, leadDetail, registerStandardTemplates } from "@dentalos/core";
+import {
+  advanceFollowups,
+  createLead,
+  ensureConversation,
+  leadDetail,
+  logMessage,
+  registerStandardTemplates,
+} from "@dentalos/core";
 import { withClinic } from "@dentalos/db";
 import { createTestDatabase, hasTestDatabase, type TestDatabase } from "@dentalos/db/testing";
 import type { PoolClient } from "pg";
@@ -173,5 +180,47 @@ describe.skipIf(!hasTestDatabase)("leads on WhatsApp", () => {
       )
     ).rowCount;
     expect(templates).toBe(0);
+  });
+
+  it("WhatsApp reports our welcome undeliverable (not on WhatsApp): a person is asked to call at once", async () => {
+    const p = person();
+    const { id } = await run((c) =>
+      createLead(c, {
+        source: "meta_form",
+        externalId: "lg-110",
+        phone: p.phone,
+        name: "Landline Only",
+        need: "cleaning",
+        timing: "month",
+        now: NOW,
+      }),
+    );
+    await run(async (c) => {
+      const conv = await ensureConversation(c, p.phone);
+      await logMessage(c, {
+        conversationId: conv.id,
+        direction: "out",
+        author: "system",
+        kind: "template",
+        body: "Welcome",
+        providerMessageId: "wamid.fail1",
+        status: "sent",
+      });
+    });
+    expect(await tasksFor(id)).toEqual([]);
+    await p.deliver([
+      {
+        type: "status",
+        eventId: "status:fail1",
+        channelId: CHANNEL_ID,
+        providerMessageId: "wamid.fail1",
+        status: "failed",
+        errorCode: "131026",
+        at: NOW,
+      },
+    ]);
+    expect(await tasksFor(id)).toEqual([
+      { title: "Not on WhatsApp: call this lead: Landline Only", status: "open" },
+    ]);
   });
 });

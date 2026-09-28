@@ -10,6 +10,31 @@ export interface LeadAdsProvider extends ProviderBase {
   verifyWebhook(webhook: RawWebhook): boolean;
   parseWebhook(webhook: RawWebhook): LeadgenEvent[];
   fetchLead(pageAccessToken: string, leadgenId: string): Promise<LeadDetails>;
+  /**
+   * Tells Meta what happened to leads after the ad (Conversions API: POST /{dataset_id}/events), so the ads
+   * optimise for people who book and come rather than for form fills.
+   */
+  sendConversions(input: {
+    datasetId: string;
+    accessToken: string;
+    events: ConversionEvent[];
+  }): Promise<void>;
+}
+
+/**
+ * One lead event for Meta. Form leads are matched by Meta's lead id ("system_generated", event_source "crm");
+ * Click-to-WhatsApp leads by the ad click id ("business_messaging" on WhatsApp). Phones are SHA-256 hashed.
+ */
+export interface ConversionEvent {
+  eventName: string;
+  eventTime: Date;
+  eventId: string;
+  kind: "crm" | "whatsapp";
+  leadId?: string;
+  ctwaClid?: string;
+  pageId?: string;
+  hashedPhone?: string;
+  valuePaise?: number;
 }
 
 export interface LeadgenEvent {

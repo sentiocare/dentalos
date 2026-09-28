@@ -12,8 +12,8 @@ export function staffRoutes(app: FastifyInstance, deps: { staff: StaffContextSer
   app.get("/v1/staff", (request) =>
     deps.staff.inClinic(request, "staff.manage", async (c) => {
       const { rows } = await c.query(
-        `select m.id, m.display_name, m.role, m.permissions, m.active, m.invited_phone, m.user_id is not null as joined,
-                u.phone, u.name as user_name
+        `select m.id, m.display_name, m.role, m.permissions, m.active, m.invited_phone, m.invited_email, m.user_id is not null as joined,
+                u.phone, u.email, u.name as user_name
          from clinic_memberships m left join users u on u.id = m.user_id
          order by m.active desc, m.role, m.display_name`,
       );
@@ -21,25 +21,30 @@ export function staffRoutes(app: FastifyInstance, deps: { staff: StaffContextSer
     }),
   );
 
-  // Adds a staff member by phone number. They sign in with an OTP on that number and are connected.
+  // Adds a staff member by email. They sign in with a code sent to that email and are connected.
+  // The phone number is optional: it is only used to reach them on WhatsApp (alerts, test mode).
   app.post("/v1/staff", (request) =>
     deps.staff.inClinic(request, "staff.manage", async (c) => {
       const b = parse(
         z.object({
-          phone: z.string(),
+          email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
+          phone: z.string().optional(),
           name: z.string().trim().min(1).max(100),
           role,
           permissions: permissionOverrides.default({}),
         }),
         request.body,
       );
-      const phone = normalizePhone(b.phone);
-      if (!phone) throw new HttpError(400, "invalid_input", "Invalid phone number");
-      const existingUser = await c.query("select id from users where phone = $1", [phone]);
+      const phone = b.phone?.trim() ? normalizePhone(b.phone) : null;
+      if (b.phone?.trim() && !phone) throw new HttpError(400, "invalid_input", "Invalid phone number");
+      if (!b.email && !phone) throw new HttpError(400, "invalid_input", "Enter the staff member's email");
+      const existingUser = b.email
+        ? await c.query("select id from users where email = $1", [b.email])
+        : await c.query("select id from users where phone = $1", [phone]);
       const { rows } = await c.query(
-        `insert into clinic_memberships (clinic_id, user_id, invited_phone, display_name, role, permissions)
-         values (app.current_clinic_id(), $1, $2, $3, $4, $5) returning id`,
-        [existingUser.rows[0]?.id ?? null, phone, b.name, b.role, b.permissions],
+        `insert into clinic_memberships (clinic_id, user_id, invited_phone, invited_email, display_name, role, permissions)
+         values (app.current_clinic_id(), $1, $2, $3, $4, $5, $6) returning id`,
+        [existingUser.rows[0]?.id ?? null, phone, b.email ?? null, b.name, b.role, b.permissions],
       );
       deps.staff.invalidate();
       return { id: rows[0].id };

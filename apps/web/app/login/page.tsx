@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { normalizePhone } from "@dentalos/shared/phone";
 import { LanguageSwitch } from "../../components/language-switch";
 import { Button, Field, Input } from "../../components/ui";
 import { useSession } from "../../lib/session";
@@ -13,9 +12,9 @@ export default function LoginPage() {
   const ta = useTranslations("app");
   const session = useSession();
   const router = useRouter();
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,15 +24,15 @@ export default function LoginPage() {
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
-    const e164 = normalizePhone(phone);
-    if (!e164) return setError(t("invalidPhone"));
+    const address = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return setError(t("invalidEmail"));
     setBusy(true);
     setError(null);
     try {
-      await session.driver.requestOtp(e164);
+      await session.driver.requestOtp(address);
       setStep("code");
     } catch {
-      setError(t("invalidPhone"));
+      setError(t("invalidEmail"));
     } finally {
       setBusy(false);
     }
@@ -44,7 +43,7 @@ export default function LoginPage() {
     setBusy(true);
     setError(null);
     try {
-      await session.driver.verifyOtp(normalizePhone(phone)!, code.trim());
+      await session.driver.verifyOtp(email.trim().toLowerCase(), code.trim());
       await session.refresh();
     } catch {
       setError(t("wrongCode"));
@@ -60,18 +59,18 @@ export default function LoginPage() {
         <LanguageSwitch />
       </div>
       <p className="text-sm text-slate-600">{ta("tagline")}</p>
-      {step === "phone" ? (
+      {step === "email" ? (
         <form onSubmit={sendCode} className="flex flex-col gap-4">
-          <Field label={t("phoneLabel")} error={error ?? undefined}>
+          <Field label={t("emailLabel")} error={error ?? undefined}>
             {(id) => (
               <Input
                 id={id}
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="98765 43210"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             )}
@@ -102,8 +101,8 @@ export default function LoginPage() {
           <Button type="submit" busy={busy}>
             {t("verify")}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => setStep("phone")}>
-            {t("changeNumber")}
+          <Button type="button" variant="ghost" onClick={() => setStep("email")}>
+            {t("changeEmail")}
           </Button>
         </form>
       )}

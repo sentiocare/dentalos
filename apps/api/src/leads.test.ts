@@ -80,8 +80,21 @@ describe.skipIf(!hasTestDatabase)("leads API", () => {
     const res = await call(owner, "PUT", "/v1/lead-settings", { page, alertPhone: "98350 00132" });
     expect(res.json()).toEqual({
       page: { pageId: "444444444", name: "Lead API Dental" },
+      datasetId: null,
+      signals: { sent: 0, failed: 0, lastSentAt: null, lastError: null },
       alertPhone: "+919835000132",
     });
+
+    // The dataset for sending lead outcomes back to Meta; the token never comes back out.
+    const dataset = { datasetId: "777000111", accessToken: "capi-token-0123456789abcdef" };
+    expect(
+      (await call(owner, "PUT", "/v1/lead-settings", { dataset: { ...dataset, datasetId: "abc" } }))
+        .statusCode,
+    ).toBe(400);
+    const connected = await call(owner, "PUT", "/v1/lead-settings", { dataset });
+    expect(connected.json().datasetId).toBe("777000111");
+    expect(connected.body).not.toContain("capi-token");
+    expect((await call(owner, "PUT", "/v1/lead-settings", { dataset: null })).json().datasetId).toBeNull();
   });
 
   it("Meta's lead webhook: signed, routed to the clinic by Page, fetched once however often Meta retries", async () => {

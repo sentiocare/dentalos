@@ -68,7 +68,7 @@ export function createStaffContext(deps: { pool: Pool; verify: (token: string) =
   async function resolve(request: FastifyRequest, permission?: Permission): Promise<StaffContext> {
     const user = await authenticate(request);
     let list = await memberships(user);
-    // First request after sign-in (or right after being invited): claim invitations by phone number.
+    // First request after sign-in (or right after being invited): claim invitations by email.
     if (list.length === 0) list = await memberships(user, true);
     const wanted = request.headers[CLINIC_HEADER];
     const membership =
@@ -79,7 +79,7 @@ export function createStaffContext(deps: { pool: Pool; verify: (token: string) =
           : undefined;
     if (!membership) {
       if (list.length === 0)
-        throw new HttpError(403, "no_clinic", "Your number is not added to any clinic yet");
+        throw new HttpError(403, "no_clinic", "Your email is not added to any clinic yet");
       throw new HttpError(400, "choose_clinic", "Choose a clinic", { clinics: list.map((m) => m.clinicId) });
     }
     const permissions = effectivePermissions(membership.role, membership.permissions);

@@ -120,6 +120,53 @@ describe.skipIf(!hasTestDatabase)("staff API", () => {
     expect((await call(reception, "GET", "/v1/staff")).statusCode).toBe(403);
   });
 
+  it("staff are invited by email and sign in with it; the phone is only a contact number", async () => {
+    expect(
+      (await call(owner, "POST", "/v1/staff", { name: "No Contact", role: "assistant" })).statusCode,
+    ).toBe(400);
+    const added = await call(owner, "POST", "/v1/staff", {
+      email: "Neha@Example.com",
+      phone: "98350 00031",
+      name: "Neha",
+      role: "doctor",
+    });
+    expect(added.statusCode).toBe(200);
+    const token = (
+      await app.inject({ method: "POST", url: "/v1/dev/login", payload: { email: "neha@example.com" } })
+    ).json().token as string;
+    const me = (await call(token, "GET", "/v1/me")).json();
+    expect(me.user.email).toBe("neha@example.com");
+    expect(me.clinics).toEqual([{ id: clinicA, name: "Sharma Dental", role: "doctor", displayName: "Neha" }]);
+    const row = ((await call(owner, "GET", "/v1/staff")).json() as Record<string, unknown>[]).find(
+      (s) => s.display_name === "Neha",
+    );
+    expect(row).toMatchObject({
+      joined: true,
+      invited_email: "neha@example.com",
+      invited_phone: "+919835000031",
+    });
+
+    // A clinic created with the owner's email: the owner signs in with it.
+    const client = await db.pool.connect();
+    let clinicC: string;
+    try {
+      clinicC = (
+        await createClinic(client, {
+          name: "Email Dental",
+          owner: { name: "Dr. Mail", phone: "9835000032", email: "Dr.Mail@Example.com" },
+        })
+      ).clinicId;
+    } finally {
+      client.release();
+    }
+    const mail = (
+      await app.inject({ method: "POST", url: "/v1/dev/login", payload: { email: "dr.mail@example.com" } })
+    ).json().token as string;
+    expect((await call(mail, "GET", "/v1/me")).json().clinics).toEqual([
+      { id: clinicC, name: "Email Dental", role: "owner", displayName: "Dr. Mail" },
+    ]);
+  });
+
   it("the clinic can never lose its last owner", async () => {
     const staff = (await call(owner, "GET", "/v1/staff")).json() as { id: string; role: string }[];
     const ownerRow = staff.find((s) => s.role === "owner")!;

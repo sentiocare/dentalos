@@ -6,6 +6,7 @@
  *   DATABASE_URL=... pnpm --filter @dentalos/api seed:demo            # create if missing
  *   DATABASE_URL=... pnpm --filter @dentalos/api seed:demo -- --reset # delete the demo clinic and recreate
  *   ... seed:demo -- --reset --at=12:10                               # today as it looks at 12:10
+ *   ... seed:demo -- --owner-email=you@gmail.com --reception-email=desk@gmail.com  # real inboxes, for a live demo
  */
 import {
   addCharge,
@@ -38,6 +39,9 @@ import { createPool, withClinic, type Pool, type PoolClient } from "@dentalos/db
 export const DEMO_NAME = "Sharma Dental Clinic (Demo)";
 export const DEMO_OWNER_PHONE = "+919000000001";
 export const DEMO_RECEPTION_PHONE = "+919000000002";
+/** Sign-in emails. Local development accepts any code; a live demo needs real inboxes (see the options above). */
+export const DEMO_OWNER_EMAIL = "owner@demo.sentio";
+export const DEMO_RECEPTION_EMAIL = "reception@demo.sentio";
 const TZ = "Asia/Kolkata";
 
 /** Small deterministic PRNG so every demo looks the same. */
@@ -189,7 +193,11 @@ async function reset(pool: Pool) {
   }
 }
 
-export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
+export async function seedDemo(
+  pool: Pool,
+  now = new Date(),
+  emails = { owner: DEMO_OWNER_EMAIL, reception: DEMO_RECEPTION_EMAIL },
+): Promise<string> {
   const existing = await pool.query("select id from clinics where name = $1", [DEMO_NAME]);
   if (existing.rows[0]) return existing.rows[0].id;
 
@@ -202,15 +210,15 @@ export async function seedDemo(pool: Pool, now = new Date()): Promise<string> {
       name: DEMO_NAME,
       city: "Ranchi",
       phone: "+916512345678",
-      owner: { name: "Dr. Rakesh Sharma", phone: DEMO_OWNER_PHONE },
+      owner: { name: "Dr. Rakesh Sharma", phone: DEMO_OWNER_PHONE, email: emails.owner },
     }));
     await client.query(
       "update clinics set address = 'Shop 12, Main Road, Lalpur', state = 'Jharkhand', pincode = '834001', maps_url = 'https://maps.google.com/?q=Lalpur+Ranchi' where id = $1",
       [clinicId],
     );
     await client.query(
-      "insert into clinic_memberships (clinic_id, invited_phone, display_name, role) values ($1, $2, 'Priya (Reception)', 'receptionist')",
-      [clinicId, DEMO_RECEPTION_PHONE],
+      "insert into clinic_memberships (clinic_id, invited_phone, invited_email, display_name, role) values ($1, $2, $3, 'Priya (Reception)', 'receptionist')",
+      [clinicId, DEMO_RECEPTION_PHONE, emails.reception],
     );
     await client.query("commit");
   } catch (error) {
@@ -429,9 +437,18 @@ export async function seedDemoCommand(args: string[]) {
             TZ,
           )
         : new Date();
-    const id = await seedDemo(pool, now);
+    const arg = (name: string) =>
+      args
+        .find((a) => a.startsWith(`--${name}=`))
+        ?.slice(name.length + 3)
+        .toLowerCase();
+    const emails = {
+      owner: arg("owner-email") ?? DEMO_OWNER_EMAIL,
+      reception: arg("reception-email") ?? DEMO_RECEPTION_EMAIL,
+    };
+    const id = await seedDemo(pool, now, emails);
     console.log(`Clinic id: ${id}`);
-    console.log(`Owner login: ${DEMO_OWNER_PHONE} · Reception login: ${DEMO_RECEPTION_PHONE}`);
+    console.log(`Owner login: ${emails.owner} · Reception login: ${emails.reception}`);
   } finally {
     await pool.end();
   }

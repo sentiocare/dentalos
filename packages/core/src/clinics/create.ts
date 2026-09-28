@@ -8,7 +8,8 @@ export interface NewClinic {
   name: string;
   city?: string;
   phone?: string;
-  owner: { name: string; phone: string };
+  /** The owner signs in with the email; the phone gets WhatsApp reports and billing notices. */
+  owner: { name: string; phone: string; email?: string };
   /** Mon–Sat 10:00–14:00 and 17:00–21:00 unless given. */
   hours?: { weekday: number; start: string; end: string }[];
 }
@@ -20,7 +21,7 @@ const DEFAULT_HOURS = [1, 2, 3, 4, 5, 6].flatMap((weekday) => [
 
 /**
  * Sentio admin action (not available to clinic staff): creates a clinic with its default branch, opening
- * hours, starter procedure list and the owner's invitation. The owner signs in with their phone number
+ * hours, starter procedure list and the owner's invitation. The owner signs in with a code sent to their email
  * and the membership is claimed automatically. Must run with the privileged role, in one transaction.
  */
 export async function createClinic(
@@ -29,6 +30,9 @@ export async function createClinic(
 ): Promise<{ clinicId: string; branchId: string }> {
   const ownerPhone = normalizePhone(input.owner.phone);
   if (!ownerPhone) throw new DomainError("invalid", "Owner phone number is not valid");
+  const ownerEmail = input.owner.email?.trim().toLowerCase() || null;
+  if (ownerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail))
+    throw new DomainError("invalid", "Owner email is not valid");
   const clinicPhone = input.phone ? normalizePhone(input.phone) : null;
 
   const clinic = await client.query(
@@ -81,8 +85,9 @@ export async function createClinic(
   await ensureTreatmentTemplates(client, clinicId);
 
   await client.query(
-    `insert into clinic_memberships (clinic_id, invited_phone, display_name, role) values ($1, $2, $3, 'owner')`,
-    [clinicId, ownerPhone, input.owner.name.trim()],
+    `insert into clinic_memberships (clinic_id, invited_phone, invited_email, display_name, role)
+     values ($1, $2, $3, $4, 'owner')`,
+    [clinicId, ownerPhone, ownerEmail, input.owner.name.trim()],
   );
   return { clinicId, branchId };
 }

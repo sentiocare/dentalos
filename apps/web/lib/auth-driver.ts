@@ -1,11 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { RuntimeConfig } from "./runtime-config";
 
-/** How staff sign in: Supabase phone OTP in real deployments, a code-free login in local development. */
+/** How staff sign in: a 6-digit code sent to their email (Supabase) in real deployments, a code-free login in local development. */
 export interface AuthDriver {
   kind: "supabase" | "dev";
-  requestOtp(phoneE164: string): Promise<void>;
-  verifyOtp(phoneE164: string, code: string): Promise<void>;
+  requestOtp(email: string): Promise<void>;
+  verifyOtp(email: string, code: string): Promise<void>;
   getToken(): Promise<string | null>;
   signOut(): Promise<void>;
 }
@@ -24,11 +24,11 @@ function devDriver(apiUrl: string): AuthDriver {
   return {
     kind: "dev",
     async requestOtp() {},
-    async verifyOtp(phone) {
+    async verifyOtp(email) {
       const res = await fetch(`${apiUrl}/v1/dev/login`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ email }),
       });
       if (!res.ok) throw new Error("Dev login failed");
       const { token } = (await res.json()) as { token: string };
@@ -46,12 +46,13 @@ function devDriver(apiUrl: string): AuthDriver {
 function supabaseDriver(client: SupabaseClient): AuthDriver {
   return {
     kind: "supabase",
-    async requestOtp(phone) {
-      const { error } = await client.auth.signInWithOtp({ phone, options: { channel: "sms" } });
+    async requestOtp(email) {
+      // Only invited staff get a code: the API still checks the clinic membership after sign-in.
+      const { error } = await client.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
       if (error) throw error;
     },
-    async verifyOtp(phone, code) {
-      const { error } = await client.auth.verifyOtp({ phone, token: code, type: "sms" });
+    async verifyOtp(email, code) {
+      const { error } = await client.auth.verifyOtp({ email, token: code, type: "email" });
       if (error) throw error;
     },
     async getToken() {

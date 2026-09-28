@@ -1,4 +1,11 @@
-import { advanceFollowups, createLead, leadFromForm, metaPageToken, scheduleSend } from "@dentalos/core";
+import {
+  advanceFollowups,
+  createLead,
+  leadFromForm,
+  metaPageToken,
+  scheduleSend,
+  sendLeadSignals,
+} from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
 import type { JobHelpers } from "graphile-worker";
 import type { JobQueue } from "@dentalos/core";
@@ -62,5 +69,29 @@ export function makeLeadKickoffTask(deps: Pick<WorkerDeps, "pool">) {
   return async (payload: unknown, helpers: JobHelpers) => {
     const { clinicId } = payload as { clinicId: string };
     await kickoffLeads(deps.pool, queueFromHelpers(helpers), clinicId);
+  };
+}
+
+/**
+ * Every 15 minutes: tells Meta which ad leads were qualified, booked, came in and paid, for each clinic with a
+ * connected dataset (Meta asks for at least daily uploads; sooner means the ads learn sooner).
+ */
+export function makeLeadSignalsTask(deps: Pick<WorkerDeps, "pool" | "adapters" | "channelKey" | "logger">) {
+  return async () => {
+    const { rows } = await deps.pool.query(
+      "select distinct clinic_id from clinic_channels where kind = 'meta_page' and active",
+    );
+    for (const { clinic_id: clinicId } of rows) {
+      try {
+        const result = await withClinic(
+          deps.pool,
+          { clinicId, actor: "job:lead_signals", role: "system" },
+          (c) => sendLeadSignals(c, { key: deps.channelKey, leads: deps.adapters.leads }),
+        );
+        if (result.failed) deps.logger.warn({ clinicId, ...result }, "Meta did not accept lead events");
+      } catch (error) {
+        deps.logger.warn({ clinicId, err: error }, "lead signals failed");
+      }
+    }
   };
 }

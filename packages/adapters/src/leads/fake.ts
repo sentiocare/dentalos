@@ -1,6 +1,6 @@
 import { ProviderError, type RawWebhook } from "../common";
 import { FakeSupport } from "../fake-support";
-import type { LeadAdsProvider, LeadDetails, LeadgenEvent } from "./types";
+import type { ConversionEvent, LeadAdsProvider, LeadDetails, LeadgenEvent } from "./types";
 
 export class FakeLeadAdsProvider implements LeadAdsProvider {
   readonly name = "fake-lead-ads";
@@ -31,6 +31,13 @@ export class FakeLeadAdsProvider implements LeadAdsProvider {
     const lead = this.leads.get(leadgenId);
     if (!lead) throw new ProviderError(this.name, "not_found", "Lead not found", false);
     return lead;
+  }
+
+  readonly conversions: { datasetId: string; accessToken: string; events: ConversionEvent[] }[] = [];
+
+  async sendConversions(input: { datasetId: string; accessToken: string; events: ConversionEvent[] }) {
+    this.support.throwIfScripted();
+    this.conversions.push(input);
   }
 
   healthCheck() {

@@ -5,13 +5,13 @@ import { expect, test, type Page } from "@playwright/test";
  * record test-call results (PLAN Phase 3: 50 real test calls marked pass/fail). Uses the demo clinic's
  * sample calls (pnpm seed:demo); see scripts/e2e.sh.
  */
-const RECEPTION = "90000 00002";
+const RECEPTION = "reception@demo.sentio";
 
 async function signIn(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(RECEPTION);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(RECEPTION);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }

@@ -69,9 +69,20 @@ export function meRoutes(
   if (deps.devLogin) {
     const { secret, audience } = deps.devLogin;
     app.post("/v1/dev/login", async (request) => {
-      const body = parse(z.object({ phone: z.string() }), request.body);
-      const phone = normalizePhone(body.phone);
-      if (!phone) throw new HttpError(400, "invalid_input", "Invalid phone number");
+      // Staff sign in by email; phone is still accepted so older test scripts keep working.
+      const body = parse(
+        z.object({
+          email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
+          phone: z.string().optional(),
+        }),
+        request.body,
+      );
+      if (body.email) {
+        const userId = devUserId(body.email);
+        return { token: await signDevToken(secret, audience, { userId, email: body.email }), userId };
+      }
+      const phone = body.phone ? normalizePhone(body.phone) : null;
+      if (!phone) throw new HttpError(400, "invalid_input", "Enter a valid email");
       const userId = devUserId(phone);
       return { token: await signDevToken(secret, audience, { userId, phone }), userId };
     });

@@ -4,11 +4,11 @@ import { expect, test, type Page } from "@playwright/test";
  * Phase 5 (dashboard side): a patient's bill at the desk, the collections and dues page with its Excel
  * export, and the owner's Sentio usage wallet. Uses the demo clinic (pnpm seed:demo); see scripts/e2e.sh.
  */
-async function signIn(page: Page, phone: string) {
+async function signIn(page: Page, email: string) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(phone);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(email);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }
@@ -16,7 +16,7 @@ async function signIn(page: Page, phone: string) {
 test("reception adds a charge and takes a UPI payment; the bill is settled and a receipt number given", async ({
   page,
 }) => {
-  await signIn(page, "90000 00002");
+  await signIn(page, "reception@demo.sentio");
   await page.getByRole("link", { name: "Patients" }).click();
   await page.locator('a[href^="/patients/"]').nth(5).click();
   await expect(page.getByRole("heading", { name: "Bill and payments" })).toBeVisible();
@@ -40,7 +40,7 @@ test("reception adds a charge and takes a UPI payment; the bill is settled and a
 });
 
 test("owner sees collections by method and who owes money, and downloads the Excel", async ({ page }) => {
-  await signIn(page, "90000 00001");
+  await signIn(page, "owner@demo.sentio");
   await page.getByRole("link", { name: "More" }).click();
   await page.getByRole("link", { name: "Payments & dues" }).click();
   await page.getByRole("tab", { name: "This month" }).click();
@@ -52,7 +52,7 @@ test("owner sees collections by method and who owes money, and downloads the Exc
 });
 
 test("owner sees the Sentio usage balance and this month's usage", async ({ page }) => {
-  await signIn(page, "90000 00001");
+  await signIn(page, "owner@demo.sentio");
   await page.goto("/wallet");
   await expect(page.getByRole("heading", { name: "Sentio balance & billing" })).toBeVisible();
   await expect(page.getByTestId("wallet-state")).toContainText("₹");

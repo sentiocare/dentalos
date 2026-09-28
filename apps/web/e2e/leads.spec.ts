@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /** Phase 6: the front desk works leads from ads (demo clinic leads; see scripts/e2e.sh). */
-async function signIn(page: Page, phone: string) {
+async function signIn(page: Page, email: string) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(phone);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(email);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }
@@ -13,7 +13,7 @@ async function signIn(page: Page, phone: string) {
 test("reception sees hot leads to call first, records the call, and adds a lead from a phone enquiry", async ({
   page,
 }) => {
-  await signIn(page, "90000 00002");
+  await signIn(page, "reception@demo.sentio");
   await page.getByRole("link", { name: "More" }).click();
   await page.getByRole("link", { name: "Leads" }).click();
   await expect(page.getByRole("heading", { name: "Leads" })).toBeVisible();

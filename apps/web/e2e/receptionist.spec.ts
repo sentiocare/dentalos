@@ -6,13 +6,13 @@ import { expect, test, type Page } from "@playwright/test";
  * and web servers; see scripts/e2e.sh.
  */
 const API = process.env.E2E_API_URL ?? "http://localhost:8080";
-const RECEPTION = "90000 00002";
+const RECEPTION = "reception@demo.sentio";
 
-async function apiToken(phone: string) {
+async function apiToken(email: string) {
   const res = await fetch(`${API}/v1/dev/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ phone }),
+    body: JSON.stringify({ email }),
   });
   return ((await res.json()) as { token: string }).token;
 }
@@ -32,9 +32,9 @@ function nextWorkingDay(daysAhead: number): string {
 
 async function signIn(page: Page) {
   await page.goto("/login");
-  await page.getByLabel("Your mobile number").fill(RECEPTION);
-  await page.getByRole("button", { name: "Send OTP" }).click();
-  await page.getByLabel(/6-digit OTP/).fill("123456");
+  await page.getByLabel("Your email").fill(RECEPTION);
+  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel(/6-digit code/).fill("123456");
   await page.getByRole("button", { name: "Verify and sign in" }).click();
   await page.waitForURL("**/today");
 }

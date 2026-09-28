@@ -62,13 +62,16 @@ export const DEFAULT_LADDERS: Record<FollowupKind, LadderStep[]> = {
     { afterHours: 12, atLocalTime: "10:00", action: "whatsapp", template: "checkin" },
   ],
   // New leads (ASSUMPTIONS A-54): the first WhatsApp at once, a person calls if nothing is booked within 3
-  // hours, two nudges over the next days, a last call, then the lead is closed as unresponsive.
+  // hours, two nudges over the next days, a last call, then two gentle check-ins a week and two weeks later
+  // (many ad leads book weeks later), then the lead is closed as unresponsive.
   lead: [
     { afterHours: 0, action: "whatsapp", template: "lead_welcome" },
     { afterHours: 3, action: "staff_task" },
     { afterHours: 21, atLocalTime: "11:00", action: "whatsapp", template: "lead_nudge" },
     { afterHours: 48, atLocalTime: "11:00", action: "whatsapp", template: "lead_nudge" },
     { afterHours: 48, atLocalTime: "10:30", action: "staff_task" },
+    { afterHours: 168, atLocalTime: "11:00", action: "whatsapp", template: "lead_checkin" },
+    { afterHours: 336, atLocalTime: "11:00", action: "whatsapp", template: "lead_checkin" },
   ],
   dues: [
     { afterHours: 0, action: "whatsapp", template: "dues_reminder" },
@@ -609,10 +612,11 @@ export async function advanceFollowups(
       await record("ai_call", "requested", { call });
       result.calls.push(call);
     } else {
-      // A lead's task is a call with everything the lead told us; the last one is the final try.
+      // A lead's task is a call with everything the lead told us; the last call in the ladder is the final try.
+      const later = ladder.slice(run.step + 1).some((s) => s.action === "staff_task");
       const taskId =
         run.kind === "lead"
-          ? await leadCallTask(client, run.subject_id, ladder[run.step + 1] ? "no_booking" : "final", now)
+          ? await leadCallTask(client, run.subject_id, later ? "no_booking" : "final", now)
           : await staffTask(client, run, now);
       await record("staff_task", "created", { taskId });
       if (taskId) result.tasks++;
@@ -801,7 +805,8 @@ async function buildMessage(
       };
     }
     case "lead_welcome":
-    case "lead_nudge": {
+    case "lead_nudge":
+    case "lead_checkin": {
       const l = (await client.query("select name, need, answers from leads where id = $1", [run.subject_id]))
         .rows[0];
       if (!l) return null;

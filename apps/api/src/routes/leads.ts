@@ -1,4 +1,5 @@
 import {
+  connectMetaDataset,
   connectMetaPage,
   createLead,
   leadDetail,
@@ -133,7 +134,7 @@ export function leadRoutes(
   );
 
   app.get("/v1/lead-settings", (request) =>
-    deps.staff.inClinic(request, "settings.manage", (c) => leadSettings(c)),
+    deps.staff.inClinic(request, "settings.manage", (c) => leadSettings(c, deps.channelKey ?? null)),
   );
 
   app.put("/v1/lead-settings", (request) =>
@@ -148,9 +149,23 @@ export function leadRoutes(
               pageAccessToken: z.string().trim().min(20).max(1000),
             })
             .optional(),
+          // Meta dataset for sending lead outcomes back (null disconnects it).
+          dataset: z
+            .object({
+              datasetId: z.string().trim().min(5).max(25),
+              accessToken: z.string().trim().min(20).max(1000),
+            })
+            .nullable()
+            .optional(),
         }),
         request.body,
       );
+      if ((b.page || b.dataset !== undefined) && !deps.channelKey)
+        throw new HttpError(
+          503,
+          "not_configured",
+          "Saving Meta tokens needs CHANNEL_SECRET_KEY on the server",
+        );
       if (b.page) {
         if (!deps.channelKey)
           throw new HttpError(
@@ -160,8 +175,9 @@ export function leadRoutes(
           );
         await connectMetaPage(c, deps.channelKey, b.page);
       }
+      if (b.dataset !== undefined) await connectMetaDataset(c, deps.channelKey!, b.dataset);
       if (b.alertPhone !== undefined) await saveLeadAlertPhone(c, b.alertPhone || null);
-      return leadSettings(c);
+      return leadSettings(c, deps.channelKey ?? null);
     }),
   );
 }

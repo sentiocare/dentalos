@@ -42,9 +42,11 @@ interface Funnel {
   totals: {
     leads: number;
     contacted: number;
+    replied: number;
     booked: number;
     visited: number;
     won: number;
+    noShows: number;
     revenuePaise: number | null;
     within5min: number;
   };
@@ -151,11 +153,17 @@ export default function LeadsPage() {
       </div>
 
       {f ? (
-        <div className="grid grid-cols-4 gap-2 text-center" data-testid="lead-funnel">
+        <div className="grid grid-cols-3 gap-2 text-center sm:grid-cols-6" data-testid="lead-funnel">
           {[
             [t("thisMonth"), f.leads],
             [t("fast"), f.leads ? `${Math.round((f.within5min * 100) / f.leads)}%` : "—"],
+            [t("replied"), f.leads ? `${Math.round((f.replied * 100) / f.leads)}%` : "—"],
             [t("booked"), f.booked],
+            // Of those whose visit has happened (came, or didn't), how many came.
+            [
+              t("showRate"),
+              f.visited + f.noShows ? `${Math.round((f.visited * 100) / (f.visited + f.noShows))}%` : "—",
+            ],
             [
               t("won"),
               f.revenuePaise !== null ? `${f.won} · ${formatRupees(f.revenuePaise, locale)}` : f.won,

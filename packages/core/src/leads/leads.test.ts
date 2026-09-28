@@ -7,12 +7,16 @@ import { createClinic } from "../clinics/create";
 import { createPatient } from "../patients/service";
 import { advanceFollowups } from "../revenue/followups";
 import { bookDirect, setAppointmentStatus } from "../scheduling/service";
+import { randomBytes } from "node:crypto";
+import { FakeLeadAdsProvider } from "@dentalos/adapters";
+import { connectMetaDataset, connectMetaPage, leadSettings } from "./channels";
 import {
   createLead,
   leadDetail,
   leadFromForm,
   leadFunnel,
   leadReplied,
+  leadWhatsAppFailed,
   listLeads,
   needFromText,
   nextCallTime,
@@ -22,6 +26,7 @@ import {
   syncLeads,
   timingFromText,
 } from "./leads";
+import { sendLeadSignals } from "./signals";
 
 // Monday 7 January 2030.
 const MON_11 = new Date("2030-01-07T11:00:00+05:30");
@@ -272,7 +277,7 @@ describe.skipIf(!hasTestDatabase)("leads", () => {
     ).toBe("stopped_success");
   });
 
-  it("a lead that never answers: nudges, calls, then closed as unresponsive; the funnel adds up", async () => {
+  it("a lead that never answers: nudges, calls, two later check-ins, then closed as unresponsive; the funnel adds up", async () => {
     const p = phone();
     const { id } = await run((c) =>
       createLead(c, {
@@ -285,9 +290,10 @@ describe.skipIf(!hasTestDatabase)("leads", () => {
         now: MON_11,
       }),
     );
-    for (let h = 0; h <= 7 * 24; h += 1)
+    for (let h = 0; h <= 28 * 24; h += 2)
       await run((c) => advanceFollowups(c, new Date(MON_11.getTime() + h * 3600_000)));
-    await run((c) => syncLeads(c, new Date(MON_11.getTime() + 8 * 86_400_000)));
+    // Still open while the check-ins run; closed only when the ladder is done.
+    await run((c) => syncLeads(c, new Date(MON_11.getTime() + 29 * 86_400_000)));
     const d = await run((c) => leadDetail(c, id));
     expect(d.lead.stage).toBe("unresponsive");
     const sent = await run(
@@ -299,7 +305,13 @@ describe.skipIf(!hasTestDatabase)("leads", () => {
           )
         ).rows,
     );
-    expect(sent.map((r) => r.p)).toEqual(["lead_welcome", "lead_nudge", "lead_nudge"]);
+    expect(sent.map((r) => r.p)).toEqual([
+      "lead_welcome",
+      "lead_nudge",
+      "lead_nudge",
+      "lead_checkin",
+      "lead_checkin",
+    ]);
     const calls = await run(
       async (c) =>
         (await c.query("select title from tasks where lead_id = $1 order by created_at", [id])).rows,
@@ -313,5 +325,121 @@ describe.skipIf(!hasTestDatabase)("leads", () => {
     expect(f.channels.find((c) => c.channel === "RCT")).toMatchObject({ leads: 1, booked: 1, won: 1 });
     const open = await run((c) => listLeads(c, { stage: "open" }));
     expect(open.every((l) => ["new", "contacted", "engaged", "qualified"].includes(l.stage))).toBe(true);
-  }, 60_000);
+  }, 120_000);
+
+  it("WhatsApp can't reach the lead: a person is asked to call at once, once", async () => {
+    const p = phone();
+    const { id } = await run((c) =>
+      createLead(c, {
+        source: "meta_form",
+        externalId: "lg-30",
+        phone: p,
+        name: "No WA",
+        need: "cleaning",
+        timing: "month",
+        now: MON_11,
+      }),
+    );
+    expect(await run((c) => leadWhatsAppFailed(c, { phone: p, errorCode: "131026", now: MON_11 }))).toBe(1);
+    expect(await run((c) => leadWhatsAppFailed(c, { phone: p, errorCode: "131026", now: MON_11 }))).toBe(0);
+    const tasks = await run(
+      async (c) => (await c.query("select priority, title from tasks where lead_id = $1", [id])).rows,
+    );
+    expect(tasks).toEqual([{ priority: "high", title: "Not on WhatsApp: call this lead: No WA" }]);
+    expect((await run((c) => leadDetail(c, id))).activities.map((a) => a.kind)).toContain("unreachable");
+    // Someone who has already replied on WhatsApp is reachable; a later failure is not a reason to call.
+    const q = phone();
+    await run((c) => createLead(c, { source: "website", phone: q, name: "Talks", now: MON_11 }));
+    await run((c) => leadReplied(c, q, MON_11));
+    expect(await run((c) => leadWhatsAppFailed(c, { phone: q, now: MON_11 }))).toBe(0);
+  });
+
+  it("tells Meta which ad leads were qualified, booked, came in and paid; once each, only with a dataset", async () => {
+    const key = randomBytes(32);
+    const leads = new FakeLeadAdsProvider();
+    const later = new Date(MON_11.getTime() + 3 * 86_400_000);
+    const ctwa = await run((c) =>
+      createLead(c, {
+        source: "ctwa",
+        externalId: "ARAkLkA8rmlF",
+        phone: phone(),
+        name: "Ad Chat",
+        alreadyTalking: true,
+        now: MON_11,
+      }),
+    );
+    await run((c) => qualifyLead(c, ctwa.id, { need: "braces", timing: "week" }, MON_11));
+    const noClick = await run((c) =>
+      createLead(c, {
+        source: "ctwa",
+        externalId: "wamid.HBgM",
+        phone: phone(),
+        name: "Old App",
+        alreadyTalking: true,
+        now: MON_11,
+      }),
+    );
+    await run((c) => qualifyLead(c, noClick.id, { need: "cleaning", timing: "week" }, MON_11));
+
+    // No dataset yet: nothing is sent, but nothing is lost either.
+    expect(await run((c) => sendLeadSignals(c, { key, leads, now: later }))).toEqual({
+      sent: 0,
+      skipped: 0,
+      failed: 0,
+    });
+    await run((c) =>
+      connectMetaPage(c, key, { pageId: "444444444", pageAccessToken: "page-token-0123456789abcdef" }),
+    );
+    await run((c) =>
+      connectMetaDataset(c, key, { datasetId: "777000111", accessToken: "capi-token-0123456789abcdef" }),
+    );
+    // Re-saving the Page token keeps the dataset.
+    await run((c) =>
+      connectMetaPage(c, key, { pageId: "444444444", pageAccessToken: "page-token-new-0123456789" }),
+    );
+
+    const first = await run((c) => sendLeadSignals(c, { key, leads, now: later }));
+    expect(first).toEqual({ sent: 4, skipped: 1, failed: 0 });
+    expect(leads.conversions).toHaveLength(1);
+    expect(leads.conversions[0]).toMatchObject({
+      datasetId: "777000111",
+      accessToken: "capi-token-0123456789abcdef",
+    });
+    const events = leads.conversions[0]!.events;
+    expect(events.filter((e) => e.kind === "crm").map((e) => [e.eventName, e.leadId, e.valuePaise])).toEqual([
+      ["booked", "lg-9", undefined],
+      ["visited", "lg-9", undefined],
+      ["won", "lg-9", 450000],
+    ]);
+    expect(events.find((e) => e.kind === "whatsapp")).toMatchObject({
+      eventName: "Lead",
+      ctwaClid: "ARAkLkA8rmlF",
+      pageId: "444444444",
+      eventId: `${ctwa.id}:qualified`,
+    });
+    expect(events.every((e) => e.hashedPhone?.length === 64)).toBe(true);
+
+    // Nothing twice; Meta refusing is recorded and shown in settings.
+    expect(await run((c) => sendLeadSignals(c, { key, leads, now: later }))).toEqual({
+      sent: 0,
+      skipped: 0,
+      failed: 0,
+    });
+    const settings = await run((c) => leadSettings(c, key));
+    expect(settings).toMatchObject({ datasetId: "777000111", signals: { sent: 4, failed: 0 } });
+    expect(JSON.stringify(settings)).not.toContain("capi-token");
+
+    // An event older than Meta's 7-day limit is skipped, not sent.
+    const late = await run((c) =>
+      createLead(c, { source: "meta_form", externalId: "lg-40", phone: phone(), name: "Late", now: MON_11 }),
+    );
+    await run((c) => qualifyLead(c, late.id, { need: "rct", timing: "month" }, MON_11));
+    expect(
+      await run((c) => sendLeadSignals(c, { key, leads, now: new Date(MON_11.getTime() + 9 * 86_400_000) })),
+    ).toEqual({
+      sent: 0,
+      skipped: 1,
+      failed: 0,
+    });
+  });
 });

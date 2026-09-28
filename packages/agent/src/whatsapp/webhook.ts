@@ -1,5 +1,12 @@
 import type { MessagingEvent } from "@dentalos/adapters";
-import { createLead, ensureConversation, logMessage, needFromText, type JobQueue } from "@dentalos/core";
+import {
+  createLead,
+  ensureConversation,
+  leadWhatsAppFailed,
+  logMessage,
+  needFromText,
+  type JobQueue,
+} from "@dentalos/core";
 import { withAppRole, withClinic, type Pool } from "@dentalos/db";
 
 /**
@@ -39,13 +46,17 @@ export async function ingestMessagingEvents(
     const ctx = { clinicId, actor: "system" as const, role: "system" as const };
 
     if (event.type === "status") {
-      await withClinic(pool, ctx, (c) =>
-        c.query(
-          `update messages set status = $2, error = coalesce($3, error)
-           where provider_message_id = $1 and status not in ('read') and not (status = 'delivered' and $2 = 'sent')`,
+      await withClinic(pool, ctx, async (c) => {
+        const { rows } = await c.query(
+          `update messages m set status = $2, error = coalesce($3, error)
+           where provider_message_id = $1 and status not in ('read') and not (status = 'delivered' and $2 = 'sent')
+           returning (select phone from conversations where id = m.conversation_id) as phone`,
           [event.providerMessageId, event.status, event.errorCode ?? null],
-        ),
-      );
+        );
+        // A lead WhatsApp can't reach (not on WhatsApp, wrong number): a person calls them instead.
+        if (event.status === "failed" && rows[0]?.phone)
+          await leadWhatsAppFailed(c, { phone: rows[0].phone, errorCode: event.errorCode, now: event.at });
+      });
       continue;
     }
 

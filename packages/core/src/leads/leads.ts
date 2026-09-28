@@ -134,7 +134,7 @@ export async function nextCallTime(client: PoolClient, now: Date): Promise<Date>
 export async function leadCallTask(
   client: PoolClient,
   leadId: string,
-  reason: "hot" | "asked_call" | "no_booking" | "callback" | "final",
+  reason: "hot" | "asked_call" | "no_booking" | "callback" | "final" | "no_whatsapp",
   now: Date,
   at?: Date,
 ): Promise<string | null> {
@@ -147,6 +147,7 @@ export async function leadCallTask(
     no_booking: "New lead has not booked",
     callback: "Call back (as agreed)",
     final: "Last try: lead has not responded",
+    no_whatsapp: "Not on WhatsApp: call this lead",
   }[reason];
   const lines = [
     `${l.source === "meta_form" ? "Facebook/Instagram form" : l.source === "ctwa" ? "WhatsApp ad" : l.source}${l.campaign ? ` · ${l.campaign}` : ""}`,
@@ -162,7 +163,7 @@ export async function leadCallTask(
      values (app.current_clinic_id(), 'lead', $1, $2, $3, $4, $5, 'leads', $6)
      on conflict (clinic_id, dedupe_key) do nothing returning id`,
     [
-      reason === "hot" || reason === "asked_call" ? "high" : "normal",
+      reason === "hot" || reason === "asked_call" || reason === "no_whatsapp" ? "high" : "normal",
       `${why}: ${l.name ?? l.phone}`,
       lines.join("\n"),
       leadId,
@@ -198,6 +199,35 @@ export async function leadCallTask(
       });
   }
   return rows[0]?.id ?? null;
+}
+
+/**
+ * WhatsApp could not deliver our message to a lead (not on WhatsApp, wrong number, blocked). A lead we can't
+ * message is only reachable by phone, so a person is asked to call at once instead of waiting for the ladder.
+ */
+export async function leadWhatsAppFailed(
+  client: PoolClient,
+  input: { phone: string; errorCode?: string | null; now: Date },
+): Promise<number> {
+  const { rows } = await client.query(
+    "select id from leads where phone = $1 and stage = any($2) and first_reply_at is null",
+    [input.phone, OPEN],
+  );
+  let tasks = 0;
+  for (const r of rows) {
+    const task = await leadCallTask(client, r.id, "no_whatsapp", input.now);
+    if (task) {
+      await activity(
+        client,
+        r.id,
+        "unreachable",
+        { channel: "whatsapp", error: input.errorCode ?? null },
+        input.now,
+      );
+      tasks++;
+    }
+  }
+  return tasks;
 }
 
 export interface NewLead {
@@ -547,9 +577,12 @@ export async function leadFunnel(client: PoolClient, input: { from: Date; to: Da
     `select coalesce(campaign, source) as channel, source,
             count(*)::int as leads,
             count(*) filter (where first_contact_at is not null)::int as contacted,
+            count(*) filter (where first_reply_at is not null)::int as replied,
             count(*) filter (where stage in ('booked', 'visited', 'won'))::int as booked,
             count(*) filter (where stage in ('visited', 'won'))::int as visited,
             count(*) filter (where stage = 'won')::int as won,
+            count(*) filter (where stage = 'booked' and exists (
+              select 1 from appointments a where a.id = leads.appointment_id and a.status = 'no_show'))::int as no_shows,
             coalesce(sum(won_value_paise) filter (where stage = 'won'), 0)::bigint as revenue,
             count(*) filter (where first_contact_at <= created_at + interval '5 minutes')::int as within5,
             percentile_cont(0.5) within group (order by extract(epoch from first_contact_at - created_at))
@@ -563,23 +596,37 @@ export async function leadFunnel(client: PoolClient, input: { from: Date; to: Da
     source: r.source as LeadSource,
     leads: r.leads as number,
     contacted: r.contacted as number,
+    replied: r.replied as number,
     booked: r.booked as number,
     visited: r.visited as number,
     won: r.won as number,
+    noShows: r.no_shows as number,
     revenuePaise: Number(r.revenue),
     within5min: r.within5 as number,
     medianFirstContactSec: r.median_sec === null ? null : Math.round(Number(r.median_sec)),
   }));
-  const sum = (k: "leads" | "contacted" | "booked" | "visited" | "won" | "revenuePaise" | "within5min") =>
-    channels.reduce((s, c) => s + c[k], 0);
+  const sum = (
+    k:
+      | "leads"
+      | "contacted"
+      | "replied"
+      | "booked"
+      | "visited"
+      | "won"
+      | "noShows"
+      | "revenuePaise"
+      | "within5min",
+  ) => channels.reduce((s, c) => s + c[k], 0);
   return {
     channels,
     totals: {
       leads: sum("leads"),
       contacted: sum("contacted"),
+      replied: sum("replied"),
       booked: sum("booked"),
       visited: sum("visited"),
       won: sum("won"),
+      noShows: sum("noShows"),
       revenuePaise: sum("revenuePaise"),
       within5min: sum("within5min"),
     },

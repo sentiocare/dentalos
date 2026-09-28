@@ -52,9 +52,9 @@ export function createTokenVerifier(config: AuthConfig) {
   };
 }
 
-/** Deterministic user id for dev login, so the same phone always maps to the same account. */
-export function devUserId(phone: string): string {
-  const h = createHash("sha256").update(`dev-login:${phone}`).digest("hex");
+/** Deterministic user id for dev login, so the same email (or phone) always maps to the same account. */
+export function devUserId(identity: string): string {
+  const h = createHash("sha256").update(`dev-login:${identity}`).digest("hex");
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
@@ -62,9 +62,13 @@ export function devUserId(phone: string): string {
 export async function signDevToken(
   secret: string,
   audience: string,
-  user: { userId: string; phone: string },
+  user: { userId: string; phone?: string | null; email?: string | null },
 ) {
-  return new SignJWT({ phone: user.phone.replace(/^\+/, ""), role: "authenticated" })
+  return new SignJWT({
+    ...(user.phone ? { phone: user.phone.replace(/^\+/, "") } : {}),
+    ...(user.email ? { email: user.email } : {}),
+    role: "authenticated",
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.userId)
     .setAudience(audience)
