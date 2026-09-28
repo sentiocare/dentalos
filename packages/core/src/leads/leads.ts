@@ -14,7 +14,8 @@ import { addDays, localDateOf, localMinutesOf, weekdayOf, zonedInstant } from ".
  *    It never negotiates price and never gives medical advice; those stay with people.
  * 3. People make the final call: hot leads (pain, soon) and high-value ones (implants, braces, smile work)
  *    get a "call now" task for staff within 15 minutes of clinic hours, with everything the lead said.
- *    AI voice calls to leads stay off: they would be promotional calls (TRAI; ASSUMPTIONS A-10).
+ *    The assistant also phones each new lead within minutes (and once more the next day) to qualify and
+ *    book on the call; a busy lead gets a call back from a person (founder decision, COMPLIANCE 24).
  * 4. Leads that don't book are nudged twice over a few days, then handed to staff, then closed.
  * 5. Every stage is recorded (new → contacted → engaged → qualified → booked → visited → won), so the owner
  *    sees what each campaign produced in patients and rupees.
@@ -386,6 +387,17 @@ export async function leadContacted(client: PoolClient, leadId: string, now: Dat
     [leadId, now],
   );
   if (rowCount) await activity(client, leadId, "message", { first: true }, now);
+}
+
+/** The assistant phoned the lead (whether or not they picked up; the call record says how it went). */
+export async function leadCalledByAssistant(client: PoolClient, leadId: string, now: Date) {
+  await client.query(
+    `update leads set first_contact_at = coalesce(first_contact_at, $2),
+            stage = case when stage = 'new' then 'contacted' else stage end
+     where id = $1`,
+    [leadId, now],
+  );
+  await activity(client, leadId, "called", { by: "assistant" }, now);
 }
 
 export type CallOutcome = "booked" | "callback" | "no_answer" | "not_interested" | "wrong_number";

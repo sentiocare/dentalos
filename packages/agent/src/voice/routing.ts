@@ -24,6 +24,8 @@ export interface VoiceSettings {
   outboundCalls: boolean;
   /** The Exotel flow (app id) that runs our assistant for calls we place; no calls without it. */
   outboundFlowId: string | null;
+  /** AI calls to new leads from ads (qualify and book a consultation); off when false. */
+  leadCalls: boolean;
 }
 
 export function voiceSettings(settings: Record<string, unknown> | null | undefined): VoiceSettings {
@@ -34,6 +36,7 @@ export function voiceSettings(settings: Record<string, unknown> | null | undefin
     staffPhones: Array.isArray(v.staffPhones) ? v.staffPhones.filter((x) => typeof x === "string") : [],
     outboundCalls: v.outboundCalls !== false,
     outboundFlowId: typeof v.outboundFlowId === "string" && v.outboundFlowId ? v.outboundFlowId : null,
+    leadCalls: v.leadCalls !== false,
   };
 }
 

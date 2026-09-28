@@ -8,11 +8,15 @@ import {
   enqueueMessage,
   findPatientsByPhone,
   isLikelySamePerson,
+  leadBookedInChat,
   linkFamily,
   localDateOf,
   localMinutesOf,
   moveAppointment,
+  needFromText,
   offerSlots,
+  qualifyLead,
+  recordCallOutcome,
   releaseHolds,
   setAppointmentStatus,
   type Hold,
@@ -102,7 +106,10 @@ export interface VoiceState {
     | "offer_consult"
     | "offer_staff"
     | "outbound_confirm"
-    | "outbound_change";
+    | "outbound_change"
+    | "lead_intro"
+    | "lead_need"
+    | "lead_offer";
   flow?: "book" | "reschedule" | "cancel";
   lastQuestion?: { text: string; expect: Expect };
   patientId?: string;
@@ -126,6 +133,8 @@ export interface VoiceState {
   intents: string[];
   outcome?: CallOutcome;
   bookedAppointmentId?: string;
+  /** The lead this outbound call is about (lead calls). */
+  leadId?: string;
   /** Plain-English notes of what happened, joined into the call summary. */
   notes: string[];
 }
@@ -156,8 +165,8 @@ export interface VoiceContext {
   now: Date;
   llm?: LLMProvider;
   /** Why we placed this call (outbound calls only). */
-  purpose?: "confirm_appointment" | null;
-  /** The appointment an outbound call is about. */
+  purpose?: "confirm_appointment" | "lead_call" | null;
+  /** The appointment (or lead) an outbound call is about. */
   subjectId?: string | null;
 }
 
@@ -366,6 +375,7 @@ export class VoiceDialog {
     switch (input.kind) {
       case "start":
         if (ctx.purpose === "confirm_appointment" && ctx.subjectId) await this.outboundStart(ctx.subjectId);
+        else if (ctx.purpose === "lead_call" && ctx.subjectId) await this.leadCallStart(ctx.subjectId);
         else {
           this.say(this.t("greeting"), false);
           this.ask(this.t("how_help"));
@@ -619,6 +629,35 @@ export class VoiceDialog {
       if (u.intent === "cancel" || /\b(cancel|radd)\b/.test(t)) return this.askCancel();
       if (no || u.intent === "human") return this.outboundStaff();
     }
+    if ((step === "lead_intro" || step === "lead_need" || step === "lead_offer") && this.s.leadId) {
+      const r = ` ${romanize(text).toLowerCase()} `;
+      if (
+        /\b(not interested|no interest|interest nahi|interested nahi|nahi chahiye|nahin chahiye|zaroorat nahi|zarurat nahi|wrong number|galat number)\b/.test(
+          r,
+        )
+      )
+        return this.leadNotInterested(/wrong|galat/.test(r));
+      if (step === "lead_intro") {
+        // "Busy, call later" first: it often contains words that look like a booking request.
+        if (
+          no ||
+          /\b(busy|baad me|baad mein|later|meeting|driving|drive|abhi nahi|call back|thodi der|office)\b/.test(
+            r,
+          )
+        )
+          return this.leadLater();
+        if (u.intent === "book") return this.leadBook();
+        if (yes) return this.leadAskNeed();
+      }
+      if (step === "lead_need" && !changedSubject) return this.leadGotNeed(text);
+      if (step === "lead_offer") {
+        if (yes || u.intent === "book") return this.leadBook();
+        if (no) {
+          this.s.step = "anything_else";
+          return this.ask(this.t("lead_any_question"));
+        }
+      }
+    }
     if (step === "offer_staff" && (yes || no)) {
       if (yes) return this.human("Asked for staff after being misunderstood");
       this.s.misses = 0;
@@ -745,6 +784,119 @@ export class VoiceDialog {
     this.s.outcome = "callback";
     this.resetFlow();
     this.say(this.t("outbound_staff_will_call"), false);
+    this.endAction = { kind: "hangup" };
+  }
+
+  // ---------------------------------------------------------------- calls to new leads
+
+  private leadNeedWords(need: string | null): string {
+    const words: Record<VoiceLang, Record<string, string>> = {
+      en: {
+        pain: "your tooth problem",
+        implant: "dental implants",
+        braces: "braces",
+        rct: "root canal treatment",
+        cleaning: "a check-up and cleaning",
+        cosmetic: "smile treatment",
+        major: "braces, implants or smile treatment",
+      },
+      hi: {
+        pain: "दाँत की तकलीफ़",
+        implant: "डेंटल इम्प्लांट",
+        braces: "ब्रेसेस",
+        rct: "रूट कैनाल",
+        cleaning: "जाँच और सफ़ाई",
+        cosmetic: "मुस्कान के इलाज",
+        major: "ब्रेसेस, इम्प्लांट या मुस्कान के इलाज",
+      },
+    };
+    return words[this.s.lang][need ?? ""] ?? (this.s.lang === "hi" ? "दाँतों के इलाज" : "dental treatment");
+  }
+
+  /**
+   * We call a new lead (they asked the clinic to contact them). Introduce, check it's a good time, find out
+   * what they need, and book a consultation; a busy lead gets a call back from a person, and "not interested"
+   * closes the lead. Prices are only ever the clinic's own list, as on every call.
+   */
+  private async leadCallStart(leadId: string) {
+    const lead = (
+      await this.q.query("select id, need, stage from leads where id = $1 and phone = $2", [
+        leadId,
+        this.ctx.phone,
+      ])
+    ).rows[0];
+    this.say(this.t("outbound_greeting"), false);
+    if (!lead || !["new", "contacted", "engaged", "qualified"].includes(lead.stage)) {
+      this.say(this.t("goodbye"), false);
+      this.endAction = { kind: "hangup" };
+      return;
+    }
+    this.s.leadId = lead.id;
+    this.s.step = "lead_intro";
+    this.ask(this.t("lead_intro_q", { need: this.leadNeedWords(lead.need) }), "yes_no");
+  }
+
+  private async leadAskNeed() {
+    const lead = (await this.q.query("select need from leads where id = $1", [this.s.leadId])).rows[0];
+    if (lead?.need) return this.leadOffer();
+    this.s.step = "lead_need";
+    return this.ask(this.t("lead_need_q"));
+  }
+
+  private async leadGotNeed(text: string) {
+    const need = needFromText(text) ?? needFromText(romanize(text));
+    if (need) await qualifyLead(this.q, this.s.leadId!, { need }, this.ctx.now);
+    this.note(`Lead said they need: ${text.slice(0, 120)}`);
+    return this.leadOffer();
+  }
+
+  private leadOffer() {
+    this.s.step = "lead_offer";
+    return this.ask(this.t("lead_offer_q"), "yes_no");
+  }
+
+  private async leadBook() {
+    const lead = (await this.q.query("select name from leads where id = $1", [this.s.leadId])).rows[0];
+    const patients = await this.phonePatients();
+    // A new person: book with the name from their form, so they aren't asked again.
+    if (patients.length === 0 && lead?.name) {
+      const lang = this.s.lang;
+      this.resetFlow();
+      this.s.lang = lang;
+      this.s.flow = "book";
+      this.s.procedureId = this.consultationId();
+      this.s.newPatientName = String(lead.name).replace(/\b\p{Ll}/gu, (c) => c.toUpperCase());
+      return this.offer({});
+    }
+    return this.startBooking(null, this.consultationId());
+  }
+
+  private async leadLater() {
+    await recordCallOutcome(this.q, this.s.leadId!, {
+      outcome: "callback",
+      callbackAt: new Date(this.ctx.now.getTime() + 2 * 3600_000),
+      note: "Busy when the assistant called; call back",
+      now: this.ctx.now,
+    });
+    this.note("Lead was busy; a person will call back");
+    this.s.outcome = "callback";
+    this.resetFlow();
+    this.say(this.t("lead_later"), false);
+    this.endAction = { kind: "hangup" };
+  }
+
+  private async leadNotInterested(wrongNumber: boolean) {
+    await recordCallOutcome(this.q, this.s.leadId!, {
+      outcome: wrongNumber ? "wrong_number" : "not_interested",
+      note: wrongNumber
+        ? "Wrong number (said on the assistant's call)"
+        : "Not interested (said on the assistant's call)",
+      now: this.ctx.now,
+    });
+    this.note(wrongNumber ? "Wrong number" : "Lead not interested");
+    this.s.outcome = "information";
+    this.resetFlow();
+    this.say(this.t("lead_not_interested"), false);
     this.endAction = { kind: "hangup" };
   }
 
@@ -1161,6 +1313,14 @@ export class VoiceDialog {
       );
       this.s.outcome = "booked";
       this.s.bookedAppointmentId = appointment.id;
+      // A lead from an ad who booked on a call (ours or theirs) is marked booked at once.
+      if (this.ctx.phone)
+        await leadBookedInChat(this.q, {
+          phone: this.ctx.phone,
+          appointmentId: appointment.id,
+          patientId,
+          now: this.ctx.now,
+        });
       this.plan = true;
       this.resetFlow();
       this.say(this.t("booked", { when }));

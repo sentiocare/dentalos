@@ -504,11 +504,12 @@ There are two kinds of money, kept apart on purpose:
    - In the dashboard: **Settings → Lead ads (Facebook & Instagram) → Tell Meta which leads became patients**, paste both and press **Connect dataset**. Within 15 minutes the line under it shows how many updates were sent.
    - Sentio sends, for each lead from a Meta form or a Click-to-WhatsApp ad: **qualified**, **booked**, **visited** and **won** (with the amount paid). Only the stage, its time and a scrambled (hashed) phone number go to Meta.
    - Once the clinic gets about **200 form leads a month**, ask the ad agency to switch the form campaign's performance goal to **Maximise number of conversion leads** and pick **booked** as the stage to optimise for (Meta wants a stage that 1 to 40 out of 100 leads reach within 28 days). For Click-to-WhatsApp ads, Meta receives the standard events **Lead**, **Schedule** and **Purchase**.
-5. **How to run the ads (share this with the clinic's agency):**
+5. **AI calls to leads** are on once the phone assistant can make calls (Part D5, confirmation calls: the outbound flow ID). The assistant calls each new lead within minutes and books on the call. To switch it off: **Settings → Phone assistant → Call new leads from ads**.
+6. **How to run the ads (share this with the clinic's agency):**
    - Prefer **Click-to-WhatsApp** ads: the person is already in the chat, so the assistant answers in seconds. Indian healthcare advertisers report these convert 2 to 3 times better than forms.
    - For lead forms, choose the **Higher intent** form type (it adds a review step, so fewer accidental submits) and keep the form short: name, phone, and the two questions below.
    - Make the ad offer concrete ("Implant consultation this week, know your cost before you decide"), not "chat with us".
-6. **The lead form.** Ask the clinic's ad agency to add two short questions to the Meta lead form: "What do you need help with?" and "When would you like to come?". The assistant reads the answers (English or Hindi) and asks only what is missing.
+7. **The lead form.** Ask the clinic's ad agency to add two short questions to the Meta lead form: "What do you need help with?" and "When would you like to come?". The assistant reads the answers (English or Hindi) and asks only what is missing.
 
 ### Onboarding a new clinic (the owner does this, with Sentio on the phone)
 

@@ -61,14 +61,18 @@ export const DEFAULT_LADDERS: Record<FollowupKind, LadderStep[]> = {
     { afterHours: 0, action: "whatsapp", template: "aftercare" },
     { afterHours: 12, atLocalTime: "10:00", action: "whatsapp", template: "checkin" },
   ],
-  // New leads (ASSUMPTIONS A-54): the first WhatsApp at once, a person calls if nothing is booked within 3
-  // hours, two nudges over the next days, a last call, then two gentle check-ins a week and two weeks later
-  // (many ad leads book weeks later), then the lead is closed as unresponsive.
+  // New leads (ASSUMPTIONS A-54): the first WhatsApp at once and an AI call 3 minutes later (the assistant
+  // qualifies and books on the call); a person calls if nothing is booked within 3 hours; a nudge the next
+  // morning and a second AI call that afternoon (a different time of day); another nudge, a last call by a
+  // person, then two gentle check-ins a week and two weeks later (many ad leads book weeks later), then the
+  // lead is closed as unresponsive. Leads already chatting on WhatsApp are not called by the assistant.
   lead: [
     { afterHours: 0, action: "whatsapp", template: "lead_welcome" },
+    { afterHours: 0.05, action: "ai_call" },
     { afterHours: 3, action: "staff_task" },
     { afterHours: 21, atLocalTime: "11:00", action: "whatsapp", template: "lead_nudge" },
-    { afterHours: 48, atLocalTime: "11:00", action: "whatsapp", template: "lead_nudge" },
+    { afterHours: 5, atLocalTime: "17:00", action: "ai_call" },
+    { afterHours: 40, atLocalTime: "11:00", action: "whatsapp", template: "lead_nudge" },
     { afterHours: 48, atLocalTime: "10:30", action: "staff_task" },
     { afterHours: 168, atLocalTime: "11:00", action: "whatsapp", template: "lead_checkin" },
     { afterHours: 336, atLocalTime: "11:00", action: "whatsapp", template: "lead_checkin" },
@@ -111,7 +115,7 @@ interface ClinicInfo {
   timezone: string;
   defaultLanguage: string;
   settings: {
-    voice?: { outboundHours?: [string, string]; outboundCalls?: boolean };
+    voice?: { outboundHours?: [string, string]; outboundCalls?: boolean; leadCalls?: boolean };
     billing?: { duesMinPaise?: number; duesAfterDays?: number };
   };
 }
@@ -420,12 +424,9 @@ interface RunRow {
   language_pref: string | null;
 }
 
-export interface CallRequest {
-  runId: string;
-  step: number;
-  appointmentId: string;
-  purpose: "confirm_appointment";
-}
+export type CallRequest =
+  | { runId: string; step: number; purpose: "confirm_appointment"; appointmentId: string }
+  | { runId: string; step: number; purpose: "lead_call"; leadId: string };
 
 /** A dues reminder waiting for its payment link (made by the worker, which holds the gateway keys). */
 export interface LinkRequest {
@@ -467,6 +468,7 @@ export async function advanceFollowups(
   const canCall =
     clinic.settings.voice?.outboundCalls !== false &&
     ((await client.query("select 1 from clinic_channels where kind = 'voice' and active")).rowCount ?? 0) > 0;
+  const canCallLeads = canCall && clinic.settings.voice?.leadCalls !== false;
   const result: StepResult = { stopped: 0, messages: 0, calls: [], tasks: 0, links: [] };
   const wallet = await walletStatus(client, now);
 
@@ -542,7 +544,12 @@ export async function advanceFollowups(
       );
 
     let action = step.action;
-    if (action === "ai_call" && (!canCall || !run.phone || !walletAllows(wallet, "ai_outbound_call")))
+    if (
+      action === "ai_call" &&
+      (!(run.kind === "lead" ? canCallLeads : canCall) ||
+        !run.phone ||
+        !walletAllows(wallet, "ai_outbound_call"))
+    )
       action = "staff_task";
     if (action === "ai_call" && !inHours(now, tz, callHours)) {
       // Calls wait for calling hours; if that is too late to be useful, a person follows up instead.
@@ -550,7 +557,8 @@ export async function advanceFollowups(
       const subject = (
         await client.query("select starts_at from appointments where id = $1", [run.subject_id])
       ).rows[0];
-      if (subject && opening.getTime() < subject.starts_at.getTime() - 60 * 60_000) {
+      // A lead has no deadline: its call simply waits for the morning.
+      if (run.kind === "lead" || (subject && opening.getTime() < subject.starts_at.getTime() - 60 * 60_000)) {
         await client.query("update followup_runs set next_at = $2 where id = $1", [run.id, opening]);
         continue;
       }
@@ -603,14 +611,28 @@ export async function advanceFollowups(
         if (outboxId && run.kind === "lead") await leadContacted(client, run.subject_id, now);
       }
     } else if (action === "ai_call") {
-      const call: CallRequest = {
-        runId: run.id,
-        step: run.step,
-        appointmentId: run.subject_id,
-        purpose: "confirm_appointment",
-      };
-      await record("ai_call", "requested", { call });
-      result.calls.push(call);
+      // A lead already chatting with the assistant on WhatsApp is not interrupted with a call.
+      const chatting =
+        run.kind === "lead" &&
+        (
+          await client.query("select 1 from leads where id = $1 and first_reply_at is not null", [
+            run.subject_id,
+          ])
+        ).rowCount;
+      if (chatting) await record("ai_call", "skipped_chatting");
+      else {
+        const call: CallRequest =
+          run.kind === "lead"
+            ? { runId: run.id, step: run.step, purpose: "lead_call", leadId: run.subject_id }
+            : {
+                runId: run.id,
+                step: run.step,
+                purpose: "confirm_appointment",
+                appointmentId: run.subject_id,
+              };
+        await record("ai_call", "requested", { call });
+        result.calls.push(call);
+      }
     } else {
       // A lead's task is a call with everything the lead told us; the last call in the ladder is the final try.
       const later = ladder.slice(run.step + 1).some((s) => s.action === "staff_task");

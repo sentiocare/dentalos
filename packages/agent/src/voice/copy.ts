@@ -32,6 +32,30 @@ const T = {
     en: "Alright. The clinic staff will call you to sort it out. Thank you!",
     hi: "ठीक है। क्लिनिक स्टाफ़ आपको फ़ोन करके बात कर लेंगे। धन्यवाद!",
   },
+  lead_intro_q: {
+    en: "You recently asked us about {need}. Do you have a minute to talk?",
+    hi: "आपने हाल ही में हमसे {need} के बारे में पूछा था। क्या आपके पास एक मिनट है?",
+  },
+  lead_need_q: {
+    en: "What would you like help with? For example tooth pain, a check-up, braces or implants.",
+    hi: "आपको किस चीज़ में मदद चाहिए? जैसे दाँत का दर्द, जाँच, ब्रेसेस या इम्प्लांट।",
+  },
+  lead_offer_q: {
+    en: "In a short consultation, the doctor will check and tell you exactly what you need and what it will cost. Shall I book one for you?",
+    hi: "एक छोटे परामर्श में डॉक्टर जाँचकर बता देंगे कि आपको ठीक-ठीक क्या चाहिए और खर्च कितना होगा। क्या मैं आपके लिए परामर्श बुक कर दूँ?",
+  },
+  lead_any_question: {
+    en: "No problem. Would you like to know anything, like the cost, the timings or where we are?",
+    hi: "कोई बात नहीं। क्या आप कुछ जानना चाहेंगे, जैसे खर्च, समय या क्लिनिक कहाँ है?",
+  },
+  lead_later: {
+    en: "No problem. Someone from the clinic will call you back later. Thank you!",
+    hi: "कोई बात नहीं। क्लिनिक से कोई आपको बाद में फ़ोन करेगा। धन्यवाद!",
+  },
+  lead_not_interested: {
+    en: "Alright, thank you for your time. If you ever need anything, just call the clinic.",
+    hi: "ठीक है, समय देने के लिए धन्यवाद। कभी भी ज़रूरत हो तो क्लिनिक को फ़ोन कर लीजिए।",
+  },
   voice_optout: {
     en: "Sorry for the trouble. The clinic will not call you with automatic calls again. You can still call the clinic any time.",
     hi: "परेशानी के लिए माफ़ी। क्लिनिक आपको अब अपने आप वाली कॉल नहीं करेगा। आप कभी भी क्लिनिक को फ़ोन कर सकते हैं।",

@@ -491,7 +491,8 @@
     "save": "Save",
     "outboundCalls": "Call patients to confirm tomorrow's appointments (9 am to 8 pm)",
     "outboundFlowId": "Exotel flow ID for calls we place",
-    "outboundFlowHint": "Set by Sentio during setup. Without it, no confirmation calls are made; staff get a task instead."
+    "outboundFlowHint": "Set by Sentio during setup. Without it, no confirmation calls are made; staff get a task instead.",
+    "leadCalls": "Call new leads from ads (the assistant calls within minutes, asks what they need and books a consultation)"
   },
   "plans": {
     "title": "Treatment plans",

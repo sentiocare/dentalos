@@ -480,6 +480,7 @@ describe.skipIf(!hasTestDatabase)("simulated 30-day clinic (Phase 4 acceptance)"
       await run((c) => planFollowups(c, now));
       const stepped = await run((c) => advanceFollowups(c, now));
       for (const call of stepped.calls) {
+        if (call.purpose !== "confirm_appointment") continue;
         // Confirmation calls: every other patient answers and confirms; the rest don't pick up.
         const appt = (
           await db.pool.query("select patient_id from appointments where id = $1", [call.appointmentId])

@@ -1124,6 +1124,7 @@ interface VoiceConfig {
   answerMode: "all" | "after_hours";
   staffPhones: string[];
   outboundCalls: boolean;
+  leadCalls: boolean;
   outboundFlowId: string | null;
   virtualNumber: string | null;
   clinicPhone: string | null;
@@ -1221,6 +1222,15 @@ function VoiceSettings() {
         />
         {t("outboundCalls")}
       </label>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          className="size-5"
+          checked={v.leadCalls}
+          onChange={(e) => setV({ ...v, leadCalls: e.target.checked })}
+        />
+        {t("leadCalls")}
+      </label>
       <Field label={t("outboundFlowId")} hint={t("outboundFlowHint")}>
         {(id) => (
           <Input
@@ -1244,6 +1254,7 @@ function VoiceSettings() {
                 staffPhones: v.staffPhones.map((p) => p.trim()).filter(Boolean),
                 virtualNumber: v.virtualNumber?.trim() || null,
                 outboundCalls: v.outboundCalls,
+                leadCalls: v.leadCalls,
                 outboundFlowId: v.outboundFlowId?.trim() || null,
               },
             });

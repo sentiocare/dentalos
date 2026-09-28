@@ -1,4 +1,4 @@
-import { blockedByTestMode, canUse, localMinutesOf } from "@dentalos/core";
+import { blockedByTestMode, canUse, leadCalledByAssistant, localMinutesOf } from "@dentalos/core";
 import { withClinic, type Pool } from "@dentalos/db";
 import { voiceSettings } from "./routing";
 
@@ -78,6 +78,73 @@ export async function checkConfirmationCall(
   });
 }
 
+/**
+ * An AI call to a new lead (they asked the clinic to contact them through an ad or form). Checked again just
+ * before dialling: the lead may have booked, replied on WhatsApp, said STOP or asked not to be called.
+ */
+export type LeadCallCheck =
+  | { ok: true; phone: string; callerId: string; flowId: string; patientId: string | null }
+  | {
+      ok: false;
+      reason:
+        | "not_open"
+        | "chatting"
+        | "test_mode"
+        | "opted_out"
+        | "outside_hours"
+        | "no_number"
+        | "no_flow"
+        | "calls_off"
+        | "wallet_paused";
+    };
+
+export async function checkLeadCall(
+  pool: Pool,
+  clinicId: string,
+  leadId: string,
+  now: Date = new Date(),
+): Promise<LeadCallCheck> {
+  return withClinic(pool, { clinicId, actor: "system", role: "system" }, async (c) => {
+    const l = (
+      await c.query(
+        `select l.stage, l.phone, l.first_reply_at, l.patient_id, cl.timezone, cl.settings
+         from leads l join clinics cl on cl.id = l.clinic_id where l.id = $1`,
+        [leadId],
+      )
+    ).rows[0];
+    if (!l || !["new", "contacted", "engaged", "qualified"].includes(l.stage))
+      return { ok: false, reason: "not_open" };
+    if (l.first_reply_at) return { ok: false, reason: "chatting" };
+    const v = voiceSettings(l.settings);
+    if (!v.enabled || !v.outboundCalls || !v.leadCalls) return { ok: false, reason: "calls_off" };
+    if (!(await canUse(c, "ai_outbound_call", now))) return { ok: false, reason: "wallet_paused" };
+    const opted = await c.query(
+      "select 1 from opt_outs where phone = $1 and revoked_at is null and channel in ('voice', 'all')",
+      [l.phone],
+    );
+    if (opted.rowCount) return { ok: false, reason: "opted_out" };
+    if (await blockedByTestMode(c, l.phone, l.settings)) return { ok: false, reason: "test_mode" };
+    const [from, to] = (l.settings?.voice?.outboundHours as [string, string] | undefined) ?? [
+      "09:00",
+      "20:00",
+    ];
+    const minutes = localMinutesOf(now, l.timezone);
+    if (minutes < toMin(from) || minutes >= toMin(to)) return { ok: false, reason: "outside_hours" };
+    const number = (
+      await c.query("select external_id from clinic_channels where kind = 'voice' and active limit 1")
+    ).rows[0];
+    if (!number) return { ok: false, reason: "no_number" };
+    if (!v.outboundFlowId) return { ok: false, reason: "no_flow" };
+    return {
+      ok: true,
+      phone: l.phone,
+      callerId: number.external_id,
+      flowId: v.outboundFlowId,
+      patientId: l.patient_id ?? null,
+    };
+  });
+}
+
 /** Records a call we placed, so the call flow and media stream recognise it when the patient answers. */
 export async function recordOutboundCall(
   pool: Pool,
@@ -85,16 +152,18 @@ export async function recordOutboundCall(
     clinicId: string;
     provider: string;
     providerCallId: string;
-    appointmentId: string;
+    purpose?: "confirm_appointment" | "lead_call";
+    /** The appointment (confirmation calls) or the lead (lead calls) the call is about. */
+    subjectId: string;
     phone: string;
     callerId: string;
-    patientId: string;
+    patientId: string | null;
   },
 ): Promise<string> {
   return withClinic(pool, { clinicId: input.clinicId, actor: "system", role: "system" }, async (c) => {
     const { rows } = await c.query(
       `insert into calls (clinic_id, provider, provider_call_id, direction, from_phone, to_phone, patient_id, route, purpose, subject_id)
-       values (app.current_clinic_id(), $1, $2, 'outbound', $3, $4, $5, 'assistant', 'confirm_appointment', $6)
+       values (app.current_clinic_id(), $1, $2, 'outbound', $3, $4, $5, 'assistant', $7, $6)
        on conflict (provider, provider_call_id) do update set purpose = excluded.purpose returning id`,
       [
         input.provider,
@@ -102,9 +171,13 @@ export async function recordOutboundCall(
         input.phone,
         input.callerId,
         input.patientId,
-        input.appointmentId,
+        input.subjectId,
+        input.purpose ?? "confirm_appointment",
       ],
     );
+    // The lead has been phoned: speed to lead counts it, and its timeline shows it.
+    if (input.purpose === "lead_call" && input.subjectId)
+      await leadCalledByAssistant(c, input.subjectId, new Date());
     return rows[0].id;
   });
 }

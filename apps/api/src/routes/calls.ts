@@ -133,6 +133,7 @@ export function callRoutes(
           staffPhones: z.array(phone).max(5),
           virtualNumber: phone.nullable().optional(),
           outboundCalls: z.boolean().optional(),
+          leadCalls: z.boolean().optional(),
           outboundFlowId: z
             .string()
             .trim()
@@ -149,6 +150,7 @@ export function callRoutes(
           .rows[0].v ?? {};
       const next = { ...current, enabled: b.enabled, answerMode: b.answerMode, staffPhones: b.staffPhones };
       if (b.outboundCalls !== undefined) next.outboundCalls = b.outboundCalls;
+      if (b.leadCalls !== undefined) next.leadCalls = b.leadCalls;
       if (b.outboundFlowId !== undefined) next.outboundFlowId = b.outboundFlowId || null;
       await c.query(
         "update clinics set settings = jsonb_set(settings, '{voice}', $1::jsonb) where id = app.current_clinic_id()",

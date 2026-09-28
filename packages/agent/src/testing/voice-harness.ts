@@ -60,10 +60,27 @@ export class CallerSimulator {
       clinicId,
       provider: "fake",
       providerCallId: randomUUID(),
-      appointmentId,
+      subjectId: appointmentId,
       phone: this.phone!,
       callerId: VOICE_NUMBER,
       patientId,
+    });
+    this.call = { clinicId, callId, phone: this.phone, route: "assistant" };
+    this.facts = await loadFacts(this.pool, clinicId);
+    return this.turn({ kind: "start" });
+  }
+
+  /** The clinic's assistant calls a new lead; the lead picks up. */
+  async answerLeadCall(leadId: string, clinicId: string) {
+    const callId = await recordOutboundCall(this.pool, {
+      clinicId,
+      provider: "fake",
+      providerCallId: randomUUID(),
+      purpose: "lead_call",
+      subjectId: leadId,
+      phone: this.phone!,
+      callerId: VOICE_NUMBER,
+      patientId: null,
     });
     this.call = { clinicId, callId, phone: this.phone, route: "assistant" };
     this.facts = await loadFacts(this.pool, clinicId);
