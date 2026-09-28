@@ -4,7 +4,7 @@ An AI front desk and practice automation system for Indian dental clinics, built
 
 Clinics buy it **once** (a perpetual license, no subscription). They save a payment method at onboarding, and only actual usage (call minutes, WhatsApp, AI processing) is billed against a prepaid wallet that recharges itself.
 
-**Status:** Phases 0–6 are built and tested: scheduling that cannot double-book, the WhatsApp and phone assistants (our own speech pipeline), follow-ups, money and the prepaid usage wallet, leads from ads, the owner report and onboarding. The reception desk (walk-in tokens, one-sheet checkout, desk layout) and the doctor's record (notes, tooth chart, prescriptions) were brought forward from Phase 7. Next: a pilot clinic (Phase 8).
+**Status:** Built and tested. The core: the WhatsApp assistant, the phone assistant (our own speech pipeline) and the leads qualifier for Meta ads. Around it: scheduling that cannot double-book, follow-ups, money and the prepaid usage wallet, the owner report, onboarding, the reception desk (walk-in tokens, checkout) and the doctor's record (notes, tooth chart, prescriptions). No more features are planned; next is a pilot in one clinic, once the provider accounts and keys are added (docs/SETUP.md).
 
 ## Documents
 
